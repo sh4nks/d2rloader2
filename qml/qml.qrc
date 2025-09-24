@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>Main.qml</file>
-        <file>Units.qml</file>
         <file>Heading.qml</file>
         <file>AboutDialog.qml</file>
     </qresource>

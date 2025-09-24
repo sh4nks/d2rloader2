@@ -12,8 +12,8 @@ ApplicationWindow {
     modality: Qt.ApplicationModal
     x: Screen.width / 2 - width / 2
     y: Screen.height / 2 - height / 2
-    title: "D2RLoader - About"
-    visible: true
+    title: "About"
+    visible: false
 
     RowLayout {
         id: mainRow

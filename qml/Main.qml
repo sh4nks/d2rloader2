@@ -25,13 +25,9 @@ ApplicationWindow {
 
             MenuItem {
                 text: "&About..."
-                onTriggered: aboutDialog.show() && console.log(units)
+                onTriggered: aboutDialog.show()
             }
         }
-    }
-
-    Units {
-        id: units
     }
 
     AboutDialog {

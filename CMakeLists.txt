@@ -59,7 +59,6 @@ qt_add_qml_module(${CMAKE_PROJECT_NAME}
     NO_PLUGIN
     QML_FILES
         qml/Main.qml
-        qml/Units.qml
         qml/Heading.qml
         qml/AboutDialog.qml
 )
