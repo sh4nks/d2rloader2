@@ -13,6 +13,7 @@ set(APP_NAME ${CMAKE_PROJECT_NAME})
 set(APP_VERSION ${CMAKE_PROJECT_VERSION})
 set(APP_VERSION_CODE ${TIMESTAMP})
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(QT_QML_GENERATE_QMLLS_INI ON)
 
 ################################################################################
 
@@ -29,31 +30,30 @@ message(STATUS "[PROJECT] BUILD_TYPE                = ${CMAKE_BUILD_TYPE}")
 message(STATUS "[PROJECT] TOOLCHAIN_FILE            = ${CMAKE_TOOLCHAIN_FILE}")
 message(STATUS "[PROJECT] QT_HOST_PATH              = ${QT_HOST_PATH}")
 
-
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Svg Qml Quick QuickControls2)
-find_package(Qt6 REQUIRED COMPONENTS Core)
-find_package(Qt6 REQUIRED COMPONENTS Core)
-
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Svg Qml Quick QuickControls2)
+# find_package(KF6 REQUIRED COMPONENTS
+#     CoreAddons # For KAboutData
+#     KirigamiAddons # For KAboutData
+# )
 qt_standard_project_setup(REQUIRES 6.9)
 
 qt_add_executable(${CMAKE_PROJECT_NAME}
     src/main.cpp
-    src/d2rloader.cpp
-    src/d2rloader.h
+    src/d2rloader.h src/d2rloader.cpp
 
     src/profile.h
-    src/profilemanager.cpp
-    src/profilemanager.h
+    src/profilemanager.h src/profilemanager.cpp
 
-    src/gamemanager.h
-    src/gamemanager.cpp
-    src/settingsmanager.h
-    src/settingsmanager.cpp
+    src/gamemanager.h src/gamemanager.cpp
+    src/settingsmanager.h src/settingsmanager.cpp
+
+    src/book.h src/book.cpp
+    src/booklistmodel.h src/booklistmodel.cpp
+    src/booktablemodel.h src/booktablemodel.cpp
+
+    qml/qml.qrc
 )
 
-
-target_link_libraries(D2RLoader PRIVATE Qt6::Core)
-target_link_libraries(D2RLoader PRIVATE Qt6::Core)
 qt_add_qml_module(${CMAKE_PROJECT_NAME}
     URI ${CMAKE_PROJECT_NAME}
     NO_PLUGIN
@@ -61,10 +61,20 @@ qt_add_qml_module(${CMAKE_PROJECT_NAME}
         qml/Main.qml
         qml/Heading.qml
         qml/AboutDialog.qml
+        qml/AccountTable.qml
+
+        qml/ktableview/private/TableCellDelegate.qml
+        qml/ktableview/private/HeaderDelegate.qml
+        qml/ktableview/private/AbstractTable.qml
+        qml/ktableview/private/AbstractHeaderComponent.qml
+        qml/ktableview/MyTableView.qml
+        qml/ktableview/HeaderComponent.qml
 )
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
-    PRIVATE Qt6::Quick
+    PRIVATE Qt6::Core
+            Qt6::Widgets
+            Qt6::Quick
             Qt6::QuickControls2
 )
 
@@ -98,5 +108,5 @@ qt_generate_deploy_qml_app_script(
 )
 install(SCRIPT ${deploy_script})
 
-
+include(FeatureSummary)
 feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
