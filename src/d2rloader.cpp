@@ -7,9 +7,11 @@
 #include <QCoreApplication>
 
 #include <QGuiApplication>
-#include <QStyleHints>
 #include <QPalette>
 #include <QSettings>
+#include <QStyleHints>
+#include <qobject.h>
+#include <qstringliteral.h>
 
 /* ************************************************************************** */
 
@@ -61,20 +63,21 @@ QString D2RLoader::appBuildDate()
 
 QString D2RLoader::appBuildDateTime()
 {
-    return QString::fromLatin1(__DATE__) + " " + QString::fromLatin1(__TIME__);
+    QString date = QString::fromLatin1(__DATE__);
+    return date + " " + __TIME__;
 }
 
 QString D2RLoader::appBuildMode()
 {
 #if !defined(QT_NO_DEBUG) && !defined(NDEBUG)
-    return "DEBUG";
+    return QStringLiteral("DEBUG");
 #endif
-    return "";
+    return QStringLiteral("");
 }
 
 QString D2RLoader::qtVersion()
 {
-    return {qVersion()};
+    return QString::fromStdString(qVersion());
 }
 
 
@@ -92,7 +95,9 @@ void D2RLoader::setAppPath(const QString &value)
         m_appPath = newPath.absolutePath();
 
         // Make sure the path is terminated with a separator.
-        if (!m_appPath.endsWith('/')) m_appPath += '/';
+        if (!m_appPath.endsWith(QStringLiteral("/"))) {
+            m_appPath = m_appPath + QStringLiteral("/");
+        }
     }
 }
 
@@ -104,6 +109,6 @@ bool D2RLoader::isOsThemeDark()
 
 
 void D2RLoader::registerSettingFormats() {
-    QSettings appSettings("path1.ini", QSettings::IniFormat);
-    QSettings gameSettings("path1.ini", QSettings::IniFormat);
+    QSettings appSettings(QStringLiteral("path1.ini"), QSettings::IniFormat);
+    QSettings gameSettings(QStringLiteral("path1.ini"), QSettings::IniFormat);
 }

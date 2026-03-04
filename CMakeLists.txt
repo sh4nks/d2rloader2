@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 3.20)
+project(D2RLoader)
 
-project(D2RLoader VERSION 1.0.0 LANGUAGES CXX)
+find_package(ECM 6.0.0 REQUIRED NO_MODULE)
+set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
+
+include(KDEInstallDirs)
+include(KDECMakeSettings)
+include(ECMFindQmlModule)
+include(ECMQmlModule)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -15,8 +22,8 @@ set(APP_VERSION_CODE ${TIMESTAMP})
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(QT_QML_GENERATE_QMLLS_INI ON)
 
-################################################################################
-
+message(STATUS "[ECM]     ECM_MODULE_PATH           = ${ECM_MODULE_PATH}")
+message(STATUS "[KDE]     KDE_INSTALL_BINDIR        = ${KDE_INSTALL_BINDIR}")
 message(STATUS "[CMAKE]   CMAKE_VERSION             = ${CMAKE_VERSION}")
 message(STATUS "[CMAKE]   CMAKE_PREFIX_PATH         = ${CMAKE_PREFIX_PATH}")
 message(STATUS "[SYSTEM]  (HOST) SYSTEM NAME        = ${CMAKE_HOST_SYSTEM_NAME}")
@@ -30,83 +37,25 @@ message(STATUS "[PROJECT] BUILD_TYPE                = ${CMAKE_BUILD_TYPE}")
 message(STATUS "[PROJECT] TOOLCHAIN_FILE            = ${CMAKE_TOOLCHAIN_FILE}")
 message(STATUS "[PROJECT] QT_HOST_PATH              = ${QT_HOST_PATH}")
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Svg Qml Quick QuickControls2)
-# find_package(KF6 REQUIRED COMPONENTS
-#     CoreAddons # For KAboutData
-#     KirigamiAddons # For KAboutData
-# )
-qt_standard_project_setup(REQUIRES 6.9)
-
-qt_add_executable(${CMAKE_PROJECT_NAME}
-    src/main.cpp
-    src/d2rloader.h src/d2rloader.cpp
-
-    src/profile.h
-    src/profilemanager.h src/profilemanager.cpp
-
-    src/gamemanager.h src/gamemanager.cpp
-    src/settingsmanager.h src/settingsmanager.cpp
-
-    src/book.h src/book.cpp
-    src/booklistmodel.h src/booklistmodel.cpp
-    src/booktablemodel.h src/booktablemodel.cpp
-
-    qml/qml.qrc
+find_package(Qt6 REQUIRED COMPONENTS
+    Core
+    Quick
+    Gui
+    QuickControls2
+    Widgets
 )
 
-qt_add_qml_module(${CMAKE_PROJECT_NAME}
-    URI ${CMAKE_PROJECT_NAME}
-    NO_PLUGIN
-    QML_FILES
-        qml/Main.qml
-        qml/Heading.qml
-        qml/AboutDialog.qml
-        qml/AccountTable.qml
-
-        qml/ktableview/private/TableCellDelegate.qml
-        qml/ktableview/private/HeaderDelegate.qml
-        qml/ktableview/private/AbstractTable.qml
-        qml/ktableview/private/AbstractHeaderComponent.qml
-        qml/ktableview/MyTableView.qml
-        qml/ktableview/HeaderComponent.qml
+find_package(KF6 REQUIRED COMPONENTS
+    Kirigami
+    KirigamiAddons
+    I18n
+    CoreAddons
+    QQC2DesktopStyle
+    IconThemes
 )
 
-target_link_libraries(${CMAKE_PROJECT_NAME}
-    PRIVATE Qt6::Core
-            Qt6::Widgets
-            Qt6::Quick
-            Qt6::QuickControls2
-)
+ecm_find_qmlmodule(org.kde.kirigami REQUIRED)
 
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE src/)
-target_compile_definitions(D2RLoader PUBLIC APP_NAME=\"${APP_NAME}\" APP_VERSION=\"${APP_VERSION}\")
+add_subdirectory(src)
 
-set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/bin"
-)
-
-# Output?
-install(TARGETS ${CMAKE_PROJECT_NAME}
-    BUNDLE DESTINATION "${CMAKE_SOURCE_DIR}/bin"
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-
-# include(GNUInstallDirs)
-install(TARGETS ${CMAKE_PROJECT_NAME}
-    BUNDLE DESTINATION .
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
-
-# Output?
-qt_generate_deploy_qml_app_script(
-    TARGET ${CMAKE_PROJECT_NAME}
-    OUTPUT_SCRIPT deploy_script
-    MACOS_BUNDLE_POST_BUILD
-    NO_UNSUPPORTED_PLATFORM_ERROR
-    DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
-)
-install(SCRIPT ${deploy_script})
-
-include(FeatureSummary)
 feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)

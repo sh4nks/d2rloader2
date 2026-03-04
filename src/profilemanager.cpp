@@ -2,6 +2,7 @@
 #include "profilemanager.h"
 #include <QJsonObject>
 #include <qjsonarray.h>
+#include <qjsondocument.h>
 
 /** *********************************
  *  ProfileManager Initizalization
@@ -102,6 +103,7 @@ bool ProfileManager::load(QString file_path)
  ** ********************************/
 QJsonDocument ProfileManager::toJson()
 {
+    QJsonDocument doc;
     // QJsonArray objs_array;
     // for(const auto item : _item_list)
     // {
@@ -111,13 +113,13 @@ QJsonDocument ProfileManager::toJson()
     //     json_obj.insert("score", item->score());
     //     json_obj.insert("checked", item->checked());
     //     json_obj.insert("filepath", item->filepath());
-    //
+
     //     objs_array.push_back(json_obj);
     // }
-    //
+
     // QJsonDocument doc(objs_array);
     // //qDebug() << doc.toJson();
-    // return doc;
+    return doc;
 }
 
 void ProfileManager::loadFromJson(QJsonDocument doc)

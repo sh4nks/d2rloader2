@@ -18,15 +18,15 @@ class SettingsManager: public QObject
 
     QSize m_appSize = QSize(1280, 720);
     QSize m_appPosition = QSize(64, 64);
-    QString m_appTheme = "THEME_DEFAULT";
-    QString m_profilePath = "";
-    QString m_handlePath = "";
-    QString m_gamePath = "";
-    QString m_wineprefixPath = "";
-    QString m_d2emuToken = "";
-    QString m_d2emuUser = "";
-    QString m_logPath = "";
-    QString m_logLevel = "INFO";
+    QString m_appTheme;
+    QString m_profilePath;
+    QString m_handlePath;
+    QString m_gamePath;
+    QString m_wineprefixPath;
+    QString m_d2emuToken;
+    QString m_d2emuUser;
+    QString m_logPath;
+    QString m_logLevel;
 
     // Singleton
     static SettingsManager *instance;

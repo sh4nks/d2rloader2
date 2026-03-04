@@ -31,7 +31,7 @@ public:
     Q_INVOKABLE void save(QString file_path);
     Q_INVOKABLE bool load(QString file_path);
 
-signals:
+Q_SIGNALS:
 
     // QML properties signals
     void itemChanged();

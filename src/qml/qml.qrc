@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Main.qml</file>
+        <file>Heading.qml</file>
+        <file>AboutDialog.qml</file>
+        <file>AccountTable.qml</file>
+    </qresource>
+</RCC>

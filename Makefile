@@ -4,14 +4,14 @@
 help: ## Displays this help message.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-prepare: ## Runs the development server with the development config
+prepare:
 	cmake -B build/
 
-build: ## Sorts the imports and reformats the code
-	cmake --build build/
+build:
+	cmake --build build/ -j 6
 
-run: ## Creates distribution packages (bdist_wheel, sdist)
-	./bin/D2RLoader
+run:
+	./build/bin/d2rloader
 
 clean: ## Remove unwanted stuff such as __pycache__, etc...
 	find . -name '*.pyc' -exec rm -f {} +

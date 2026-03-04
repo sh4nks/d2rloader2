@@ -22,12 +22,12 @@ public:
 
   explicit BookListModel(const QList<Book *> &books, QObject *parent = nullptr);
 
-  int rowCount(const QModelIndex &parent = QModelIndex()) const;
-  QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
+  int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+  QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
-protected:
-  QHash<int, QByteArray> roleNames() const;
+  protected:
+  QHash<int, QByteArray> roleNames() const override;
 
-private:
+  private:
   QList<Book *> m_books;
 };

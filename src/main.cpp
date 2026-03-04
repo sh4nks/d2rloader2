@@ -2,23 +2,23 @@
 #include "settingsmanager.h"
 #include <QApplication>
 #include <QGuiApplication>
-#include <QQmlApplicationEngine>
-#include <QQuickStyle>
-#include <QQmlContext>
-#include <QtQml>
 #include <QIcon>
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
+#include <QQuickStyle>
+#include <QtQml>
 #include <print>
+#include <qlogging.h>
+#include <qstylefactory.h>
 
 #include "book.h"
 #include "booklistmodel.h"
 #include "booktablemodel.h"
 
-
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
-    QGuiApplication app(argc, argv);
-    app.setApplicationName("D2RLoader");
-
+    QApplication app(argc, argv);
+    app.setApplicationName(QStringLiteral("D2RLoader"));
 
     D2RLoader *d2rloader = D2RLoader::getInstance();
 
@@ -32,23 +32,14 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    // QQuickStyle::setStyle("Fusion");
     if (qEnvironmentVariableIsEmpty("QT_QUICK_CONTROLS_STYLE")) {
         QQuickStyle::setStyle(QStringLiteral("org.kde.desktop"));
     }
     QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("kde")));
 
-    qmlRegisterUncreatableType<BookListModel>("BookListModel",
-                                              1,
-                                              0,
-                                              "BookRoles",
-                                              QStringLiteral("Cannot create instances of BookListModel"));
+    qmlRegisterUncreatableType<BookListModel>("BookListModel", 1, 0, "BookRoles", QStringLiteral("Cannot create instances of BookListModel"));
 
-    qmlRegisterUncreatableType<BookTableModel>("BookTableModel",
-                                               1,
-                                               0,
-                                               "BookRoles",
-                                               QStringLiteral("Cannot create instances of BookTableModel"));
+    qmlRegisterUncreatableType<BookTableModel>("BookTableModel", 1, 0, "BookRoles", QStringLiteral("Cannot create instances of BookTableModel"));
 
     QList<Book *> bookList;
     bookList.append(new Book(QStringLiteral("Harry Potter and the Philosopher's Stone"), QStringLiteral("J.K. Rowling"), 1997, 4.5));
@@ -80,18 +71,14 @@ int main(int argc, char* argv[])
     tableProxy->sort(BookTableModel::YearRole, Qt::AscendingOrder);
 
     QQmlApplicationEngine engine;
-    engine.rootContext()->setContextProperty("bookListModel", listProxy);
-    engine.rootContext()->setContextProperty("bookTableModel", tableProxy);
-
-    engine.rootContext()->setContextProperty("settingsManager", sm);
-    engine.rootContext()->setContextProperty("app", d2rloader);
-
+    engine.rootContext()->setContextProperty(QStringLiteral("bookListModel"), listProxy);
+    engine.rootContext()->setContextProperty(QStringLiteral("bookTableModel"), tableProxy);
+    engine.rootContext()->setContextProperty(QStringLiteral("settingsManager"), sm);
+    engine.rootContext()->setContextProperty(QStringLiteral("app"), d2rloader);
     qDebug() << engine.importPathList();
 
-
-    engine.addImportPath("qrc:/qml");
-    // _qmlAppEngine->load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
-    engine.loadFromModule("D2RLoader", "Main");
+    // engine.load(QUrl(QStringLiteral("qrc:/qml/Main.qml")));
+    engine.loadFromModule("org.someblocks.d2rloader", "Main");
     if (engine.rootObjects().isEmpty()) {
         return -1;
     }

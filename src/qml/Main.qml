@@ -2,10 +2,9 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Dialogs
 import org.kde.kirigami as Kirigami
+import org.kde.kirigamiaddons.tableview as Tables
 import BookTableModel
 import Qt.labs.qmlmodels
-
-import "ktableview" as D2R
 
 ApplicationWindow {
     id: mainWindow
@@ -82,18 +81,26 @@ ApplicationWindow {
     //     id: accountTable
     // }
 
-    D2R.MyTableView {
+    Tables.KTableView {
         id: bookTable
-        model: __exampleModel
+        model: bookTableModel
+        anchors.fill: parent
+        anchors.leftMargin: 0
+        anchors.rightMargin: 0
 
         interactive: false
         clip: true
-        alternatingRows: false
+        alternatingRows: true
 
         sortOrder: Qt.AscendingOrder
         sortRole: BookRoles.YearRole
 
+        onWidthChanged: Qt.callLater(table.forceLayout)
+
         onColumnClicked: function (index, headerComponent) {
+            console.log("bookTable: ", bookTable)
+            console.log("bookTable.table: ", )
+            console.log(index, headerComponent)
             if (bookTable.sortRole !== headerComponent.role) {
                 bookTable.sortRole = index;
                 bookTable.sortOrder = Qt.AscendingOrder;
@@ -105,6 +112,10 @@ ApplicationWindow {
 
             // After sorting we need update selection
             __resetSelection();
+        }
+
+        function getColumnWidth() {
+            return bookTable.width / 4
         }
 
         function __resetSelection() {
@@ -123,16 +134,18 @@ ApplicationWindow {
         }
 
         headerComponents: [
-            HeaderComponent {
-                width: 200
+            Tables.HeaderComponent {
+                width: bookTable.width / 4
                 title: "Book"
                 textRole: "title"
+                resizable: true
                 role: BookRoles.TitleRole
             },
-            HeaderComponent {
-                width: 200
+            Tables.HeaderComponent {
+                width: bookTable.width / 4
                 title: "Author"
                 textRole: "author"
+                resizable: true
                 role: BookRoles.AuthorRole
 
                 leading: Kirigami.Icon {
@@ -141,16 +154,18 @@ ApplicationWindow {
                     implicitHeight: implicitWidth
                 }
             },
-            HeaderComponent {
-                width: 100
+            Tables.HeaderComponent {
+                width: bookTable.width / 4
                 title: "Year"
                 textRole: "year"
+                resizable: true
                 role: BookRoles.YearRole
             },
-            HeaderComponent {
-                width: 100
+            Tables.HeaderComponent {
+                width: bookTable.width / 4
                 title: "Rating"
                 textRole: "rating"
+                resizable: true
                 role: BookRoles.RatingRole
 
                 leading: Kirigami.Icon {
@@ -162,146 +177,11 @@ ApplicationWindow {
         ]
     }
 
-    /*
-    TableView {
-        id: tableView
-        anchors.fill: parent
-        columnSpacing: 1
-        rowSpacing: 1
-        boundsBehavior: Flickable.StopAtBounds
-
-        columnWidthProvider: function (column) {
-            return tableView.model ? tableView.width / 5 : 0;
-        }
-
-        model: TableModel {
-            TableModelColumn {
-                display: "checked"
-            }
-            TableModelColumn {
-                display: "amount"
-            }
-            TableModelColumn {
-                display: "fruitType"
-            }
-            TableModelColumn {
-                display: "fruitName"
-            }
-            TableModelColumn {
-                display: "fruitPrice"
-            }
-
-            // Each row is one type of fruit that can be ordered
-            rows: [
-                {
-                    // Each property is one cell/column.
-                    checked: false,
-                    amount: 1,
-                    fruitType: "Apple",
-                    fruitName: "Granny Smith",
-                    fruitPrice: 1.50
-                },
-                {
-                    checked: true,
-                    amount: 4,
-                    fruitType: "Orange",
-                    fruitName: "Navel",
-                    fruitPrice: 2.50
-                },
-                {
-                    checked: false,
-                    amount: 1,
-                    fruitType: "Banana",
-                    fruitName: "Cavendish",
-                    fruitPrice: 3.50
-                }
-            ]
-        }
-        onWidthChanged: tableView.forceLayout()
-        delegate: Rectangle {
-            implicitWidth: tableView.columnWidthProvider(column)
-            implicitHeight: 50
-            border.width: 1
-
-            Text {
-                text: display
-                anchors.centerIn: parent
-            }
-        }
-        Row {
-            id: columnsHeader
-            y: tableView.contentY
-            z: 2
-            Repeater {
-                model: tableView.columns > 0 ? tableView.columns : 1
-                Rectangle {
-                    width: tableView.columnWidthProvider(modelData)
-                    height: 60
-                    clip: true
-
-                    Label {
-                        id: headerText
-                        width: parent.width
-                        color: SystemTheme.palette.windowText.color
-                        horizontalAlignment: Text.AlignHCenter
-                        verticalAlignment: Text.AlignVCenter
-                        text: tableView.model ? tableView.model.headerData(modelData, Qt.Horizontal) : 0
-                        elide: Text.ElideRight
-                        clip: true
-                    }
-                }
-            }
-        }
-    }
-    */
     AboutDialog {
         id: aboutDialog
     }
 
     FileDialog {
         id: fileOpenDialog
-    }
-
-    TableModel {
-        id: __exampleModel
-        TableModelColumn {
-            display: "title"
-        }
-        TableModelColumn {
-            display: "author"
-        }
-        TableModelColumn {
-            display: "year"
-        }
-        TableModelColumn {
-            display: "rating"
-        }
-
-        rows: [
-            {
-                title: "Harry Potter and the Philosopher's Stone",
-                author: "J.K. Rowling",
-                year: 1997,
-                rating: 4.5
-            },
-            {
-                title: "Harry Potter and the Philosopher's Stone",
-                author: "J.K. Rowling",
-                year: 1997,
-                rating: 4.5
-            },
-            {
-                title: "Harry Potter and the Philosopher's Stone",
-                author: "J.K. Rowling",
-                year: 1997,
-                rating: 4.5
-            },
-            {
-                title: "Harry Potter and the Philosopher's Stone",
-                author: "J.K. Rowling",
-                year: 1997,
-                rating: 4.5
-            },
-        ]
     }
 }
