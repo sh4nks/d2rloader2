@@ -22,10 +22,11 @@ ColumnLayout {
         Layout.fillWidth: true
 
         delegate: Rectangle {
+            id: headerDelegate
             required property var modelData
             required property int column
 
-            implicitWidth: tableView.columnWidthProvider(column)
+            implicitWidth: tableView.columnWidthProvider(headerDelegate.column)
             implicitHeight: Kirigami.Units.gridUnit * 2
             color: Kirigami.Theme.alternateBackgroundColor
 
@@ -39,12 +40,12 @@ ColumnLayout {
 
             Label {
                 anchors.fill: parent
-                anchors.leftMargin: (column === 1 || column === 4) ? Kirigami.Units.gridUnit : Kirigami.Units.smallSpacing
-                anchors.rightMargin: (column === 1 || column === 4) ? Kirigami.Units.gridUnit : Kirigami.Units.smallSpacing
-                text: modelData
+                anchors.leftMargin: (headerDelegate.column === 1 || headerDelegate.column === 4) ? Kirigami.Units.gridUnit : Kirigami.Units.smallSpacing
+                anchors.rightMargin: (headerDelegate.column === 1 || headerDelegate.column === 4) ? Kirigami.Units.gridUnit : Kirigami.Units.smallSpacing
+                text: headerDelegate.modelData
                 font.bold: true
                 color: Kirigami.Theme.textColor
-                horizontalAlignment: (column === 1 || column === 4) ? Text.AlignLeft : Text.AlignHCenter
+                horizontalAlignment: (headerDelegate.column === 1 || headerDelegate.column === 4) ? Text.AlignLeft : Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 elide: Text.ElideRight
             }
@@ -129,11 +130,12 @@ ColumnLayout {
         }
 
         delegate: Rectangle {
+            id: cellDelegate
             required property var display
             required property int column
             required property int row
 
-            implicitWidth: tableView.columnWidthProvider(column)
+            implicitWidth: tableView.columnWidthProvider(cellDelegate.column)
             implicitHeight: Kirigami.Units.gridUnit * 2.5
             color: Kirigami.Theme.backgroundColor
 
@@ -147,68 +149,77 @@ ColumnLayout {
 
             // Column 0: Status Indicator (Circle)
             Rectangle {
-                visible: column === 0
+                visible: cellDelegate.column === 0
                 anchors.centerIn: parent
                 width: Kirigami.Units.gridUnit * 0.6
                 height: width
                 radius: width / 2
-                color: display === "Running" ? Kirigami.Theme.positiveTextColor : "gray"
-
-                // Kirigami.ToolTip {
-                //     text: display
-                // }
+                color: cellDelegate.display === "Running" ? Kirigami.Theme.positiveTextColor : "gray"
             }
 
             // Columns 1 & 4: Standard text display (Account, Launch Parameters)
             Label {
-                visible: column === 1 || column === 4
+                visible: cellDelegate.column === 1 || cellDelegate.column === 4
                 anchors.fill: parent
+                anchors.topMargin: Kirigami.Units.gridUnit * 0.4
+                anchors.bottomMargin: Kirigami.Units.gridUnit * 0.4
                 anchors.leftMargin: Kirigami.Units.gridUnit
                 anchors.rightMargin: Kirigami.Units.gridUnit
-                text: display
+                text: cellDelegate.display
                 color: Kirigami.Theme.textColor
+                font.family: cellDelegate.column === 4 ? "monospace" : undefined
                 verticalAlignment: Text.AlignVCenter
                 elide: Text.ElideRight
             }
 
             // Column 2: ComboBox for Auth Method
             ComboBox {
-                visible: column === 2
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
+                id: authComboBox
+                Kirigami.Theme.colorSet: Kirigami.Theme.Button
+                Kirigami.Theme.inherit: false
+                visible: cellDelegate.column === 2
+                anchors.fill: parent
+                anchors.topMargin: Kirigami.Units.gridUnit * 0.4
+                anchors.bottomMargin: Kirigami.Units.gridUnit * 0.4
                 anchors.leftMargin: Kirigami.Units.smallSpacing
                 anchors.rightMargin: Kirigami.Units.smallSpacing
                 model: ["Token", "Password", "Steam"]
-                currentIndex: model.indexOf(display)
+                currentIndex: authComboBox.model.indexOf(cellDelegate.display)
             }
 
             // Column 3: ComboBox for Region
             ComboBox {
-                visible: column === 3
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
+                id: regionComboBox
+                Kirigami.Theme.colorSet: Kirigami.Theme.Button
+                Kirigami.Theme.inherit: false
+                visible: cellDelegate.column === 3
+                anchors.fill: parent
+                anchors.topMargin: Kirigami.Units.gridUnit * 0.4
+                anchors.bottomMargin: Kirigami.Units.gridUnit * 0.4
                 anchors.leftMargin: Kirigami.Units.smallSpacing
                 anchors.rightMargin: Kirigami.Units.smallSpacing
                 model: ["Europe", "Americas", "Asia"]
-                currentIndex: model.indexOf(display)
+                currentIndex: regionComboBox.model.indexOf(cellDelegate.display)
             }
 
             // Column 5: Action Button
             Button {
                 id: actionButton
-                visible: column === 5
-                anchors.verticalCenter: parent.verticalCenter
+                Kirigami.Theme.colorSet: Kirigami.Theme.Button
+                Kirigami.Theme.inherit: false
+                visible: cellDelegate.column === 5
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
+                anchors.topMargin: Kirigami.Units.gridUnit * 0.4
+                anchors.bottomMargin: Kirigami.Units.gridUnit * 0.4
                 width: Kirigami.Units.gridUnit * 6
-                height: parent.height - Kirigami.Units.gridUnit * 0.8
 
-                text: parent.display // "Start" or "Stop"
-                icon.name: parent.display === "Start" ? "media-playback-playing" : "media-playback-stopped"
+                text: cellDelegate.display // "Start" or "Stop"
+                icon.name: cellDelegate.display === "Start" ? "media-playback-start" : "media-playback-stop"
 
                 background: Rectangle {
-                    color: actionButton.text === "Start" ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.negativeTextColor
+                    color: actionButton.text === "Start" ? Kirigami.Theme.positiveBackgroundColor : Kirigami.Theme.negativeBackgroundColor
                     radius: 4
                     opacity: actionButton.pressed ? 0.8 : (actionButton.hovered ? 0.9 : 1.0)
                 }
@@ -220,8 +231,8 @@ ColumnLayout {
                     }
                     Kirigami.Icon {
                         source: actionButton.icon.name
-                        Layout.preferredWidth: Kirigami.Units.gridUnit
-                        Layout.preferredHeight: Kirigami.Units.gridUnit
+                        Layout.preferredWidth: Kirigami.Units.gridUnit * 0.8
+                        Layout.preferredHeight: Kirigami.Units.gridUnit * 0.8
                         Layout.alignment: Qt.AlignVCenter
                         color: Kirigami.Theme.highlightedTextColor
                     }
@@ -229,7 +240,6 @@ ColumnLayout {
                         text: actionButton.text
                         Layout.alignment: Qt.AlignVCenter
                         color: Kirigami.Theme.highlightedTextColor
-                        font.bold: true
                     }
                     Item {
                         Layout.fillWidth: true
