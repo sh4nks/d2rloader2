@@ -17,7 +17,6 @@ target_sources(d2rloader
     settingsmanager.h settingsmanager.cpp
 
     book.h book.cpp
-    booklistmodel.h booklistmodel.cpp
     booktablemodel.h booktablemodel.cpp
 )
 

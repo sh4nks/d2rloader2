@@ -12,7 +12,6 @@
 #include <qstylefactory.h>
 
 #include "book.h"
-#include "booklistmodel.h"
 #include "booktablemodel.h"
 
 int main(int argc, char *argv[])
@@ -37,8 +36,6 @@ int main(int argc, char *argv[])
     }
     QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("kde")));
 
-    qmlRegisterUncreatableType<BookListModel>("BookListModel", 1, 0, "BookRoles", QStringLiteral("Cannot create instances of BookListModel"));
-
     qmlRegisterUncreatableType<BookTableModel>("BookTableModel", 1, 0, "BookRoles", QStringLiteral("Cannot create instances of BookTableModel"));
 
     QList<Book *> bookList;
@@ -57,13 +54,7 @@ int main(int argc, char *argv[])
     bookList.append(new Book(QStringLiteral("Ulysses"), QStringLiteral("James Joyce"), 1922, 3.7));
     bookList.append(new Book(QStringLiteral("One Hundred Years of Solitude"), QStringLiteral("Gabriel Garcia Marquez"), 1967, 4.4));
 
-    BookListModel *bookListModel = new BookListModel(bookList, &app);
     BookTableModel *bookTableModel = new BookTableModel(bookList, &app);
-
-    QSortFilterProxyModel *listProxy = new QSortFilterProxyModel(&app);
-    listProxy->setSourceModel(bookListModel);
-    listProxy->setSortRole(BookListModel::YearRole);
-    listProxy->sort(0, Qt::AscendingOrder);
 
     QSortFilterProxyModel *tableProxy = new QSortFilterProxyModel(&app);
     tableProxy->setSourceModel(bookTableModel);
@@ -71,7 +62,6 @@ int main(int argc, char *argv[])
     tableProxy->sort(BookTableModel::YearRole, Qt::AscendingOrder);
 
     QQmlApplicationEngine engine;
-    engine.rootContext()->setContextProperty(QStringLiteral("bookListModel"), listProxy);
     engine.rootContext()->setContextProperty(QStringLiteral("bookTableModel"), tableProxy);
     engine.rootContext()->setContextProperty(QStringLiteral("settingsManager"), sm);
     engine.rootContext()->setContextProperty(QStringLiteral("app"), d2rloader);
