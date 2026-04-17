@@ -4,5 +4,8 @@
         <file>Heading.qml</file>
         <file>AboutDialog.qml</file>
         <file>AccountTable.qml</file>
+        <file>TerrorZones.qml</file>
+        <file>DiabloClone.qml</file>
+        <file>ApplicationLog.qml</file>
     </qresource>
 </RCC>

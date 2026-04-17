@@ -26,6 +26,9 @@ ecm_target_qml_sources(d2rloader
     qml/Heading.qml
     qml/AboutDialog.qml
     qml/AccountTable.qml
+    qml/TerrorZones.qml
+    qml/DiabloClone.qml
+    qml/ApplicationLog.qml
 )
 
 target_link_libraries(d2rloader

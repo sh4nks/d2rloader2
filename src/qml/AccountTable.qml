@@ -8,12 +8,13 @@ import org.kde.kirigami as Kirigami
 
 Kirigami.Card {
     id: root
-    anchors.fill: parent
-    anchors.margins: Kirigami.Units.smallSpacing
+    Layout.fillWidth: true
+    Layout.fillHeight: true
+    Layout.margins: Kirigami.Units.gridUnit
 
     header: RowLayout {
         Layout.fillWidth: true
-        Layout.margins: Kirigami.Units.smallSpacing
+        Layout.margins: 0
 
         Kirigami.Heading {
             text: "Accounts"
@@ -40,6 +41,7 @@ Kirigami.Card {
 
     contentItem: ColumnLayout {
         spacing: 0
+        Layout.margins: 0
 
         // Set Kirigami Theme properties for the table area
         Kirigami.Theme.inherit: true

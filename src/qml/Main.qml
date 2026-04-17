@@ -1,16 +1,16 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
+import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Dialogs
 import org.kde.kirigami as Kirigami
-import org.kde.kirigamiaddons.tableview as Tables
-import BookTableModel
-import Qt.labs.qmlmodels
 
 ApplicationWindow {
     id: mainWindow
     visible: true
     width: 800
-    height: 600
+    height: 800
     title: `${Application.name}`
 
     menuBar: MenuBar {
@@ -35,7 +35,7 @@ ApplicationWindow {
             MenuItem {
                 text: "&Exit"
                 icon.name: "application-exit"
-                onTriggered: fileOpenDialog.open()
+                onTriggered: Qt.quit()
             }
         }
 
@@ -77,8 +77,56 @@ ApplicationWindow {
         }
     }
 
-    AccountTable {
-        id: accountTable
+    ColumnLayout {
+        anchors.fill: parent
+        spacing: 0
+
+        // Fixed Upper Section: Accounts Table
+        AccountTable {
+            id: accountTable
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+        }
+
+        // TabBar beneath the accounts table
+        TabBar {
+            id: tabBar
+            Layout.fillWidth: true
+            currentIndex: stackLayout.currentIndex
+
+            TabButton {
+                text: "Terror Zones"
+                icon.name: "view-calendar-day"
+            }
+            TabButton {
+                text: "Diablo Clone"
+                icon.name: "view-media-artist"
+            }
+            TabButton {
+                text: "Application Log"
+                icon.name: "utilities-log-viewer"
+            }
+        }
+
+        // Content Area for Tabs
+        StackLayout {
+            id: stackLayout
+            Layout.fillWidth: true
+            Layout.preferredHeight: Kirigami.Units.gridUnit * 5
+            currentIndex: tabBar.currentIndex
+
+            TerrorZones {
+                id: terrorZonesTab
+            }
+
+            DiabloClone {
+                id: diabloCloneTab
+            }
+
+            ApplicationLog {
+                id: applicationLogTab
+            }
+        }
     }
 
     AboutDialog {
