@@ -10,10 +10,27 @@ Kirigami.Card {
     Layout.fillWidth: true
     Layout.fillHeight: true
 
-    header: Kirigami.Heading {
-        text: "Terror Zones"
-        level: 2
+    header: RowLayout {
+        Layout.fillWidth: true
         Layout.margins: Kirigami.Units.smallSpacing
+
+        Kirigami.Heading {
+            text: "Terror Zones"
+            level: 2
+            Layout.alignment: Qt.AlignVCenter
+        }
+
+        Item {
+            Layout.fillWidth: true
+        }
+
+        Button {
+            text: "Refresh"
+            icon.name: "view-refresh"
+            onClicked: {
+                // Refresh logic
+            }
+        }
     }
 
     contentItem: ColumnLayout {
@@ -23,39 +40,64 @@ Kirigami.Card {
         Kirigami.Theme.colorSet: Kirigami.Theme.View
         Kirigami.Theme.inherit: true
 
-        RowLayout {
+        // --- Current Terror Zone Section ---
+        ColumnLayout {
+            spacing: Kirigami.Units.smallSpacing
             Layout.fillWidth: true
-            Layout.leftMargin: Kirigami.Units.smallSpacing
-            Layout.rightMargin: Kirigami.Units.smallSpacing
-            spacing: Kirigami.Units.gridUnit
 
-            Kirigami.Icon {
-                source: "view-calendar-day"
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 3
-                Layout.preferredHeight: Kirigami.Units.gridUnit * 3
+            Label {
+                text: "Current Terror Zone:"
+                font.bold: true
+                opacity: 0.7
                 color: Kirigami.Theme.textColor
             }
 
-            ColumnLayout {
-                Label {
-                    text: "Current Terror Zone:"
-                    font.bold: true
-                    color: Kirigami.Theme.textColor
-                }
-                Label {
-                    text: "The Chaos Sanctuary"
-                    font.pointSize: 14
-                    color: Kirigami.Theme.textColor
-                }
-            }
-
-            Item {
+            Rectangle {
                 Layout.fillWidth: true
-            }
+                implicitHeight: Kirigami.Units.gridUnit * 3.5
+                color: Kirigami.Theme.alternateBackgroundColor
+                border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.1)
+                border.width: 1
+                radius: 6
 
-            Label {
-                text: "Ends in: 45m"
-                color: Kirigami.Theme.positiveTextColor
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: Kirigami.Units.gridUnit
+                    anchors.rightMargin: Kirigami.Units.gridUnit
+                    spacing: Kirigami.Units.gridUnit
+
+                    // Time Badge
+                    Rectangle {
+                        color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.1)
+                        radius: 4
+                        Layout.preferredWidth: Kirigami.Units.gridUnit * 4
+                        Layout.preferredHeight: Kirigami.Units.gridUnit * 1.8
+
+                        Label {
+                            anchors.centerIn: parent
+                            text: "13:30"
+                            font.bold: true
+                            font.family: "monospace"
+                            color: Kirigami.Theme.positiveTextColor
+                        }
+                    }
+
+                    Kirigami.Icon {
+                        source: "go-next"
+                        Layout.preferredWidth: Kirigami.Units.smallSpacing * 2
+                        Layout.preferredHeight: Kirigami.Units.smallSpacing * 2
+                        opacity: 0.5
+                        color: Kirigami.Theme.textColor
+                    }
+
+                    Label {
+                        text: "The Chaos Sanctuary"
+                        font.pointSize: 12
+                        font.weight: Font.Medium
+                        color: Kirigami.Theme.textColor
+                        Layout.fillWidth: true
+                    }
+                }
             }
         }
 
@@ -63,48 +105,69 @@ Kirigami.Card {
             Layout.fillWidth: true
         }
 
-        Label {
-            text: "Next Predicted Zones:"
-            font.bold: true
-            color: Kirigami.Theme.textColor
-        }
-
-        ListView {
+        // --- Next Predicted Zone Section ---
+        ColumnLayout {
+            spacing: Kirigami.Units.smallSpacing
             Layout.fillWidth: true
-            Layout.fillHeight: true
-            clip: true
-            model: [
-                {
-                    "zone": "Tal Rasha's Tombs",
-                    "time": "14:00"
-                },
-                {
-                    "zone": "Cows",
-                    "time": "15:00"
-                },
-                {
-                    "zone": "Durance of Hate",
-                    "time": "16:00"
-                }
-            ]
-            delegate: ItemDelegate {
-                id: zoneDelegate
-                required property var modelData
-                width: ListView.view.width
-                background: null
-                contentItem: RowLayout {
-                    Label {
-                        text: zoneDelegate.modelData.time ?? ""
-                        color: Kirigami.Theme.textColor
-                        Layout.preferredWidth: Kirigami.Units.gridUnit * 3
+
+            Label {
+                text: "Next Predicted Zone:"
+                font.bold: true
+                opacity: 0.7
+                color: Kirigami.Theme.textColor
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: Kirigami.Units.gridUnit * 3.5
+                color: Kirigami.Theme.alternateBackgroundColor
+                border.color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.1)
+                border.width: 1
+                radius: 6
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: Kirigami.Units.gridUnit
+                    anchors.rightMargin: Kirigami.Units.gridUnit
+                    spacing: Kirigami.Units.gridUnit
+
+                    // Time Badge
+                    Rectangle {
+                        color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.1)
+                        radius: 4
+                        Layout.preferredWidth: Kirigami.Units.gridUnit * 4
+                        Layout.preferredHeight: Kirigami.Units.gridUnit * 1.8
+
+                        Label {
+                            anchors.centerIn: parent
+                            text: "14:00"
+                            font.bold: true
+                            font.family: "monospace"
+                            color: Kirigami.Theme.textColor
+                        }
                     }
+
+                    Kirigami.Icon {
+                        source: "go-next"
+                        Layout.preferredWidth: Kirigami.Units.smallSpacing * 2
+                        Layout.preferredHeight: Kirigami.Units.smallSpacing * 2
+                        opacity: 0.5
+                        color: Kirigami.Theme.textColor
+                    }
+
                     Label {
-                        text: zoneDelegate.modelData.zone ?? ""
+                        text: "Tal Rasha's Tombs"
+                        font.pointSize: 12
+                        font.weight: Font.Medium
                         color: Kirigami.Theme.textColor
                         Layout.fillWidth: true
                     }
                 }
             }
+        }
+
+        Item {
+            Layout.fillHeight: true
         }
     }
 }

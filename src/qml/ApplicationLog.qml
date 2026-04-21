@@ -26,8 +26,8 @@ Kirigami.Card {
         }
 
         Button {
-            text: "Clear Log"
-            icon.name: "edit-clear-all"
+            text: "Clear Logs"
+            icon.name: "edit-clear-list"
             onClicked: logModel.clear()
         }
     }

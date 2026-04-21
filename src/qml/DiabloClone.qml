@@ -10,10 +10,27 @@ Kirigami.Card {
     Layout.fillWidth: true
     Layout.fillHeight: true
 
-    header: Kirigami.Heading {
-        text: "Diablo Clone Tracker"
-        level: 2
+    header: RowLayout {
+        Layout.fillWidth: true
         Layout.margins: Kirigami.Units.smallSpacing
+
+        Kirigami.Heading {
+            text: "Diablo Clone Tracker"
+            level: 2
+            Layout.alignment: Qt.AlignVCenter
+        }
+
+        Item {
+            Layout.fillWidth: true
+        }
+
+        Button {
+            text: "Refresh"
+            icon.name: "view-refresh"
+            onClicked: {
+                // Refresh logic
+            }
+        }
     }
 
     contentItem: ColumnLayout {

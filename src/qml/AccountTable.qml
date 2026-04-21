@@ -10,7 +10,7 @@ Kirigami.Card {
     id: root
     Layout.fillWidth: true
     Layout.fillHeight: true
-    Layout.margins: Kirigami.Units.gridUnit
+    Layout.margins: 0
 
     header: RowLayout {
         Layout.fillWidth: true
