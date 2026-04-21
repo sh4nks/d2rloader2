@@ -19,7 +19,7 @@ ApplicationWindow {
             MenuItem {
                 text: "&Settings"
                 icon.name: "settings-configure"
-                onTriggered: fileOpenDialog.open()
+                onTriggered: settingsWindow.show()
             }
             MenuItem {
                 text: "&Load Settings..."
@@ -127,6 +127,10 @@ ApplicationWindow {
                 id: applicationLogTab
             }
         }
+    }
+
+    SettingsWindow {
+        id: settingsWindow
     }
 
     AboutDialog {

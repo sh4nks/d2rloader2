@@ -29,6 +29,10 @@ ecm_target_qml_sources(d2rloader
     qml/TerrorZones.qml
     qml/DiabloClone.qml
     qml/ApplicationLog.qml
+    qml/SettingsWindow.qml
+    qml/ApplicationSettingsPage.qml
+    qml/AccountSettingsPage.qml
+    qml/DiabloCloneSettingsPage.qml
 )
 
 target_link_libraries(d2rloader

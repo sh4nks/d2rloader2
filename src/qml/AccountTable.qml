@@ -8,33 +8,38 @@ import org.kde.kirigami as Kirigami
 
 Kirigami.Card {
     id: root
+    padding: 0
     Layout.fillWidth: true
     Layout.fillHeight: true
     Layout.margins: 0
 
-    header: RowLayout {
-        Layout.fillWidth: true
-        Layout.margins: 0
+    header: Item {
+        implicitHeight: headerLayout.implicitHeight + Kirigami.Units.smallSpacing * 2
+        RowLayout {
+            id: headerLayout
+            anchors.fill: parent
+            anchors.leftMargin: Kirigami.Units.smallSpacing * 2
+            anchors.rightMargin: Kirigami.Units.smallSpacing * 2
+            anchors.topMargin: Kirigami.Units.smallSpacing * 2
 
-        Kirigami.Heading {
-            text: "Accounts"
-            level: 2
-            Layout.alignment: Qt.AlignVCenter
-            topPadding: 0
-            bottomPadding: 0
-        }
+            Kirigami.Heading {
+                text: "Accounts"
+                level: 2
+                Layout.alignment: Qt.AlignVCenter
+            }
 
-        Item {
-            Layout.fillWidth: true
-        }
+            Item {
+                Layout.fillWidth: true
+            }
 
-        Button {
-            text: "Add Account"
-            icon.name: "list-add"
-            Kirigami.Theme.colorSet: Kirigami.Theme.Button
-            Kirigami.Theme.inherit: false
-            onClicked: {
-                // Logic to add a new account would go here
+            Button {
+                text: "Add Account"
+                icon.name: "list-add"
+                Kirigami.Theme.colorSet: Kirigami.Theme.Button
+                Kirigami.Theme.inherit: false
+                onClicked: {
+                    // Logic to add a new account would go here
+                }
             }
         }
     }

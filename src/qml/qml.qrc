@@ -7,5 +7,9 @@
         <file>TerrorZones.qml</file>
         <file>DiabloClone.qml</file>
         <file>ApplicationLog.qml</file>
+        <file>SettingsWindow.qml</file>
+        <file>ApplicationSettingsPage.qml</file>
+        <file>AccountSettingsPage.qml</file>
+        <file>DiabloCloneSettingsPage.qml</file>
     </qresource>
 </RCC>
