@@ -11,5 +11,6 @@
         <file>ApplicationSettingsPage.qml</file>
         <file>AccountSettingsPage.qml</file>
         <file>DiabloCloneSettingsPage.qml</file>
+        <file>AccountEditorPage.qml</file>
     </qresource>
 </RCC>

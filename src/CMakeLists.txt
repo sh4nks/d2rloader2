@@ -33,6 +33,7 @@ ecm_target_qml_sources(d2rloader
     qml/ApplicationSettingsPage.qml
     qml/AccountSettingsPage.qml
     qml/DiabloCloneSettingsPage.qml
+    qml/AccountEditorPage.qml
 )
 
 target_link_libraries(d2rloader
