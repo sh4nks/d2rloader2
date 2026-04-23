@@ -10,6 +10,9 @@ Kirigami.Card {
     id: root
     padding: 0
     signal settingsClicked
+    signal addAccountClicked
+    signal editAccountClicked(var accountData)
+
     Layout.fillWidth: true
     Layout.fillHeight: true
     Layout.margins: 0
@@ -38,9 +41,7 @@ Kirigami.Card {
                 icon.name: "list-add"
                 Kirigami.Theme.colorSet: Kirigami.Theme.Button
                 Kirigami.Theme.inherit: false
-                onClicked: {
-                    // Logic to add a new account would go here
-                }
+                onClicked: root.addAccountClicked()
             }
 
             Button {
@@ -118,6 +119,7 @@ Kirigami.Card {
             onWidthChanged: tableView.forceLayout()
 
             model: TableModel {
+                id: tableModel
                 TableModelColumn {
                     display: "status"
                 }
@@ -189,6 +191,13 @@ Kirigami.Card {
                     anchors.bottom: parent.bottom
                     height: 1
                     color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.1)
+                }
+
+                TapHandler {
+                    onDoubleTapped: {
+                        let rowData = tableModel.rows[cellDelegate.row];
+                        root.editAccountClicked(rowData);
+                    }
                 }
 
                 // Column 0: Status Indicator (Circle)
@@ -292,7 +301,7 @@ Kirigami.Card {
                     }
 
                     onClicked: {
-                        // Logic to toggle state would go here
+                        // Logic to toggle state
                     }
                 }
             }

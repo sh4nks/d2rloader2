@@ -11,11 +11,32 @@ FormCard.FormCardPage {
 
     title: "Accounts"
 
+    /**
+     * Property used to pass data when navigating from outside the module.
+     * This mimics the pattern used in NeoChat for opening specific sub-pages.
+     */
+    property var initialAccountData
+
+    onInitialAccountDataChanged: if (initialAccountData) {
+        initialAccountTimer.restart();
+    }
+
+    Timer {
+        id: initialAccountTimer
+        interval: 10
+        running: false
+        onTriggered: {
+            root.QQC2.ApplicationWindow.window.pageStack.layers.push(accountEditorComponent, root.initialAccountData);
+            root.initialAccountData = null;
+        }
+    }
+
     FormCard.FormHeader {
-        title: "Managed Accounts"
+        title: "Accounts"
     }
 
     FormCard.FormCard {
+        // Mocking the account model for the UI prototype
         Repeater {
             model: 4
             delegate: FormCard.AbstractFormDelegate {
@@ -26,12 +47,21 @@ FormCard.FormCardPage {
                 readonly property string region: "Europe"
                 readonly property string authMethod: ["Token", "Token", "Password", "Steam"][accountDelegate.index]
 
-                onClicked: root.Kirigami.PageStack.pageStack.push(accountEditorComponent, {
+                onClicked: root.QQC2.ApplicationWindow.window.pageStack.layers.push(accountEditorComponent, {
                     isNew: false,
                     accountName: accountDelegate.accountName,
                     authMethod: accountDelegate.authMethod,
                     region: accountDelegate.region
                 })
+
+                TapHandler {
+                    onDoubleTapped: root.QQC2.ApplicationWindow.window.pageStack.layers.push(accountEditorComponent, {
+                        isNew: false,
+                        accountName: accountDelegate.accountName,
+                        authMethod: accountDelegate.authMethod,
+                        region: accountDelegate.region
+                    })
+                }
 
                 contentItem: RowLayout {
                     spacing: Kirigami.Units.largeSpacing
@@ -69,14 +99,14 @@ FormCard.FormCardPage {
                             icon.name: "arrow-up"
                             enabled: accountDelegate.index > 0
                             onClicked: {
-                                // Logic to move account up
+                                // Logic to move account up would go here
                             }
                         }
                         QQC2.ToolButton {
                             icon.name: "arrow-down"
                             enabled: accountDelegate.index < 3
                             onClicked: {
-                                // Logic to move account down
+                                // Logic to move account down would go here
                             }
                         }
                     }
@@ -84,7 +114,7 @@ FormCard.FormCardPage {
                     QQC2.ToolButton {
                         icon.name: "edit-delete"
                         onClicked: {
-                            // Logic to remove account
+                            // Logic to remove account would go here
                         }
                     }
 
@@ -103,7 +133,7 @@ FormCard.FormCardPage {
             id: addAccountDelegate
             text: "Add Account"
             icon.name: "list-add"
-            onClicked: root.Kirigami.PageStack.pageStack.push(accountEditorComponent, {
+            onClicked: root.QQC2.ApplicationWindow.window.pageStack.layers.push(accountEditorComponent, {
                 isNew: true
             })
         }

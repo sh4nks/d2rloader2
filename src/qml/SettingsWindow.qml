@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import org.kde.kirigami as Kirigami
 import org.kde.kirigamiaddons.settings as KirigamiSettings
 
 KirigamiSettings.ConfigurationView {
@@ -19,14 +18,76 @@ KirigamiSettings.ConfigurationView {
         KirigamiSettings.ConfigurationModule {
             moduleId: "accounts"
             text: "Accounts"
-            icon.name: "user-identity"
+            icon.name: "system-users"
             page: () => Qt.createComponent("org.someblocks.d2rloader", "AccountSettingsPage")
         },
         KirigamiSettings.ConfigurationModule {
-            moduleId: "dclone"
-            text: "Diablo Clone"
-            icon.name: "view-media-artist"
+            moduleId: "game_settings"
+            text: "Game Settings"
+            icon.name: "folder-games-symbolic"
+            page: () => Qt.createComponent("org.someblocks.d2rloader", "GameSettingsPage")
+        },
+        KirigamiSettings.ConfigurationModule {
+            moduleId: "live_info"
+            text: "DClone & TZ Info"
+            icon.name: "internet-services"
             page: () => Qt.createComponent("org.someblocks.d2rloader", "DiabloCloneSettingsPage")
+        },
+        KirigamiSettings.ConfigurationModule {
+            moduleId: "about"
+            text: "About D2RLoader"
+            icon.name: "help-about"
+            category: "About"
+            page: () => Qt.createComponent("org.kde.kirigamiaddons.formcard", "AboutPage")
         }
     ]
+
+    /**
+     * Opens a specific module with the provided initial properties.
+     *
+     * @param defaultModule The ID of the module to open.
+     * @param initialProperties A JavaScript object containing the properties to pass to the module's page.
+     */
+    function openWithInitialProperties(defaultModule, initialProperties) {
+        let module = null;
+        for (let i = 0; i < modules.length; i++) {
+            if (modules[i].moduleId === defaultModule) {
+                module = modules[i];
+                break;
+            }
+        }
+
+        if (module) {
+            module.initialProperties = () => {
+                return initialProperties;
+            };
+        }
+        root.open(defaultModule);
+    }
+
+    /**
+     * Convenience method to open the account editor by navigating to the Accounts module
+     * and passing the account data via initialProperties.
+     *
+     * @param accountData Data for the account to edit, or null for a new account.
+     */
+    function openAccountEditor(accountData = null) {
+        let props = {
+            isNew: true
+        };
+
+        if (accountData) {
+            props = {
+                isNew: false,
+                accountName: accountData.account || "",
+                authMethod: accountData.authMethod || "Token",
+                region: accountData.region || "Europe",
+                launchParameters: accountData.launchParameters || "-w"
+            };
+        }
+
+        root.openWithInitialProperties("accounts", {
+            initialAccountData: props
+        });
+    }
 }

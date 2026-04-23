@@ -4,6 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Dialogs
+import QtQuick.Window
 import org.kde.kirigami as Kirigami
 
 Kirigami.ApplicationWindow {
@@ -22,32 +23,11 @@ Kirigami.ApplicationWindow {
                 onTriggered: settingsWindow.open()
             }
             MenuItem {
-                text: "&Load Settings..."
-                icon.name: "document-open"
-                onTriggered: fileOpenDialog.open()
-            }
-            MenuItem {
                 text: "&Save Settings..."
                 icon.name: "document-save"
                 onTriggered: fileOpenDialog.open()
             }
             MenuSeparator {}
-            MenuItem {
-                text: "&Exit"
-                icon.name: "application-exit"
-                onTriggered: Qt.quit()
-            }
-        }
-
-        Menu {
-            title: "&Account"
-
-            MenuItem {
-                text: "&Add Account"
-                icon.name: "list-add-user"
-                onTriggered: fileOpenDialog.open()
-            }
-
             MenuItem {
                 text: "&Load Account Settings..."
                 icon.name: "document-open"
@@ -58,8 +38,13 @@ Kirigami.ApplicationWindow {
                 icon.name: "username-copy"
                 onTriggered: fileOpenDialog.open()
             }
+            MenuSeparator {}
+            MenuItem {
+                text: "&Exit"
+                icon.name: "application-exit"
+                onTriggered: Qt.quit()
+            }
         }
-
         Menu {
             title: "&Help"
 
@@ -87,6 +72,13 @@ Kirigami.ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
             onSettingsClicked: settingsWindow.open()
+            onAddAccountClicked: {
+                settingsWindow.openAccountEditor();
+            }
+            onEditAccountClicked: accountData => {
+                console.log("accountData", accountData);
+                settingsWindow.openAccountEditor(accountData);
+            }
         }
 
         // TabBar beneath the accounts table
@@ -96,14 +88,17 @@ Kirigami.ApplicationWindow {
             currentIndex: stackLayout.currentIndex
 
             TabButton {
+                implicitHeight: Kirigami.Units.gridUnit * 2
                 text: "Terror Zones"
                 icon.name: "view-calendar-day"
             }
             TabButton {
+                implicitHeight: Kirigami.Units.gridUnit * 2
                 text: "Diablo Clone"
                 icon.name: "view-media-artist"
             }
             TabButton {
+                implicitHeight: Kirigami.Units.gridUnit * 2
                 text: "Application Log"
                 icon.name: "utilities-log-viewer"
             }

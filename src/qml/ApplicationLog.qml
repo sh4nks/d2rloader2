@@ -109,6 +109,8 @@ Kirigami.Card {
                             Label {
                                 text: logDelegate.level
                                 color: {
+                                    if (logDelegate.level === "DEBUG")
+                                        return Kirigami.Theme.disabledTextColor;
                                     if (logDelegate.level === "ERROR")
                                         return Kirigami.Theme.negativeTextColor;
                                     if (logDelegate.level === "WARNING")
@@ -116,6 +118,7 @@ Kirigami.Card {
                                     return Kirigami.Theme.positiveTextColor;
                                 }
                                 font.bold: true
+                                font.family: "monospace"
                                 Layout.preferredWidth: Kirigami.Units.gridUnit * 4
                             }
 
@@ -123,6 +126,7 @@ Kirigami.Card {
                                 text: logDelegate.message
                                 Layout.fillWidth: true
                                 wrapMode: Text.WordWrap
+                                font.family: "monospace"
                                 color: Kirigami.Theme.textColor
                             }
                         }

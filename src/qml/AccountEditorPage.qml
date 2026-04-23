@@ -19,6 +19,7 @@ FormCard.FormCardPage {
     property string launchParameters: "-w"
     property string gameSettings: "Default"
     property string customSettingsPath: ""
+    property string protonPath: ""
 
     // Authentication data
     property string authToken: ""
@@ -41,6 +42,12 @@ FormCard.FormCardPage {
         title: "Select Custom Settings.json"
         nameFilters: ["JSON files (*.json)", "All files (*)"]
         onAccepted: root.customSettingsPath = root.urlToPath(selectedFile)
+    }
+
+    FolderDialog {
+        id: protonPathDialog
+        title: "Select Proton Runtime Directory"
+        onAccepted: root.protonPath = root.urlToPath(selectedFolder)
     }
 
     FormCard.FormHeader {
@@ -133,6 +140,43 @@ FormCard.FormCardPage {
             text: root.launchParameters
             placeholderText: "-w -txt"
             onTextChanged: root.launchParameters = text
+        }
+    }
+
+    FormCard.FormHeader {
+        title: "Compatibility"
+    }
+
+    FormCard.FormCard {
+        FormCard.AbstractFormDelegate {
+            contentItem: ColumnLayout {
+                spacing: Kirigami.Units.smallSpacing
+                QQC2.Label {
+                    text: "Proton Runtime"
+                }
+                QQC2.Label {
+                    text: "The directory containing the Proton/Wine compatibility layer for this account."
+                    font: Kirigami.Theme.smallFont
+                    opacity: 0.7
+                    wrapMode: Text.Wrap
+                    Layout.fillWidth: true
+                }
+                RowLayout {
+                    QQC2.TextField {
+                        id: protonPathField
+                        Layout.fillWidth: true
+                        text: root.protonPath
+                        placeholderText: "e.g. GE-Proton or UMU-Latest"
+                        onTextChanged: root.protonPath = text
+                    }
+                    QQC2.Button {
+                        icon.name: "folder-open"
+                        onClicked: protonPathDialog.open()
+                        QQC2.ToolTip.visible: hovered
+                        QQC2.ToolTip.text: "Browse..."
+                    }
+                }
+            }
         }
     }
 
