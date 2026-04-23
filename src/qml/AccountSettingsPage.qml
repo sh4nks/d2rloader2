@@ -62,6 +62,25 @@ FormCard.FormCardPage {
                         }
                     }
 
+                    // Reorder Buttons
+                    RowLayout {
+                        spacing: 0
+                        QQC2.ToolButton {
+                            icon.name: "arrow-up"
+                            enabled: accountDelegate.index > 0
+                            onClicked: {
+                                // Logic to move account up
+                            }
+                        }
+                        QQC2.ToolButton {
+                            icon.name: "arrow-down"
+                            enabled: accountDelegate.index < 3
+                            onClicked: {
+                                // Logic to move account down
+                            }
+                        }
+                    }
+
                     QQC2.ToolButton {
                         icon.name: "edit-delete"
                         onClicked: {
