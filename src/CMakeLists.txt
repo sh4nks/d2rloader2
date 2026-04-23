@@ -43,8 +43,11 @@ target_link_libraries(d2rloader
     Qt6::QuickControls2
     Qt6::Widgets
     KF6::I18n
+    KF6::Kirigami
     KF6::CoreAddons
     KF6::IconThemes
+    KirigamiApp
+    KirigamiAddonsComponents
 )
 
 target_compile_definitions(d2rloader PUBLIC APP_NAME=\"${APP_NAME}\" APP_VERSION=\"${APP_VERSION}\")

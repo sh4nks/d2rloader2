@@ -6,7 +6,7 @@ import QtQuick.Controls
 import QtQuick.Dialogs
 import org.kde.kirigami as Kirigami
 
-ApplicationWindow {
+Kirigami.ApplicationWindow {
     id: mainWindow
     visible: true
     width: 800
@@ -19,7 +19,7 @@ ApplicationWindow {
             MenuItem {
                 text: "&Settings"
                 icon.name: "settings-configure"
-                onTriggered: settingsWindow.show()
+                onTriggered: settingsWindow.open()
             }
             MenuItem {
                 text: "&Load Settings..."
@@ -86,6 +86,7 @@ ApplicationWindow {
             id: accountTable
             Layout.fillWidth: true
             Layout.fillHeight: true
+            onSettingsClicked: settingsWindow.open()
         }
 
         // TabBar beneath the accounts table

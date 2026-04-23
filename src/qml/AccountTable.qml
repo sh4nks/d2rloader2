@@ -9,6 +9,7 @@ import org.kde.kirigami as Kirigami
 Kirigami.Card {
     id: root
     padding: 0
+    signal settingsClicked
     Layout.fillWidth: true
     Layout.fillHeight: true
     Layout.margins: 0
@@ -40,6 +41,11 @@ Kirigami.Card {
                 onClicked: {
                     // Logic to add a new account would go here
                 }
+            }
+
+            Button {
+                icon.name: "settings-configure"
+                onClicked: root.settingsClicked()
             }
         }
     }
