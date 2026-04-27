@@ -59,6 +59,49 @@ Kirigami.Card {
         Kirigami.Theme.inherit: true
         Kirigami.Theme.colorSet: Kirigami.Theme.View
 
+        Menu {
+            id: contextMenu
+            property var currentRowData
+            property int currentRowIndex
+
+            MenuItem {
+                text: i18nc("@action:inmenu", "Clone")
+                icon.name: "edit-copy"
+                onTriggered: {
+                    // Logic to clone contextMenu.currentRowData
+                }
+            }
+            MenuItem {
+                text: i18nc("@action:inmenu", "Edit")
+                icon.name: "edit-entry"
+                onTriggered: root.editAccountClicked(contextMenu.currentRowData)
+            }
+            MenuItem {
+                text: i18nc("@action:inmenu", "Delete")
+                icon.name: "edit-delete"
+                onTriggered: {
+                    // Logic to delete index contextMenu.currentRowIndex
+                }
+            }
+            MenuSeparator {}
+            MenuItem {
+                text: i18nc("@action:inmenu", "Move Up")
+                icon.name: "arrow-up"
+                enabled: contextMenu.currentRowIndex > 0
+                onTriggered: {
+                    // Logic to move row up
+                }
+            }
+            MenuItem {
+                text: i18nc("@action:inmenu", "Move Down")
+                icon.name: "arrow-down"
+                enabled: contextMenu.currentRowIndex < tableModel.rows.length - 1
+                onTriggered: {
+                    // Logic to move row down
+                }
+            }
+        }
+
         HorizontalHeaderView {
             id: horizontalHeader
             syncView: tableView
@@ -194,7 +237,18 @@ Kirigami.Card {
                 }
 
                 TapHandler {
-                    onDoubleTapped: {
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onTapped: (eventPoint, button) => {
+                        if (button === Qt.RightButton) {
+                            contextMenu.currentRowData = tableModel.rows[cellDelegate.row];
+                            contextMenu.currentRowIndex = cellDelegate.row;
+                            contextMenu.popup();
+                        }
+                    }
+                    onDoubleTapped: (eventPoint, button) => {
+                        if (button === Qt.RightButton) {
+                            return;
+                        }
                         let rowData = tableModel.rows[cellDelegate.row];
                         root.editAccountClicked(rowData);
                     }
