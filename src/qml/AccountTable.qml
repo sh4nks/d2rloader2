@@ -116,6 +116,15 @@ Kirigami.Card {
             }
         }
 
+        Menu {
+            id: contextMenuAdd
+            MenuItem {
+                text: i18nc("@action:inmenu", "Add new Account")
+                icon.name: "list-add"
+                onTriggered: root.addAccountClicked()
+            }
+        }
+
         HorizontalHeaderView {
             id: horizontalHeader
             syncView: tableView
@@ -176,6 +185,15 @@ Kirigami.Card {
                 return (tableView.width - (Kirigami.Units.gridUnit * 9)) / 4;
             }
             onWidthChanged: tableView.forceLayout()
+
+            // Handle right-click in empty space
+            // TapHandler {
+            //     acceptedButtons: Qt.RightButton
+            //     onTapped: eventPoint => {
+            //         console.log(eventPoint);
+            //         contextMenuAdd.popup();
+            //     }
+            // }
 
             model: TableModel {
                 id: tableModel

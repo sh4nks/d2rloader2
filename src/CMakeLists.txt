@@ -36,6 +36,7 @@ ecm_target_qml_sources(d2rloader
     qml/AccountEditorPage.qml
     qml/GameSettingsPage.qml
     qml/LaunchSequencePage.qml
+    qml/LaunchSequenceEditorPage.qml
 )
 
 target_link_libraries(d2rloader
