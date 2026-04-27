@@ -27,7 +27,7 @@ Kirigami.Card {
             anchors.topMargin: Kirigami.Units.smallSpacing * 2
 
             Kirigami.Heading {
-                text: "Accounts"
+                text: i18nc("@title", "Accounts")
                 level: 2
                 Layout.alignment: Qt.AlignVCenter
             }
@@ -37,7 +37,7 @@ Kirigami.Card {
             }
 
             Button {
-                text: "Add Account"
+                text: i18nc("@action:button", "Add Account")
                 icon.name: "list-add"
                 Kirigami.Theme.colorSet: Kirigami.Theme.Button
                 Kirigami.Theme.inherit: false
@@ -63,7 +63,7 @@ Kirigami.Card {
             id: horizontalHeader
             syncView: tableView
             // Column 0 is the status indicator (no text header)
-            model: ["", "Account", "Auth Method", "Region", "Launch Parameters", "Actions"]
+            model: ["", i18nc("@title:column", "Account"), i18nc("@title:column", "Auth Method"), i18nc("@title:column", "Region"), i18nc("@title:column", "Launch Parameters"), i18nc("@title:column", "Actions")]
             Layout.fillWidth: true
 
             delegate: Rectangle {
@@ -236,7 +236,7 @@ Kirigami.Card {
                     anchors.bottomMargin: Kirigami.Units.gridUnit * 0.4
                     anchors.leftMargin: Kirigami.Units.smallSpacing
                     anchors.rightMargin: Kirigami.Units.smallSpacing
-                    model: ["Token", "Password", "Steam"]
+                    model: [i18nc("@item:incombobox", "Token"), i18nc("@item:incombobox", "Password"), i18nc("@item:incombobox", "Steam")]
                     currentIndex: authComboBox.model.indexOf(cellDelegate.display)
                 }
 
@@ -251,7 +251,7 @@ Kirigami.Card {
                     anchors.bottomMargin: Kirigami.Units.gridUnit * 0.4
                     anchors.leftMargin: Kirigami.Units.smallSpacing
                     anchors.rightMargin: Kirigami.Units.smallSpacing
-                    model: ["Europe", "Americas", "Asia"]
+                    model: [i18nc("@item:incombobox", "Europe"), i18nc("@item:incombobox", "Americas"), i18nc("@item:incombobox", "Asia")]
                     currentIndex: regionComboBox.model.indexOf(cellDelegate.display)
                 }
 

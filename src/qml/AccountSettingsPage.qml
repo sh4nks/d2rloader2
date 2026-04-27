@@ -9,7 +9,7 @@ import org.kde.kirigamiaddons.formcard as FormCard
 FormCard.FormCardPage {
     id: root
 
-    title: "Accounts"
+    title: i18nc("@title", "Accounts")
 
     /**
      * Property used to pass data when navigating from outside the module.
@@ -32,7 +32,7 @@ FormCard.FormCardPage {
     }
 
     FormCard.FormHeader {
-        title: "Accounts"
+        title: i18nc("@title:group", "Accounts")
     }
 
     FormCard.FormCard {
@@ -43,9 +43,9 @@ FormCard.FormCardPage {
                 id: accountDelegate
                 required property int index
 
-                readonly property string accountName: ["cow", "dog", "sheep", "goat"][accountDelegate.index]
-                readonly property string region: "Europe"
-                readonly property string authMethod: ["Token", "Token", "Password", "Steam"][accountDelegate.index]
+                readonly property string accountName: [i18nc("@info", "cow"), i18nc("@info", "dog"), i18nc("@info", "sheep"), i18nc("@info", "goat")][accountDelegate.index]
+                readonly property string region: i18nc("@info", "Europe")
+                readonly property string authMethod: [i18nc("@info", "Token"), i18nc("@info", "Token"), i18nc("@info", "Password"), i18nc("@info", "Steam")][accountDelegate.index]
 
                 onClicked: root.QQC2.ApplicationWindow.window.pageStack.layers.push(accountEditorComponent, {
                     isNew: false,
@@ -131,7 +131,7 @@ FormCard.FormCardPage {
 
         FormCard.FormButtonDelegate {
             id: addAccountDelegate
-            text: "Add Account"
+            text: i18nc("@action:button", "Add Account")
             icon.name: "list-add"
             onClicked: root.QQC2.ApplicationWindow.window.pageStack.layers.push(accountEditorComponent, {
                 isNew: true

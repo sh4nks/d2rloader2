@@ -3,41 +3,49 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import org.kde.kirigamiaddons.settings as KirigamiSettings
 
+import com.someblocks.d2rloader 1.0
+
 KirigamiSettings.ConfigurationView {
     id: root
 
-    title: "Preferences"
+    title: i18nc("@title:window", "Preferences")
 
     modules: [
         KirigamiSettings.ConfigurationModule {
             moduleId: "application"
-            text: "Application"
+            text: i18nc("@title:menu", "Application")
             icon.name: "settings-configure"
-            page: () => Qt.createComponent("org.someblocks.d2rloader", "ApplicationSettingsPage")
+            page: () => Qt.createComponent("com.someblocks.d2rloader", "ApplicationSettingsPage")
         },
         KirigamiSettings.ConfigurationModule {
             moduleId: "accounts"
-            text: "Accounts"
+            text: i18nc("@title:menu", "Accounts")
             icon.name: "system-users"
-            page: () => Qt.createComponent("org.someblocks.d2rloader", "AccountSettingsPage")
+            page: () => Qt.createComponent("com.someblocks.d2rloader", "AccountSettingsPage")
         },
         KirigamiSettings.ConfigurationModule {
             moduleId: "game_settings"
-            text: "Game Settings"
+            text: i18nc("@title:menu", "Game Settings")
             icon.name: "folder-games-symbolic"
-            page: () => Qt.createComponent("org.someblocks.d2rloader", "GameSettingsPage")
+            page: () => Qt.createComponent("com.someblocks.d2rloader", "GameSettingsPage")
         },
         KirigamiSettings.ConfigurationModule {
             moduleId: "live_info"
-            text: "DClone & TZ Info"
+            text: i18nc("@title:menu", "DClone & TZ Info")
             icon.name: "internet-services"
-            page: () => Qt.createComponent("org.someblocks.d2rloader", "DiabloCloneSettingsPage")
+            page: () => Qt.createComponent("com.someblocks.d2rloader", "DiabloCloneSettingsPage")
         },
         KirigamiSettings.ConfigurationModule {
             moduleId: "about"
-            text: "About D2RLoader"
+            text: i18nc("@title:menu", "About D2RLoader")
             icon.name: "help-about"
-            category: "About"
+            category: i18nc("@title:group", "About")
+            initialProperties: () => {
+                return {
+                    "showKdeLinks": false,
+                    "aboutData": About
+                };
+            }
             page: () => Qt.createComponent("org.kde.kirigamiaddons.formcard", "AboutPage")
         }
     ]

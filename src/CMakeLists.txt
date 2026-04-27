@@ -2,7 +2,7 @@ add_executable(d2rloader)
 
 ecm_add_qml_module(d2rloader
     URI
-    org.someblocks.d2rloader
+    com.someblocks.d2rloader
 )
 
 target_sources(d2rloader

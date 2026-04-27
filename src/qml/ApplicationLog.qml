@@ -15,7 +15,7 @@ Kirigami.Card {
         Layout.margins: Kirigami.Units.smallSpacing
 
         Kirigami.Heading {
-            text: "Application Log"
+            text: i18nc("@title", "Application Log")
             level: 2
             color: Kirigami.Theme.textColor
             Layout.alignment: Qt.AlignVCenter
@@ -26,7 +26,7 @@ Kirigami.Card {
         }
 
         Button {
-            text: "Clear Logs"
+            text: i18nc("@action:button", "Clear Logs")
             icon.name: "edit-clear-list"
             onClicked: logModel.clear()
         }

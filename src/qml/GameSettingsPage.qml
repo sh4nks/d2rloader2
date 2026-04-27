@@ -9,10 +9,10 @@ import org.kde.kirigamiaddons.formcard as FormCard
 FormCard.FormCardPage {
     id: root
 
-    title: "Game Settings Assignment"
+    title: i18nc("@title", "Game Settings Assignment")
 
     FormCard.FormHeader {
-        title: "Account Settings Mapping"
+        title: i18nc("@title:group", "Account Settings Mapping")
     }
 
     FormCard.FormCard {
@@ -27,7 +27,7 @@ FormCard.FormCardPage {
                 id: assignmentDelegate
                 required property int index
 
-                readonly property string accountName: ["BooBoo", "MFer", "Filler1", "Mule"][assignmentDelegate.index]
+                readonly property string accountName: [i18nc("@info", "BooBoo"), i18nc("@info", "MFer"), i18nc("@info", "Filler1"), i18nc("@info", "Mule")][assignmentDelegate.index]
 
                 contentItem: RowLayout {
                     spacing: Kirigami.Units.largeSpacing
@@ -46,7 +46,7 @@ FormCard.FormCardPage {
 
                     QQC2.ComboBox {
                         id: settingsSelector
-                        model: ["Default", "Account Specific", "Custom"]
+                        model: [i18nc("@item", "Default"), i18nc("@item", "Account Specific"), i18nc("@item", "Custom")]
                         Layout.preferredWidth: Kirigami.Units.gridUnit * 10
 
                         onCurrentIndexChanged: {
@@ -59,7 +59,7 @@ FormCard.FormCardPage {
                         flat: true
                         visible: settingsSelector.currentText !== "Custom"
                         QQC2.ToolTip.visible: hovered
-                        QQC2.ToolTip.text: "Copy current global Settings.json to this account"
+                        QQC2.ToolTip.text: i18nc("@info:tooltip", "Copy current global Settings.json to this account")
                         onClicked: {
                             // Logic to copy settings
                         }
@@ -70,7 +70,7 @@ FormCard.FormCardPage {
                         flat: true
                         visible: settingsSelector.currentText === "Custom"
                         QQC2.ToolTip.visible: hovered
-                        QQC2.ToolTip.text: "Select custom Settings.json file"
+                        QQC2.ToolTip.text: i18nc("@info:tooltip", "Select custom Settings.json file")
                         onClicked: {
                             // Logic to open file dialog
                         }
@@ -81,13 +81,13 @@ FormCard.FormCardPage {
     }
 
     FormCard.FormHeader {
-        title: "Actions"
+        title: i18nc("@title:group", "Actions")
     }
 
     FormCard.FormCard {
         FormCard.FormButtonDelegate {
-            text: "Apply to All Accounts"
-            description: "Set the currently selected settings profile for all accounts in the list."
+            text: i18nc("@action:button", "Apply to All Accounts")
+            description: i18nc("@info:label", "Set the currently selected settings profile for all accounts in the list.")
             icon.name: "dialog-ok-apply"
             onClicked: {
                 // Logic for bulk assignment

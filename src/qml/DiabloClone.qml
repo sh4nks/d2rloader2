@@ -15,7 +15,7 @@ Kirigami.Card {
         Layout.margins: Kirigami.Units.smallSpacing
 
         Kirigami.Heading {
-            text: "Diablo Clone Tracker"
+            text: i18nc("@title", "Diablo Clone Tracker")
             level: 2
             Layout.alignment: Qt.AlignVCenter
         }
@@ -25,7 +25,7 @@ Kirigami.Card {
         }
 
         Button {
-            text: "Refresh"
+            text: i18nc("@action:button", "Refresh")
             icon.name: "view-refresh"
             onClicked: {
                 // Refresh logic
@@ -55,12 +55,12 @@ Kirigami.Card {
 
             ColumnLayout {
                 Label {
-                    text: "Current Progress:"
+                    text: i18nc("@label", "Current Progress:")
                     font.bold: true
                     color: Kirigami.Theme.textColor
                 }
                 Label {
-                    text: "Stage 3/6: Terror begins to form within Sanctuary"
+                    text: i18nc("@info", "Stage 3/6: Terror begins to form within Sanctuary")
                     font.pointSize: 12
                     color: Kirigami.Theme.textColor
                     wrapMode: Text.WordWrap
@@ -74,7 +74,7 @@ Kirigami.Card {
         }
 
         Label {
-            text: "Regional Progress (Softcore Ladder):"
+            text: i18nc("@title", "Regional Progress (Softcore Ladder):")
             font.bold: true
             color: Kirigami.Theme.textColor
         }
@@ -86,7 +86,7 @@ Kirigami.Card {
             columnSpacing: Kirigami.Units.gridUnit
 
             Label {
-                text: "Americas:"
+                text: i18nc("@label", "Americas:")
                 color: Kirigami.Theme.textColor
             }
             ProgressBar {
@@ -97,7 +97,7 @@ Kirigami.Card {
             }
 
             Label {
-                text: "Europe:"
+                text: i18nc("@label", "Europe:")
                 color: Kirigami.Theme.textColor
             }
             ProgressBar {
@@ -108,7 +108,7 @@ Kirigami.Card {
             }
 
             Label {
-                text: "Asia:"
+                text: i18nc("@label", "Asia:")
                 color: Kirigami.Theme.textColor
             }
             ProgressBar {
@@ -124,7 +124,7 @@ Kirigami.Card {
         }
 
         Label {
-            text: "Last updated: 2 minutes ago"
+            text: i18nc("@info", "Last updated: 2 minutes ago")
             font.italic: true
             color: Kirigami.Theme.textColor
             opacity: 0.6

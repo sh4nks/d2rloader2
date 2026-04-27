@@ -15,7 +15,7 @@ Kirigami.Card {
         Layout.margins: Kirigami.Units.smallSpacing
 
         Kirigami.Heading {
-            text: "Terror Zones"
+            text: i18nc("@title", "Terror Zones")
             level: 2
             Layout.alignment: Qt.AlignVCenter
         }
@@ -25,7 +25,7 @@ Kirigami.Card {
         }
 
         Button {
-            text: "Refresh"
+            text: i18nc("@action:button", "Refresh")
             icon.name: "view-refresh"
             onClicked: {
                 // Refresh logic
@@ -46,7 +46,7 @@ Kirigami.Card {
             Layout.fillWidth: true
 
             Label {
-                text: "Current Terror Zone:"
+                text: i18nc("@label", "Current Terror Zone:")
                 font.bold: true
                 opacity: 0.7
                 color: Kirigami.Theme.textColor
@@ -91,7 +91,7 @@ Kirigami.Card {
                     }
 
                     Label {
-                        text: "The Chaos Sanctuary"
+                        text: i18nc("@info", "The Chaos Sanctuary")
                         font.pointSize: 12
                         font.weight: Font.Medium
                         color: Kirigami.Theme.textColor
@@ -111,7 +111,7 @@ Kirigami.Card {
             Layout.fillWidth: true
 
             Label {
-                text: "Next Predicted Zone:"
+                text: i18nc("@label", "Next Predicted Zone:")
                 font.bold: true
                 opacity: 0.7
                 color: Kirigami.Theme.textColor
@@ -156,7 +156,7 @@ Kirigami.Card {
                     }
 
                     Label {
-                        text: "Tal Rasha's Tombs"
+                        text: i18nc("@info", "Tal Rasha's Tombs")
                         font.pointSize: 12
                         font.weight: Font.Medium
                         color: Kirigami.Theme.textColor

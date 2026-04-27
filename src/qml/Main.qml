@@ -16,46 +16,46 @@ Kirigami.ApplicationWindow {
 
     menuBar: MenuBar {
         Menu {
-            title: "&Settings"
+            title: i18nc("@title:menu", "&Settings")
             MenuItem {
-                text: "&Settings"
+                text: i18nc("@action:inmenu", "&Settings")
                 icon.name: "settings-configure"
                 onTriggered: settingsWindow.open()
             }
             MenuItem {
-                text: "&Save Settings..."
+                text: i18nc("@action:inmenu", "&Save Settings...")
                 icon.name: "document-save"
                 onTriggered: fileOpenDialog.open()
             }
             MenuSeparator {}
             MenuItem {
-                text: "&Load Account Settings..."
+                text: i18nc("@action:inmenu", "&Load Account Settings...")
                 icon.name: "document-open"
                 onTriggered: fileOpenDialog.open()
             }
             MenuItem {
-                text: "&Save Account Settings..."
+                text: i18nc("@action:inmenu", "&Save Account Settings...")
                 icon.name: "username-copy"
                 onTriggered: fileOpenDialog.open()
             }
             MenuSeparator {}
             MenuItem {
-                text: "&Exit"
+                text: i18nc("@action:inmenu", "&Exit")
                 icon.name: "application-exit"
                 onTriggered: Qt.quit()
             }
         }
         Menu {
-            title: "&Help"
+            title: i18nc("@title:menu", "&Help")
 
             MenuItem {
-                text: "&Open README"
+                text: i18nc("@action:inmenu", "&Open README")
                 icon.name: "help-contents"
                 onTriggered: aboutDialog.show()
             }
             MenuSeparator {}
             MenuItem {
-                text: "&About..."
+                text: i18nc("@action:inmenu", "&About...")
                 icon.name: "help-about"
                 onTriggered: aboutDialog.show()
             }
@@ -89,17 +89,17 @@ Kirigami.ApplicationWindow {
 
             TabButton {
                 implicitHeight: Kirigami.Units.gridUnit * 2
-                text: "Terror Zones"
+                text: i18nc("@title:tab", "Terror Zones")
                 icon.name: "view-calendar-day"
             }
             TabButton {
                 implicitHeight: Kirigami.Units.gridUnit * 2
-                text: "Diablo Clone"
+                text: i18nc("@title:tab", "Diablo Clone")
                 icon.name: "view-media-artist"
             }
             TabButton {
                 implicitHeight: Kirigami.Units.gridUnit * 2
-                text: "Application Log"
+                text: i18nc("@title:tab", "Application Log")
                 icon.name: "utilities-log-viewer"
             }
         }

@@ -9,25 +9,25 @@ import org.kde.kirigamiaddons.formcard as FormCard
 FormCard.FormCardPage {
     id: root
 
-    title: "Diablo Clone and Terror Zone Information"
+    title: i18nc("@title", "Live Information")
 
     FormCard.FormHeader {
-        title: "D2Emu Integration"
+        title: i18nc("@title:group", "D2Emu Integration")
     }
 
     FormCard.FormCard {
         FormCard.FormTextFieldDelegate {
-            label: "Username"
-            description: "Your D2Emu.com account username."
-            placeholderText: "Enter your username..."
+            label: i18nc("@label", "Username")
+            description: i18nc("@info:label", "Your D2Emu.com account username.")
+            placeholderText: i18nc("@info:placeholder", "Enter your username...")
         }
 
         FormCard.FormDelegateSeparator {}
 
         FormCard.FormTextFieldDelegate {
-            label: "API Key"
-            description: "Your D2Emu.com API key for Terror Zone and Diablo Clone data."
-            placeholderText: "Enter your API key..."
+            label: i18nc("@label", "API Key")
+            description: i18nc("@info:label", "Your D2Emu.com API key for Terror Zone and Diablo Clone data.")
+            placeholderText: i18nc("@info:placeholder", "Enter your API key...")
             echoMode: TextInput.Password
         }
 
@@ -35,8 +35,8 @@ FormCard.FormCardPage {
 
         FormCard.FormCheckDelegate {
             id: autoRefresh
-            text: "Automatic Refresh"
-            description: "Periodically fetch the latest data from D2Emu.com."
+            text: i18nc("@label", "Automatic Refresh")
+            description: i18nc("@info:label", "Periodically fetch the latest data from D2Emu.com.")
             checked: true
         }
 
@@ -45,8 +45,8 @@ FormCard.FormCardPage {
         }
 
         FormCard.FormSpinBoxDelegate {
-            label: "Update Interval (minutes)"
-            description: "How often to check for game event updates."
+            label: i18nc("@label", "Update Interval (minutes)")
+            description: i18nc("@info:label", "How often to check for game event updates.")
             visible: autoRefresh.checked
             from: 10
             to: 60
@@ -56,32 +56,32 @@ FormCard.FormCardPage {
     }
 
     FormCard.FormHeader {
-        title: "Diablo Clone"
+        title: i18nc("@title:group", "Diablo Clone")
     }
 
     FormCard.FormCard {
         FormCard.FormCheckDelegate {
-            text: "Enable DClone Notifications"
-            description: "Receive desktop notifications when Diablo Clone progress changes."
+            text: i18nc("@label", "Enable DClone Notifications")
+            description: i18nc("@info:label", "Receive desktop notifications when Diablo Clone progress changes.")
         }
 
         FormCard.FormDelegateSeparator {}
 
         FormCard.FormComboBoxDelegate {
-            text: "Preferred Mode"
-            description: "The game mode to prioritize for notifications and monitoring."
-            model: ["Softcore", "Hardcore", "Softcore Ladder", "Hardcore Ladder"]
+            text: i18nc("@label", "Preferred Mode")
+            description: i18nc("@info:label", "The game mode to prioritize for notifications and monitoring.")
+            model: [i18nc("@item", "Softcore"), i18nc("@item", "Hardcore"), i18nc("@item", "Softcore Ladder"), i18nc("@item", "Hardcore Ladder")]
         }
     }
 
     FormCard.FormHeader {
-        title: "Terror Zones"
+        title: i18nc("@title:group", "Terror Zones")
     }
 
     FormCard.FormCard {
         FormCard.FormCheckDelegate {
-            text: "Enable TZ Notifications"
-            description: "Receive desktop notifications when a new Terror Zone starts."
+            text: i18nc("@label", "Enable TZ Notifications")
+            description: i18nc("@info:label", "Receive desktop notifications when a new Terror Zone starts.")
         }
     }
 }

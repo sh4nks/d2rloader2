@@ -10,7 +10,7 @@ import org.kde.kirigamiaddons.formcard as FormCard
 FormCard.FormCardPage {
     id: root
 
-    title: root.isNew ? "Add Account" : "Edit Account"
+    title: root.isNew ? i18nc("@title", "Add Account") : i18nc("@title", "Edit Account")
 
     property bool isNew: true
     property string accountName: ""
@@ -39,28 +39,28 @@ FormCard.FormCardPage {
 
     FileDialog {
         id: customSettingsDialog
-        title: "Select Custom Settings.json"
+        title: i18nc("@title:window", "Select Custom Settings.json")
         nameFilters: ["JSON files (*.json)", "All files (*)"]
         onAccepted: root.customSettingsPath = root.urlToPath(selectedFile)
     }
 
     FolderDialog {
         id: protonPathDialog
-        title: "Select Proton Runtime Directory"
+        title: i18nc("@title:window", "Select Proton Runtime Directory")
         onAccepted: root.protonPath = root.urlToPath(selectedFolder)
     }
 
     FormCard.FormHeader {
-        title: "Account Configuration"
+        title: i18nc("@title:group", "Account Configuration")
     }
 
     FormCard.FormCard {
         FormCard.FormTextFieldDelegate {
             id: nameField
-            label: "Account Name"
-            description: "A unique identifier for this account."
+            label: i18nc("@label", "Account Name")
+            description: i18nc("@info:label", "A unique identifier for this account.")
             text: root.accountName
-            placeholderText: "e.g. MyAccount"
+            placeholderText: i18nc("@info:placeholder", "e.g. MyAccount")
             onTextChanged: root.accountName = text
         }
 
@@ -68,9 +68,9 @@ FormCard.FormCardPage {
 
         FormCard.FormComboBoxDelegate {
             id: authField
-            text: "Authentication Method"
-            description: "The method used to log in to Battle.net."
-            model: ["Token", "Password", "Steam"]
+            text: i18nc("@label", "Authentication Method")
+            description: i18nc("@info:label", "The method used to log in to Battle.net.")
+            model: [i18nc("@item", "Token"), i18nc("@item", "Password"), i18nc("@item", "Steam")]
             currentIndex: Math.max(0, model.indexOf(root.authMethod))
             onCurrentIndexChanged: root.authMethod = model[currentIndex]
         }
@@ -82,11 +82,11 @@ FormCard.FormCardPage {
 
         FormCard.FormTextFieldDelegate {
             id: tokenField
-            label: "Authentication Token"
-            description: "The Battle.net login token."
+            label: i18nc("@label", "Authentication Token")
+            description: i18nc("@info:label", "The Battle.net login token.")
             visible: root.authMethod === "Token"
             text: root.authToken
-            placeholderText: "Enter your login token..."
+            placeholderText: i18nc("@info:placeholder", "Enter your login token...")
             onTextChanged: root.authToken = text
         }
 
@@ -97,11 +97,11 @@ FormCard.FormCardPage {
 
         FormCard.FormTextFieldDelegate {
             id: emailField
-            label: "Email Address"
-            description: "Your Battle.net account email."
+            label: i18nc("@label", "Email Address")
+            description: i18nc("@info:label", "Your Battle.net account email.")
             visible: root.authMethod === "Password"
             text: root.email
-            placeholderText: "example@email.com"
+            placeholderText: i18nc("@info:placeholder", "example@email.com")
             onTextChanged: root.email = text
         }
 
@@ -111,12 +111,12 @@ FormCard.FormCardPage {
 
         FormCard.FormTextFieldDelegate {
             id: passwordField
-            label: "Password"
-            description: "Your Battle.net account password."
+            label: i18nc("@label", "Password")
+            description: i18nc("@info:label", "Your Battle.net account password.")
             visible: root.authMethod === "Password"
             echoMode: TextInput.Password
             text: root.password
-            placeholderText: "••••••••"
+            placeholderText: i18nc("@info:placeholder", "••••••••")
             onTextChanged: root.password = text
         }
 
@@ -124,9 +124,9 @@ FormCard.FormCardPage {
 
         FormCard.FormComboBoxDelegate {
             id: regionField
-            text: "Region"
-            description: "The game server region for this account."
-            model: ["Europe", "Americas", "Asia"]
+            text: i18nc("@label", "Region")
+            description: i18nc("@info:label", "The game server region for this account.")
+            model: [i18nc("@item", "Europe"), i18nc("@item", "Americas"), i18nc("@item", "Asia")]
             currentIndex: Math.max(0, model.indexOf(root.region))
             onCurrentIndexChanged: root.region = model[currentIndex]
         }
@@ -135,16 +135,16 @@ FormCard.FormCardPage {
 
         FormCard.FormTextFieldDelegate {
             id: paramsField
-            label: "Launch Parameters"
-            description: "Command line arguments passed to the game executable."
+            label: i18nc("@label", "Launch Parameters")
+            description: i18nc("@info:label", "Command line arguments passed to the game executable.")
             text: root.launchParameters
-            placeholderText: "-w -txt"
+            placeholderText: i18nc("@info:placeholder", "-w -txt")
             onTextChanged: root.launchParameters = text
         }
     }
 
     FormCard.FormHeader {
-        title: "Compatibility"
+        title: i18nc("@title:group", "Compatibility")
     }
 
     FormCard.FormCard {
@@ -152,10 +152,10 @@ FormCard.FormCardPage {
             contentItem: ColumnLayout {
                 spacing: Kirigami.Units.smallSpacing
                 QQC2.Label {
-                    text: "Proton Runtime"
+                    text: i18nc("@label", "Proton Runtime")
                 }
                 QQC2.Label {
-                    text: "The directory containing the Proton/Wine compatibility layer for this account."
+                    text: i18nc("@info:label", "The directory containing the Proton/Wine compatibility layer for this account.")
                     font: Kirigami.Theme.smallFont
                     opacity: 0.7
                     wrapMode: Text.Wrap
@@ -166,14 +166,14 @@ FormCard.FormCardPage {
                         id: protonPathField
                         Layout.fillWidth: true
                         text: root.protonPath
-                        placeholderText: "e.g. GE-Proton or UMU-Latest"
+                        placeholderText: i18nc("@info:placeholder", "e.g. GE-Proton or UMU-Latest")
                         onTextChanged: root.protonPath = text
                     }
                     QQC2.Button {
                         icon.name: "folder-open"
                         onClicked: protonPathDialog.open()
                         QQC2.ToolTip.visible: hovered
-                        QQC2.ToolTip.text: "Browse..."
+                        QQC2.ToolTip.text: i18nc("@info:tooltip", "Browse...")
                     }
                 }
             }
@@ -181,15 +181,15 @@ FormCard.FormCardPage {
     }
 
     FormCard.FormHeader {
-        title: "Game Settings"
+        title: i18nc("@title:group", "Game Settings")
     }
 
     FormCard.FormCard {
         FormCard.FormComboBoxDelegate {
             id: gameSettingsField
-            text: "Settings Profile"
-            description: "Select which game settings (Settings.json) to use for this account."
-            model: ["Default", "Account Specific", "Custom"]
+            text: i18nc("@label", "Settings Profile")
+            description: i18nc("@info:label", "Select which game settings (Settings.json) to use for this account.")
+            model: [i18nc("@item", "Default"), i18nc("@item", "Account Specific"), i18nc("@item", "Custom")]
             currentIndex: Math.max(0, model.indexOf(root.gameSettings))
             onCurrentIndexChanged: root.gameSettings = model[currentIndex]
         }
@@ -204,10 +204,10 @@ FormCard.FormCardPage {
             contentItem: ColumnLayout {
                 spacing: Kirigami.Units.smallSpacing
                 QQC2.Label {
-                    text: "Custom Settings File"
+                    text: i18nc("@label", "Custom Settings File")
                 }
                 QQC2.Label {
-                    text: "Path to a specific Settings.json file for this account."
+                    text: i18nc("@info:label", "Path to a specific Settings.json file for this account.")
                     font: Kirigami.Theme.smallFont
                     opacity: 0.7
                     wrapMode: Text.Wrap
@@ -218,14 +218,14 @@ FormCard.FormCardPage {
                         id: customSettingsPathField
                         Layout.fillWidth: true
                         text: root.customSettingsPath
-                        placeholderText: "Path to Settings.json..."
+                        placeholderText: i18nc("@info:placeholder", "Path to Settings.json...")
                         onTextChanged: root.customSettingsPath = text
                     }
                     QQC2.Button {
                         icon.name: "document-open"
                         onClicked: customSettingsDialog.open()
                         QQC2.ToolTip.visible: hovered
-                        QQC2.ToolTip.text: "Browse..."
+                        QQC2.ToolTip.text: i18nc("@info:tooltip", "Browse...")
                     }
                 }
             }
@@ -234,8 +234,8 @@ FormCard.FormCardPage {
         FormCard.FormDelegateSeparator {}
 
         FormCard.FormButtonDelegate {
-            text: "Copy Current Settings"
-            description: "Copy the game's current global Settings.json to this account's profile."
+            text: i18nc("@action:button", "Copy Current Settings")
+            description: i18nc("@info:label", "Copy the game's current global Settings.json to this account's profile.")
             icon.name: "edit-copy"
             onClicked: {
                 // Logic to copy settings would go here
@@ -244,13 +244,13 @@ FormCard.FormCardPage {
     }
 
     FormCard.FormHeader {
-        title: "Actions"
+        title: i18nc("@title:group", "Actions")
     }
 
     FormCard.FormCard {
         FormCard.FormButtonDelegate {
             id: saveButton
-            text: root.isNew ? "Create Account" : "Save Changes"
+            text: root.isNew ? i18nc("@action:button", "Create Account") : i18nc("@action:button", "Save Changes")
             icon.name: root.isNew ? "list-add" : "document-save"
             highlighted: true
             onClicked: {
@@ -263,7 +263,7 @@ FormCard.FormCardPage {
 
         FormCard.FormButtonDelegate {
             id: cancelButton
-            text: "Cancel"
+            text: i18nc("@action:button", "Cancel")
             icon.name: "dialog-cancel"
             onClicked: root.Kirigami.PageStack.pageStack.pop()
         }
