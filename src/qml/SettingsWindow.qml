@@ -36,13 +36,18 @@ KirigamiSettings.ConfigurationView {
             page: () => Qt.createComponent("com.someblocks.d2rloader", "DiabloCloneSettingsPage")
         },
         KirigamiSettings.ConfigurationModule {
+            moduleId: "launch_sequence"
+            text: i18nc("@title:menu", "Launch Sequence")
+            icon.name: "media-playlist-play"
+            page: () => Qt.createComponent("com.someblocks.d2rloader", "LaunchSequencePage")
+        },
+        KirigamiSettings.ConfigurationModule {
             moduleId: "about"
             text: i18nc("@title:menu", "About D2RLoader")
             icon.name: "help-about"
             category: i18nc("@title:group", "About")
             initialProperties: () => {
                 return {
-                    "showKdeLinks": false,
                     "aboutData": About
                 };
             }

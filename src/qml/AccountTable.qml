@@ -36,6 +36,20 @@ Kirigami.Card {
                 Layout.fillWidth: true
             }
 
+            ComboBox {
+                id: launchSequenceSelector
+                model: [i18nc("@item:incombobox", "Default Sequence")]
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 10
+            }
+
+            Button {
+                text: i18nc("@action:button", "Launch Sequence")
+                icon.name: "media-playback-start"
+                onClicked: {
+                    // Logic to launch the selected sequence
+                }
+            }
+
             Button {
                 text: i18nc("@action:button", "Add Account")
                 icon.name: "list-add"

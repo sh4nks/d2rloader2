@@ -13,5 +13,6 @@
         <file>DiabloCloneSettingsPage.qml</file>
         <file>AccountEditorPage.qml</file>
         <file>GameSettingsPage.qml</file>
+        <file>LaunchSequencePage.qml</file>
     </qresource>
 </RCC>

@@ -35,6 +35,7 @@ ecm_target_qml_sources(d2rloader
     qml/DiabloCloneSettingsPage.qml
     qml/AccountEditorPage.qml
     qml/GameSettingsPage.qml
+    qml/LaunchSequencePage.qml
 )
 
 target_link_libraries(d2rloader
