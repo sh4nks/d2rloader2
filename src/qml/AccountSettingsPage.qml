@@ -97,6 +97,8 @@ FormCard.FormCardPage {
                         spacing: 0
                         QQC2.ToolButton {
                             icon.name: "arrow-up"
+                            QQC2.ToolTip.visible: hovered && enabled
+                            QQC2.ToolTip.text: i18nc("@info:tooltip", "Move Up")
                             enabled: accountDelegate.index > 0
                             onClicked: {
                                 // Logic to move account up would go here
@@ -104,6 +106,8 @@ FormCard.FormCardPage {
                         }
                         QQC2.ToolButton {
                             icon.name: "arrow-down"
+                            QQC2.ToolTip.visible: hovered && enabled
+                            QQC2.ToolTip.text: i18nc("@info:tooltip", "Move Down")
                             enabled: accountDelegate.index < 3
                             onClicked: {
                                 // Logic to move account down would go here
@@ -112,7 +116,18 @@ FormCard.FormCardPage {
                     }
 
                     QQC2.ToolButton {
+                        icon.name: "edit-copy"
+                        QQC2.ToolTip.visible: hovered
+                        QQC2.ToolTip.text: i18nc("@info:tooltip", "Clone Account")
+                        onClicked: {
+                            // Logic to clone account would go here
+                        }
+                    }
+
+                    QQC2.ToolButton {
                         icon.name: "edit-delete"
+                        QQC2.ToolTip.visible: hovered
+                        QQC2.ToolTip.text: i18nc("@info:tooltip", "Delete Account")
                         onClicked: {
                             // Logic to remove account would go here
                         }

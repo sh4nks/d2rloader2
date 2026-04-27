@@ -149,6 +149,8 @@ Kirigami.Card {
             clip: true
             boundsBehavior: Flickable.StopAtBounds
 
+            property int hoveredRow: -1
+
             columnWidthProvider: function (column) {
                 if (column === 0) {
                     return Kirigami.Units.gridUnit * 2;
@@ -226,7 +228,17 @@ Kirigami.Card {
 
                 implicitWidth: tableView.columnWidthProvider(cellDelegate.column)
                 implicitHeight: Kirigami.Units.gridUnit * 2.5
-                color: Kirigami.Theme.backgroundColor
+                color: cellDelegate.row === tableView.hoveredRow ? Kirigami.Theme.activeBackgroundColor : Kirigami.Theme.backgroundColor
+
+                HoverHandler {
+                    onHoveredChanged: {
+                        if (hovered) {
+                            tableView.hoveredRow = cellDelegate.row;
+                        } else if (tableView.hoveredRow === cellDelegate.row) {
+                            tableView.hoveredRow = -1;
+                        }
+                    }
+                }
 
                 Rectangle {
                     anchors.left: parent.left
