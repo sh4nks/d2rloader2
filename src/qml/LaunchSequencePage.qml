@@ -25,9 +25,10 @@ FormCard.FormCardPage {
 
                 readonly property string sequenceName: [i18nc("@info", "Default Sequence"), i18nc("@info", "Multi-Box Farming"), i18nc("@info", "Mule Transfers")][sequenceDelegate.index]
 
-                onClicked: {
-                    // Logic to edit sequence details
-                }
+                onClicked: root.QQC2.ApplicationWindow.window.pageStack.layers.push(sequenceEditorComponent, {
+                    isNew: false,
+                    sequenceName: sequenceDelegate.sequenceName
+                })
 
                 contentItem: RowLayout {
                     spacing: Kirigami.Units.largeSpacing
@@ -81,9 +82,10 @@ FormCard.FormCardPage {
                         icon.name: "edit-entry"
                         QQC2.ToolTip.visible: hovered
                         QQC2.ToolTip.text: i18nc("@info:tooltip", "Edit Sequence")
-                        onClicked: {
-                            // Logic to open sequence editor would go here
-                        }
+                        onClicked: root.QQC2.ApplicationWindow.window.pageStack.layers.push(sequenceEditorComponent, {
+                            isNew: false,
+                            sequenceName: sequenceDelegate.sequenceName
+                        })
                     }
 
                     QQC2.ToolButton {
@@ -110,9 +112,9 @@ FormCard.FormCardPage {
             id: addSequenceDelegate
             text: i18nc("@action:button", "Add New Sequence")
             icon.name: "list-add"
-            onClicked: {
-                // Logic to create a new sequence would go here
-            }
+            onClicked: root.QQC2.ApplicationWindow.window.pageStack.layers.push(sequenceEditorComponent, {
+                isNew: true
+            })
         }
     }
 
@@ -145,5 +147,10 @@ FormCard.FormCardPage {
             description: i18nc("@info:label", "Adds a small random offset to the launch delay for stealth.")
             checked: false
         }
+    }
+
+    Component {
+        id: sequenceEditorComponent
+        LaunchSequenceEditorPage {}
     }
 }

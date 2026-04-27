@@ -14,5 +14,6 @@
         <file>AccountEditorPage.qml</file>
         <file>GameSettingsPage.qml</file>
         <file>LaunchSequencePage.qml</file>
+        <file>LaunchSequenceEditorPage.qml</file>
     </qresource>
 </RCC>

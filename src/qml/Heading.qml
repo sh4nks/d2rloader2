@@ -7,7 +7,7 @@ Label {
     font.bold: level > 1
 
     font.pointSize: referenceLabel.font.pointSize + level
-    property list<QtObject> children: [
+    property list<QtObject> childs: [
         Label {
             id: referenceLabel
             visible: false
