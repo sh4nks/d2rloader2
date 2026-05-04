@@ -51,14 +51,6 @@ Kirigami.Card {
             }
 
             Button {
-                text: i18nc("@action:button", "Add Account")
-                icon.name: "list-add"
-                Kirigami.Theme.colorSet: Kirigami.Theme.Button
-                Kirigami.Theme.inherit: false
-                onClicked: root.addAccountClicked()
-            }
-
-            Button {
                 icon.name: "settings-configure"
                 onClicked: root.settingsClicked()
             }
@@ -173,6 +165,11 @@ Kirigami.Card {
             boundsBehavior: Flickable.StopAtBounds
 
             property int hoveredRow: -1
+            signal clicked(var eventPoint, var button, var cellDelegate)
+
+            onClicked: (eventPoint, button, cellDelegate) => {
+                console.log("on clicked", button, cellDelegate);
+            }
 
             columnWidthProvider: function (column) {
                 if (column === 0) {
@@ -186,14 +183,33 @@ Kirigami.Card {
             }
             onWidthChanged: tableView.forceLayout()
 
-            // Handle right-click in empty space
-            // TapHandler {
-            //     acceptedButtons: Qt.RightButton
-            //     onTapped: eventPoint => {
-            //         console.log(eventPoint);
-            //         contextMenuAdd.popup();
-            //     }
-            // }
+            TapHandler {
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                onTapped: (eventPoint, button) => {
+                    if (button === Qt.LeftButton) {
+                        return;
+                    }
+                    if (tableView.hoveredRow > -1) {
+                        contextMenu.currentRowData = tableModel.rows[tableView.hoveredRow];
+                        contextMenu.currentRowIndex = tableView.hoveredRow;
+                        contextMenu.popup();
+                    } else {
+                        contextMenuAdd.popup();
+                    }
+                }
+                onDoubleTapped: (eventPoint, button) => {
+                    if (button === Qt.RightButton) {
+                        return;
+                    }
+
+                    if (tableView.hoveredRow === -1) {
+                        return;
+                    }
+
+                    let rowData = tableModel.rows[tableView.hoveredRow];
+                    root.editAccountClicked(rowData);
+                }
+            }
 
             model: TableModel {
                 id: tableModel
@@ -272,30 +288,13 @@ Kirigami.Card {
                     }
                 }
 
+                // border
                 Rectangle {
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
                     height: 1
                     color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.1)
-                }
-
-                TapHandler {
-                    acceptedButtons: Qt.LeftButton | Qt.RightButton
-                    onTapped: (eventPoint, button) => {
-                        if (button === Qt.RightButton) {
-                            contextMenu.currentRowData = tableModel.rows[cellDelegate.row];
-                            contextMenu.currentRowIndex = cellDelegate.row;
-                            contextMenu.popup();
-                        }
-                    }
-                    onDoubleTapped: (eventPoint, button) => {
-                        if (button === Qt.RightButton) {
-                            return;
-                        }
-                        let rowData = tableModel.rows[cellDelegate.row];
-                        root.editAccountClicked(rowData);
-                    }
                 }
 
                 // Column 0: Status Indicator (Circle)

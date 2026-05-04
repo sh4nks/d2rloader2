@@ -12,7 +12,7 @@ Kirigami.ApplicationWindow {
     visible: true
     width: 800
     height: 800
-    title: `${Application.name}`
+    // title: `${Application.name}`
 
     menuBar: MenuBar {
         Menu {

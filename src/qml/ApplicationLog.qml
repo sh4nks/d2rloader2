@@ -121,14 +121,23 @@ Kirigami.Card {
                                 font.family: "monospace"
                                 Layout.preferredWidth: Kirigami.Units.gridUnit * 4
                             }
-
-                            Label {
-                                text: logDelegate.message
+                            TextEdit {
                                 Layout.fillWidth: true
-                                wrapMode: Text.WordWrap
+                                text: logDelegate.message
                                 font.family: "monospace"
                                 color: Kirigami.Theme.textColor
+                                readOnly: true
+                                wrapMode: Text.WordWrap
+                                selectByMouse: true
                             }
+
+                            // Label {
+                            //     text: logDelegate.message
+                            //     Layout.fillWidth: true
+                            //     wrapMode: Text.WordWrap
+                            //     font.family: "monospace"
+                            //     color: Kirigami.Theme.textColor
+                            // }
                         }
                     }
 

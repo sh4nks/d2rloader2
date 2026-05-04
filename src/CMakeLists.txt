@@ -10,14 +10,12 @@ target_sources(d2rloader
     main.cpp
     d2rloader.h d2rloader.cpp
 
-    profile.h
+    profile.h profile.cpp
+    profiletablemodel.h profiletablemodel.cpp
     profilemanager.h profilemanager.cpp
 
     gamemanager.h gamemanager.cpp
     settingsmanager.h settingsmanager.cpp
-
-    book.h book.cpp
-    booktablemodel.h booktablemodel.cpp
 )
 
 ecm_target_qml_sources(d2rloader

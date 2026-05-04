@@ -1,6 +1,6 @@
-#include "book.h"
-#include "booktablemodel.h"
 #include "d2rloader.h"
+#include "profile.h"
+#include "profiletablemodel.h"
 #include "settingsmanager.h"
 #include <KAboutData>
 #include <KIconTheme>
@@ -76,34 +76,25 @@ int main(int argc, char *argv[])
                                  return engine->toScriptValue(KAboutData::applicationData());
                              });
 
-    qmlRegisterUncreatableType<BookTableModel>("BookTableModel", 1, 0, "BookRoles", QStringLiteral("Cannot create instances of BookTableModel"));
+    qmlRegisterUncreatableType<ProfileTableModel>("ProfileTableModel", 1, 0, "ProfileRoles", QStringLiteral("Cannot create instances of ProfileTableModel"));
 
-    QList<Book *> bookList;
-    bookList.append(new Book(QStringLiteral("Harry Potter and the Philosopher's Stone"), QStringLiteral("J.K. Rowling"), 1997, 4.5));
-    bookList.append(new Book(QStringLiteral("Fantastic Beasts and Where to Find Them"), QStringLiteral("J.K. Rowling"), 2001, 4.3));
-    bookList.append(new Book(QStringLiteral("The Dark Tower"), QStringLiteral("Stephen King"), 1982, 4.0));
-    bookList.append(new Book(QStringLiteral("American Gods"), QStringLiteral("Neil Gaiman"), 2001, 4.1));
-    bookList.append(new Book(QStringLiteral("The Hobbit"), QStringLiteral("J.R.R. Tolkien"), 1937, 4.4));
-    bookList.append(new Book(QStringLiteral("1984"), QStringLiteral("George Orwell"), 1949, 4.3));
-    bookList.append(new Book(QStringLiteral("To Kill a Mockingbird"), QStringLiteral("Harper Lee"), 1960, 4.5));
-    bookList.append(new Book(QStringLiteral("The Great Gatsby"), QStringLiteral("F. Scott Fitzgerald"), 1925, 3.9));
-    bookList.append(new Book(QStringLiteral("Moby Dick"), QStringLiteral("Herman Melville"), 1851, 3.6));
-    bookList.append(new Book(QStringLiteral("War and Peace"), QStringLiteral("Leo Tolstoy"), 1867, 4.3));
-    bookList.append(new Book(QStringLiteral("Pride and Prejudice"), QStringLiteral("Jane Austen"), 1813, 4.1));
-    bookList.append(new Book(QStringLiteral("The Catcher in the Rye"), QStringLiteral("J.D. Salinger"), 1951, 3.9));
-    bookList.append(new Book(QStringLiteral("Ulysses"), QStringLiteral("James Joyce"), 1922, 3.7));
-    bookList.append(new Book(QStringLiteral("One Hundred Years of Solitude"), QStringLiteral("Gabriel Garcia Marquez"), 1967, 4.4));
+    QList<Profile *> profileList;
+    profileList.append(new Profile(QStringLiteral("Steirer"), AuthMethod::Token, Region::Europe, QStringLiteral("-w")));
+    profileList.append(new Profile(QStringLiteral("GoKarliGo"), AuthMethod::Password, Region::Europe, QStringLiteral("-w")));
+    profileList.append(new Profile(QStringLiteral("BurliBurliBurli"), AuthMethod::Token, Region::Europe, QStringLiteral("-w -ns")));
+    profileList.append(new Profile(QStringLiteral("Neanderthaler"), AuthMethod::Token, Region::Europe, QStringLiteral("-w -ns")));
+    profileList.append(new Profile(QStringLiteral("Gaudiwipferl"), AuthMethod::Token, Region::Europe, QStringLiteral("-w -ns")));
 
-    BookTableModel *bookTableModel = new BookTableModel(bookList, &app);
+    ProfileTableModel *profileTableModel = new ProfileTableModel(profileList, &app);
 
     QSortFilterProxyModel *tableProxy = new QSortFilterProxyModel(&app);
-    tableProxy->setSourceModel(bookTableModel);
+    tableProxy->setSourceModel(profileTableModel);
     tableProxy->setSortRole(Qt::DisplayRole);
-    tableProxy->sort(BookTableModel::YearRole, Qt::AscendingOrder);
+    tableProxy->sort(ProfileTableModel::NameRole, Qt::AscendingOrder);
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextObject(new KLocalizedContext(&engine));
-    engine.rootContext()->setContextProperty(QStringLiteral("bookTableModel"), tableProxy);
+    engine.rootContext()->setContextProperty(QStringLiteral("profileTableModel"), tableProxy);
     engine.rootContext()->setContextProperty(QStringLiteral("settingsManager"), sm);
     engine.rootContext()->setContextProperty(QStringLiteral("app"), d2rloader);
     qDebug() << engine.importPathList();
