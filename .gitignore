@@ -86,3 +86,4 @@ bin/D2RLoader
 *.kdev4
 cmake-build-debug
 Generated
+.qmlls.ini
