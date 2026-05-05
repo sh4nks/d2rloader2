@@ -1,4 +1,4 @@
-.PHONY: clean build format run help
+.PHONY: clean build format run help format
 .DEFAULT_GOAL := help
 
 help: ## Displays this help message.
@@ -12,6 +12,9 @@ build:
 
 run:
 	./build/bin/d2rloader
+
+format:
+	git clang-format --staged --extensions 'cpp,h,hpp,c'
 
 clean: ## Remove unwanted stuff such as __pycache__, etc...
 	find . -name '*.pyc' -exec rm -f {} +

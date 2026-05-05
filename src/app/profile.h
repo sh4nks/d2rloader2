@@ -12,7 +12,8 @@ enum Region {
 };
 
 enum AuthMethod {
-    Token, Password
+    Token,
+    Password
 };
 
 struct Account {

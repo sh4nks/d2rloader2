@@ -3,16 +3,14 @@
 
 #include <QObject>
 
-
 #include <QObject>
-#include <QString>
 #include <QSize>
-
+#include <QString>
 
 /*!
  * \brief The SettingsManager class
  */
-class SettingsManager: public QObject
+class SettingsManager : public QObject
 {
     Q_OBJECT
 
@@ -58,7 +56,10 @@ public:
     static SettingsManager *getInstance();
 
     Q_INVOKABLE void resetSettings();
-    QString getAppTheme() const { return m_appTheme; }
+    QString getAppTheme() const
+    {
+        return m_appTheme;
+    }
     void setAppTheme(const QString &value);
     QSize getAppSize() const;
     void setAppSize(const QSize &newAppSize);
@@ -80,6 +81,7 @@ public:
     void setLogPath(const QString &newLogPath);
     QString getLogLevel() const;
     void setLogLevel(const QString &newLogLevel);
+
 private:
     Q_PROPERTY(QSize appSize READ getAppSize WRITE setAppSize NOTIFY appSizeChanged FINAL)
     Q_PROPERTY(QSize appPosition READ getAppPosition WRITE setAppPosition NOTIFY appPositionChanged FINAL)

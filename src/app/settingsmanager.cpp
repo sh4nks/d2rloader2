@@ -1,14 +1,16 @@
 #include "settingsmanager.h"
 #include <QCoreApplication>
-#include <QSettings>
-#include <QLocale>
 #include <QDebug>
+#include <QLocale>
+#include <QSettings>
+#include <qobject.h>
 
 #include "d2rloader.h"
 
 SettingsManager *SettingsManager::instance = nullptr;
 
-SettingsManager *SettingsManager::getInstance() {
+SettingsManager *SettingsManager::getInstance()
+{
     if (instance == nullptr) {
         instance = new SettingsManager();
     }
@@ -16,15 +18,18 @@ SettingsManager *SettingsManager::getInstance() {
     return instance;
 }
 
-SettingsManager::SettingsManager() {
+SettingsManager::SettingsManager()
+{
     readSettings();
 }
 
-SettingsManager::~SettingsManager() {
+SettingsManager::~SettingsManager()
+{
     //
 }
 
-bool SettingsManager::readSettings() {
+bool SettingsManager::readSettings()
+{
     bool status = false;
 
     QSettings settings(QSettings::Format::IniFormat, QSettings::UserScope, D2RLoader::appName());
@@ -74,8 +79,8 @@ bool SettingsManager::readSettings() {
     return status;
 }
 
-
-bool SettingsManager::writeSettings() const {
+bool SettingsManager::writeSettings() const
+{
     bool status = false;
 
     QSettings settings(QSettings::Format::IniFormat, QSettings::UserScope, D2RLoader::appName());
@@ -104,125 +109,146 @@ bool SettingsManager::writeSettings() const {
     return status;
 }
 
-void SettingsManager::resetSettings() {
-    m_appTheme = "Fusion";
+void SettingsManager::resetSettings()
+{
+    m_appTheme = QStringLiteral("Fusion");
     Q_EMIT appThemeChanged();
 }
 
-
-void SettingsManager::setAppTheme(const QString &value) {
+void SettingsManager::setAppTheme(const QString &value)
+{
     if (m_appTheme != value) {
         m_appTheme = value;
         Q_EMIT appThemeChanged();
     }
 }
 
-QSize SettingsManager::getAppSize() const {
+QSize SettingsManager::getAppSize() const
+{
     return m_appSize;
 }
 
-void SettingsManager::setAppSize(const QSize &newAppSize) {
+void SettingsManager::setAppSize(const QSize &newAppSize)
+{
     if (m_appSize == newAppSize)
         return;
     m_appSize = newAppSize;
-    emit appSizeChanged();
+    Q_EMIT appSizeChanged();
 }
 
-QSize SettingsManager::getAppPosition() const {
+QSize SettingsManager::getAppPosition() const
+{
     return m_appPosition;
 }
 
-void SettingsManager::setAppPosition(const QSize &newAppPosition) {
+void SettingsManager::setAppPosition(const QSize &newAppPosition)
+{
     if (m_appPosition == newAppPosition)
         return;
     m_appPosition = newAppPosition;
-    emit appPositionChanged();
+    Q_EMIT appPositionChanged();
 }
 
-QString SettingsManager::getProfilePath() const {
+QString SettingsManager::getProfilePath() const
+{
     return m_profilePath;
 }
 
-void SettingsManager::setProfilePath(const QString &newProfilePath) {
+void SettingsManager::setProfilePath(const QString &newProfilePath)
+{
     if (m_profilePath == newProfilePath)
         return;
     m_profilePath = newProfilePath;
-    emit profilePathChanged();
+    Q_EMIT profilePathChanged();
 }
 
-QString SettingsManager::getHandlePath() const {
+QString SettingsManager::getHandlePath() const
+{
     return m_handlePath;
 }
 
-void SettingsManager::setHandlePath(const QString &newHandlePath) {
+void SettingsManager::setHandlePath(const QString &newHandlePath)
+{
     if (m_handlePath == newHandlePath)
         return;
     m_handlePath = newHandlePath;
-    emit handlePathChanged();
+    Q_EMIT handlePathChanged();
 }
 
-QString SettingsManager::getGamePath() const {
+QString SettingsManager::getGamePath() const
+{
     return m_gamePath;
 }
 
-void SettingsManager::setGamePath(const QString &newGamePath) {
+void SettingsManager::setGamePath(const QString &newGamePath)
+{
     if (m_gamePath == newGamePath)
         return;
     m_gamePath = newGamePath;
-    emit gamePathChanged();
+    Q_EMIT gamePathChanged();
 }
 
-QString SettingsManager::getWineprefixPath() const {
+QString SettingsManager::getWineprefixPath() const
+{
     return m_wineprefixPath;
 }
 
-void SettingsManager::setWineprefixPath(const QString &newWineprefixPath) {
+void SettingsManager::setWineprefixPath(const QString &newWineprefixPath)
+{
     if (m_wineprefixPath == newWineprefixPath)
         return;
     m_wineprefixPath = newWineprefixPath;
-    emit wineprefixPathChanged();
+    Q_EMIT wineprefixPathChanged();
 }
 
-QString SettingsManager::getD2emuToken() const {
+QString SettingsManager::getD2emuToken() const
+{
     return m_d2emuToken;
 }
 
-void SettingsManager::setD2emuToken(const QString &newD2emuToken) {
+void SettingsManager::setD2emuToken(const QString &newD2emuToken)
+{
     if (m_d2emuToken == newD2emuToken)
         return;
     m_d2emuToken = newD2emuToken;
-    emit d2emuTokenChanged();
+    Q_EMIT d2emuTokenChanged();
 }
 
-QString SettingsManager::getD2emuUser() const {
+QString SettingsManager::getD2emuUser() const
+{
     return m_d2emuUser;
 }
 
-void SettingsManager::setD2emuUser(const QString &newD2emuUser) {
+void SettingsManager::setD2emuUser(const QString &newD2emuUser)
+{
     if (m_d2emuUser == newD2emuUser)
         return;
     m_d2emuUser = newD2emuUser;
-    emit d2emuUserChanged();
+    Q_EMIT d2emuUserChanged();
 }
 
-QString SettingsManager::getLogPath() const {
+QString SettingsManager::getLogPath() const
+{
     return m_logPath;
 }
 
-void SettingsManager::setLogPath(const QString &newLogPath) {
+void SettingsManager::setLogPath(const QString &newLogPath)
+{
     if (m_logPath == newLogPath)
         return;
     m_logPath = newLogPath;
-    emit logPathChanged();
+    Q_EMIT logPathChanged();
 }
 
-QString SettingsManager::getLogLevel() const {
+QString SettingsManager::getLogLevel() const
+{
     return m_logLevel;
 }
 
-void SettingsManager::setLogLevel(const QString &newLogLevel) {
+void SettingsManager::setLogLevel(const QString &newLogLevel)
+{
     if (m_logLevel == newLogLevel)
         return;
     m_logLevel = newLogLevel;
-    emit logLevelChanged();
+    Q_EMIT logLevelChanged();
 }

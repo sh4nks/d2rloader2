@@ -1,13 +1,12 @@
 #ifndef D2RLOADER_H
 #define D2RLOADER_H
 
-#include <QObject>
-#include <QUrl>
 #include <QColor>
-#include <QString>
+#include <QObject>
 #include <QSettings>
+#include <QString>
 #include <QStringList>
-
+#include <QUrl>
 
 class D2RLoader : public QObject
 {
@@ -35,7 +34,10 @@ public:
     // Qt info
     static Q_INVOKABLE QString qtVersion();
 
-    Q_INVOKABLE QString getAppPath() const { return m_appPath; }
+    Q_INVOKABLE QString getAppPath() const
+    {
+        return m_appPath;
+    }
     void setAppPath(const QString &value);
 
     static Q_INVOKABLE void appExit();

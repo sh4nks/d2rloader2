@@ -2,10 +2,10 @@
 #ifndef PROFILEMANAGER_H
 #define PROFILEMANAGER_H
 
-#include <QObject>
 #include <QDebug>
-#include <QString>
 #include <QDir>
+#include <QObject>
+#include <QString>
 
 #include "profile.h"
 
@@ -16,7 +16,6 @@ class ProfileManager : public QObject
     Q_OBJECT
 
 public:
-
     // Constructor
     ProfileManager();
 
@@ -37,7 +36,6 @@ Q_SIGNALS:
     void itemChanged();
 
 private:
-
     // Variables
     std::list<Account> m_accountList;
     void updateQmlItemList();

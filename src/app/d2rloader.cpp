@@ -1,8 +1,8 @@
 #include "d2rloader.h"
 
+#include <QColor>
 #include <QDir>
 #include <QSize>
-#include <QColor>
 
 #include <QCoreApplication>
 
@@ -19,14 +19,12 @@ D2RLoader *D2RLoader::instance = nullptr;
 
 D2RLoader *D2RLoader::getInstance()
 {
-    if (instance == nullptr)
-    {
+    if (instance == nullptr) {
         instance = new D2RLoader();
     }
 
     return instance;
 }
-
 
 D2RLoader::D2RLoader()
 {
@@ -38,7 +36,7 @@ D2RLoader::D2RLoader()
 
     qDebug() << "qDebug: " << m_appPath;
     // Make sure the path is terminated with a separator?
-    //if (!m_appPath.endsWith('/')) m_appPath += '/';
+    // if (!m_appPath.endsWith('/')) m_appPath += '/';
 }
 
 D2RLoader::~D2RLoader()
@@ -64,7 +62,7 @@ QString D2RLoader::appBuildDate()
 QString D2RLoader::appBuildDateTime()
 {
     QString date = QString::fromLatin1(__DATE__);
-    return date + " " + __TIME__;
+    return date;
 }
 
 QString D2RLoader::appBuildMode()
@@ -80,7 +78,6 @@ QString D2RLoader::qtVersion()
     return QString::fromStdString(qVersion());
 }
 
-
 void D2RLoader::appExit()
 {
     QCoreApplication::exit();
@@ -88,8 +85,7 @@ void D2RLoader::appExit()
 
 void D2RLoader::setAppPath(const QString &value)
 {
-    if (m_appPath != value)
-    {
+    if (m_appPath != value) {
         QDir newPath(value);
         newPath.cdUp();
         m_appPath = newPath.absolutePath();
@@ -107,8 +103,8 @@ bool D2RLoader::isOsThemeDark()
     return (styleHints && styleHints->colorScheme() == Qt::ColorScheme::Dark);
 }
 
-
-void D2RLoader::registerSettingFormats() {
+void D2RLoader::registerSettingFormats()
+{
     QSettings appSettings(QStringLiteral("path1.ini"), QSettings::IniFormat);
     QSettings gameSettings(QStringLiteral("path1.ini"), QSettings::IniFormat);
 }

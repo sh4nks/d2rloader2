@@ -2,3 +2,6 @@ CompileFlags:
   CompilationDatabase: build/
   Remove:
     - -mno-direct-extern-access
+
+Documentation:
+  CommentFormat: Doxygen

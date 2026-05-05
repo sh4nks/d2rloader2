@@ -3,7 +3,7 @@
 
 #include <QObject>
 
-class GameManager: public QObject
+class GameManager : public QObject
 {
     Q_OBJECT
 public:

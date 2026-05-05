@@ -5,6 +5,8 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import Qt.labs.qmlmodels
 import org.kde.kirigami as Kirigami
+import com.someblocks.d2rloader
+import ProfileTableModel
 
 Kirigami.Card {
     id: root
@@ -101,7 +103,7 @@ Kirigami.Card {
             MenuItem {
                 text: i18nc("@action:inmenu", "Move Down")
                 icon.name: "arrow-down"
-                enabled: contextMenu.currentRowIndex < tableModel.rows.length - 1
+                enabled: contextMenu.currentRowIndex < profileTableModel.rows.length - 1
                 onTriggered: {
                     // Logic to move row down
                 }
@@ -211,62 +213,7 @@ Kirigami.Card {
                 }
             }
 
-            model: TableModel {
-                id: tableModel
-                TableModelColumn {
-                    display: "status"
-                }
-                TableModelColumn {
-                    display: "account"
-                }
-                TableModelColumn {
-                    display: "authMethod"
-                }
-                TableModelColumn {
-                    display: "region"
-                }
-                TableModelColumn {
-                    display: "launchParameters"
-                }
-                TableModelColumn {
-                    display: "actions"
-                }
-
-                rows: [
-                    {
-                        "status": "Running",
-                        "account": "cow",
-                        "authMethod": "Token",
-                        "region": "Europe",
-                        "launchParameters": "-w",
-                        "actions": "Stop"
-                    },
-                    {
-                        "status": "Stopped",
-                        "account": "dog",
-                        "authMethod": "Token",
-                        "region": "Europe",
-                        "launchParameters": "-w",
-                        "actions": "Start"
-                    },
-                    {
-                        "status": "Stopped",
-                        "account": "sheep",
-                        "authMethod": "Password",
-                        "region": "Europe",
-                        "launchParameters": "-w",
-                        "actions": "Start"
-                    },
-                    {
-                        "status": "Stopped",
-                        "account": "goat",
-                        "authMethod": "Steam",
-                        "region": "Europe",
-                        "launchParameters": "-w",
-                        "actions": "Start"
-                    }
-                ]
-            }
+            model: profileTableModel
 
             delegate: Rectangle {
                 id: cellDelegate
@@ -402,6 +349,63 @@ Kirigami.Card {
                     }
                 }
             }
+        }
+
+        TableModel {
+            id: _exampleModel
+            TableModelColumn {
+                display: "status"
+            }
+            TableModelColumn {
+                display: "account"
+            }
+            TableModelColumn {
+                display: "authMethod"
+            }
+            TableModelColumn {
+                display: "region"
+            }
+            TableModelColumn {
+                display: "launchParameters"
+            }
+            TableModelColumn {
+                display: "actions"
+            }
+
+            rows: [
+                {
+                    "status": "Running",
+                    "account": "cow",
+                    "authMethod": "Token",
+                    "region": "Europe",
+                    "launchParameters": "-w",
+                    "actions": "Stop"
+                },
+                {
+                    "status": "Stopped",
+                    "account": "dog",
+                    "authMethod": "Token",
+                    "region": "Europe",
+                    "launchParameters": "-w",
+                    "actions": "Start"
+                },
+                {
+                    "status": "Stopped",
+                    "account": "sheep",
+                    "authMethod": "Password",
+                    "region": "Europe",
+                    "launchParameters": "-w",
+                    "actions": "Start"
+                },
+                {
+                    "status": "Stopped",
+                    "account": "goat",
+                    "authMethod": "Steam",
+                    "region": "Europe",
+                    "launchParameters": "-w",
+                    "actions": "Start"
+                }
+            ]
         }
     }
 }

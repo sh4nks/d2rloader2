@@ -35,8 +35,7 @@ int main(int argc, char *argv[])
 
     // Init app components
     SettingsManager *sm = SettingsManager::getInstance();
-    if (!sm)
-    {
+    if (!sm) {
         qWarning() << "Cannot init app components!";
         return EXIT_FAILURE;
     }
@@ -58,11 +57,11 @@ int main(int argc, char *argv[])
                         QStringLiteral("peter.justin@outlook.com"),
                         QStringLiteral("https://peterjustin.com"));
 
-    aboutData.setHomepage("https://github.com/sh4nks/d2rloader");
+    aboutData.setHomepage(QStringLiteral("https://github.com/sh4nks/d2rloader"));
     aboutData.setBugAddress("https://github.com/sh4nks/d2rloader/issues");
     aboutData.setCopyrightStatement(QStringLiteral("Copyright (c) 2025 - 2026 Peter Justin"));
     aboutData.setOrganizationDomain("someblocks.com"); //
-    aboutData.setDesktopFileName("d2rloader");
+    aboutData.setDesktopFileName(QStringLiteral("d2rloader"));
     KAboutData::setApplicationData(aboutData);
 
     // Register a singleton that will be accessible from QML.

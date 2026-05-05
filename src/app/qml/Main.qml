@@ -6,6 +6,7 @@ import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Window
 import org.kde.kirigami as Kirigami
+import com.someblocks.d2rloader.settings
 
 Kirigami.ApplicationWindow {
     id: mainWindow
@@ -71,13 +72,13 @@ Kirigami.ApplicationWindow {
             id: accountTable
             Layout.fillWidth: true
             Layout.fillHeight: true
-            onSettingsClicked: settingsWindow.open()
+            onSettingsClicked: SettingsWindow.open()
             onAddAccountClicked: {
-                settingsWindow.openAccountEditor();
+                SettingsWindow.openAccountEditor();
             }
             onEditAccountClicked: accountData => {
                 console.log("accountData", accountData);
-                settingsWindow.openAccountEditor(accountData);
+                SettingsWindow.openAccountEditor(accountData);
             }
         }
 
@@ -123,10 +124,6 @@ Kirigami.ApplicationWindow {
                 id: applicationLogTab
             }
         }
-    }
-
-    SettingsWindow {
-        id: settingsWindow
     }
 
     AboutDialog {

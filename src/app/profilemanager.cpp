@@ -3,6 +3,7 @@
 #include <QJsonObject>
 #include <qjsonarray.h>
 #include <qjsondocument.h>
+#include <qobject.h>
 
 /** *********************************
  *  ProfileManager Initizalization
@@ -10,7 +11,6 @@
 
 ProfileManager::ProfileManager()
 {
-
     qDebug() << "(ProfileManager) Initialization ...";
 
     //  // Add some elements to the list as example
@@ -22,13 +22,10 @@ ProfileManager::ProfileManager()
 
 ProfileManager::~ProfileManager()
 {
-
 }
-
 
 void ProfileManager::clone(int id)
 {
-
 }
 
 void ProfileManager::add(int id, QString name, bool checked, double score, QString filepath)
@@ -40,24 +37,27 @@ void ProfileManager::add(int id, QString name, bool checked, double score, QStri
     updateQmlItemList();
 }
 
-void ProfileManager::update(int id, QString name, bool checked, double score, QString filepath) {
+void ProfileManager::update(int id, QString name, bool checked, double score, QString filepath)
+{
 }
 
-void ProfileManager::remove(int id, QString name, bool checked, double score, QString filepath) {
+void ProfileManager::remove(int id, QString name, bool checked, double score, QString filepath)
+{
 }
 
-void ProfileManager::updateQmlItemList() {
+void ProfileManager::updateQmlItemList()
+{
 }
 
 void ProfileManager::save(QString file_path)
 {
-    // Prepare file name and path
-    #ifdef __linux__
-    file_path.remove("file://");
-    #elif _WIN32
-    file_path.remove("file:///");
-    #endif
-    QString full_file_path = file_path.contains(".json")? file_path : file_path.append(".json");
+// Prepare file name and path
+#ifdef __linux__
+    file_path.remove(QString::fromUtf8("file://"));
+#elif _WIN32
+    file_path.remove(QString::fromUtf8("file:///"));
+#endif
+    QString full_file_path = file_path.contains(QString::fromUtf8(".json")) ? file_path : file_path.append(QString::fromUtf8(".json"));
     qDebug() << "(ProfileManager) Requested save list as " << full_file_path;
 
     // Get the current list as JSON
@@ -72,18 +72,17 @@ void ProfileManager::save(QString file_path)
 
 bool ProfileManager::load(QString file_path)
 {
-    if(!file_path.contains(".json"))
-    {
+    if (!file_path.contains(QString::fromUtf8(".json"))) {
         qCritical() << "(ProfileManager) Error, the file should be a JSON file";
         return false;
     }
 
-    // Prepare file
-    #ifdef __linux__
-    file_path.remove("file://");
-    #elif _WIN32
-    file_path.remove("file:///");
-    #endif
+// Prepare file
+#ifdef __linux__
+    file_path.remove(QString::fromUtf8("file://"));
+#elif _WIN32
+    file_path.remove(QString::fromUtf8("file:///"));
+#endif
     qDebug() << "(ProfileManager) Requested load the list " << file_path;
 
     // Load JSON file
@@ -96,7 +95,6 @@ bool ProfileManager::load(QString file_path)
 
     return true;
 }
-
 
 /** *********************************
  *  Auxiliar functions
@@ -124,13 +122,12 @@ QJsonDocument ProfileManager::toJson()
 
 void ProfileManager::loadFromJson(QJsonDocument doc)
 {
-    //qDebug() << doc.toJson();
+    // qDebug() << doc.toJson();
     QJsonArray objs_array = doc.array();
     qDebug() << "Loading " << objs_array.size() << " elements";
 
-    for(const auto value : objs_array)
-    {
+    for (const auto value : objs_array) {
         QJsonObject obj = value.toObject();
-        add(obj["id"].toInt(), obj["name"].toString(), obj["checked"].toBool(), obj["score"].toDouble(), obj["filepath"].toString());
+        // add(obj["id"].toInt(), obj["name"].toString(), obj["checked"].toBool(), obj["score"].toDouble(), obj["filepath"].toString());
     }
 }

@@ -1,4 +1,5 @@
 pragma ComponentBehavior: Bound
+pragma Singleton
 
 import QtQuick
 import org.kde.kirigamiaddons.settings as KirigamiSettings
