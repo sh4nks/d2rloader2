@@ -62,7 +62,7 @@ QString D2RLoader::appBuildDate()
 QString D2RLoader::appBuildDateTime()
 {
     QString date = QString::fromLatin1(__DATE__);
-    return date;
+    return date + QString::fromLatin1(" ") + QString::fromLatin1(__TIME__);
 }
 
 QString D2RLoader::appBuildMode()
