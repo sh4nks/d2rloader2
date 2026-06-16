@@ -6,7 +6,8 @@ import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Window
 import org.kde.kirigami as Kirigami
-import com.someblocks.d2rloader.settings
+
+import com.someblocks.d2rloader as D2R
 
 Kirigami.ApplicationWindow {
     id: mainWindow
@@ -21,7 +22,7 @@ Kirigami.ApplicationWindow {
             MenuItem {
                 text: i18nc("@action:inmenu", "&Settings")
                 icon.name: "settings-configure"
-                onTriggered: settingsWindow.open()
+                onTriggered: D2R.SettingsWindow.open()
             }
             MenuItem {
                 text: i18nc("@action:inmenu", "&Save Settings...")
@@ -68,17 +69,21 @@ Kirigami.ApplicationWindow {
         spacing: 0
 
         // Fixed Upper Section: Accounts Table
-        AccountTable {
+        D2R.AccountTable {
             id: accountTable
+            modelData: D2R.ProfileTableModel {
+                id: profileTableModel
+            }
+            Layout.topMargin: Kirigami.Units.smallSpacing * 6
             Layout.fillWidth: true
             Layout.fillHeight: true
-            onSettingsClicked: SettingsWindow.open()
+            onSettingsClicked: D2R.SettingsWindow.open()
             onAddAccountClicked: {
-                SettingsWindow.openAccountEditor();
+                D2R.SettingsWindow.openAccountEditor();
             }
             onEditAccountClicked: accountData => {
                 console.log("accountData", accountData);
-                SettingsWindow.openAccountEditor(accountData);
+                D2R.SettingsWindow.openAccountEditor(accountData);
             }
         }
 
@@ -112,15 +117,15 @@ Kirigami.ApplicationWindow {
             Layout.preferredHeight: Kirigami.Units.gridUnit * 5
             currentIndex: tabBar.currentIndex
 
-            TerrorZones {
+            D2R.TerrorZones {
                 id: terrorZonesTab
             }
 
-            DiabloClone {
+            D2R.DiabloClone {
                 id: diabloCloneTab
             }
 
-            ApplicationLog {
+            D2R.ApplicationLog {
                 id: applicationLogTab
             }
         }

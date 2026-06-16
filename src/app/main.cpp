@@ -1,6 +1,4 @@
 #include "d2rloader.h"
-#include "profile.h"
-#include "profiletablemodel.h"
 #include "settingsmanager.h"
 #include <KAboutData>
 #include <KIconTheme>
@@ -75,26 +73,10 @@ int main(int argc, char *argv[])
                                  return engine->toScriptValue(KAboutData::applicationData());
                              });
 
-    qmlRegisterUncreatableType<ProfileTableModel>("ProfileTableModel", 1, 0, "ProfileRoles", QStringLiteral("Cannot create instances of ProfileTableModel"));
-
-    QList<Profile *> profileList;
-    profileList.append(new Profile(QStringLiteral("Steirer"), AuthMethod::Token, Region::Europe, QStringLiteral("-w")));
-    profileList.append(new Profile(QStringLiteral("GoKarliGo"), AuthMethod::Password, Region::Europe, QStringLiteral("-w")));
-    profileList.append(new Profile(QStringLiteral("BurliBurliBurli"), AuthMethod::Token, Region::Europe, QStringLiteral("-w -ns")));
-    profileList.append(new Profile(QStringLiteral("Neanderthaler"), AuthMethod::Token, Region::Europe, QStringLiteral("-w -ns")));
-    profileList.append(new Profile(QStringLiteral("Gaudiwipferl"), AuthMethod::Token, Region::Europe, QStringLiteral("-w -ns")));
-
-    ProfileTableModel *profileTableModel = new ProfileTableModel(profileList, &app);
-
-    QSortFilterProxyModel *tableProxy = new QSortFilterProxyModel(&app);
-    tableProxy->setSourceModel(profileTableModel);
-    tableProxy->setSortRole(Qt::DisplayRole);
-    tableProxy->sort(ProfileTableModel::NameRole, Qt::AscendingOrder);
-
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextObject(new KLocalizedContext(&engine));
-    engine.rootContext()->setContextProperty(QStringLiteral("profileTableModel"), tableProxy);
-    engine.rootContext()->setContextProperty(QStringLiteral("settingsManager"), sm);
+    // engine.rootContext()->setContextProperty(QStringLiteral("profileTableModel"), tableProxy);
+    // engine.rootContext()->setContextProperty(QStringLiteral("settingsManager"), sm);
     engine.rootContext()->setContextProperty(QStringLiteral("app"), d2rloader);
     qDebug() << engine.importPathList();
 

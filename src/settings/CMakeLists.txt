@@ -1,4 +1,4 @@
-qt_add_library(Settings STATIC)
+add_library(Settings STATIC)
 
 set_source_files_properties(
     SettingsWindow.qml

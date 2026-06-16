@@ -7,7 +7,7 @@
 #include <QObject>
 #include <QString>
 
-#include "profile.h"
+#include "models/profile.h"
 
 using namespace std;
 
@@ -37,7 +37,7 @@ Q_SIGNALS:
 
 private:
     // Variables
-    std::list<Account> m_accountList;
+    QList<Profile> m_profileList;
     void updateQmlItemList();
 
     // Aux functions

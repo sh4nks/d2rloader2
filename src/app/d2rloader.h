@@ -7,10 +7,13 @@
 #include <QString>
 #include <QStringList>
 #include <QUrl>
+#include <qqmlintegration.h>
 
 class D2RLoader : public QObject
 {
     Q_OBJECT
+    QML_ELEMENT
+    QML_UNCREATABLE("")
 
     QString m_appPath;
 

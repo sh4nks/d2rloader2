@@ -5,8 +5,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import Qt.labs.qmlmodels
 import org.kde.kirigami as Kirigami
-import com.someblocks.d2rloader
-import ProfileTableModel
+import com.someblocks.d2rloader as D2R
 
 Kirigami.Card {
     id: root
@@ -14,6 +13,7 @@ Kirigami.Card {
     signal settingsClicked
     signal addAccountClicked
     signal editAccountClicked(var accountData)
+    required property var modelData
 
     Layout.fillWidth: true
     Layout.fillHeight: true
@@ -103,7 +103,7 @@ Kirigami.Card {
             MenuItem {
                 text: i18nc("@action:inmenu", "Move Down")
                 icon.name: "arrow-down"
-                enabled: contextMenu.currentRowIndex < profileTableModel.rows.length - 1
+                enabled: contextMenu.currentRowIndex < root.modelData.rowCount() - 1
                 onTriggered: {
                     // Logic to move row down
                 }
@@ -167,11 +167,6 @@ Kirigami.Card {
             boundsBehavior: Flickable.StopAtBounds
 
             property int hoveredRow: -1
-            signal clicked(var eventPoint, var button, var cellDelegate)
-
-            onClicked: (eventPoint, button, cellDelegate) => {
-                console.log("on clicked", button, cellDelegate);
-            }
 
             columnWidthProvider: function (column) {
                 if (column === 0) {
@@ -192,7 +187,7 @@ Kirigami.Card {
                         return;
                     }
                     if (tableView.hoveredRow > -1) {
-                        contextMenu.currentRowData = tableModel.rows[tableView.hoveredRow];
+                        contextMenu.currentRowData = tableView.model.data[tableView.hoveredRow];
                         contextMenu.currentRowIndex = tableView.hoveredRow;
                         contextMenu.popup();
                     } else {
@@ -208,16 +203,24 @@ Kirigami.Card {
                         return;
                     }
 
-                    let rowData = tableModel.rows[tableView.hoveredRow];
+                    let rowData = tableView.model.data[tableView.hoveredRow];
                     root.editAccountClicked(rowData);
                 }
             }
 
-            model: profileTableModel
+            model: root.modelData
+
+            D2R.AuthMethodModel {
+                id: authMethodModel
+            }
+
+            D2R.RegionModel {
+                id: regionModel
+            }
 
             delegate: Rectangle {
                 id: cellDelegate
-                required property var display
+                required property var model
                 required property int column
                 required property int row
 
@@ -251,18 +254,18 @@ Kirigami.Card {
                     width: Kirigami.Units.gridUnit * 0.6
                     height: width
                     radius: width / 2
-                    color: cellDelegate.display === "Running" ? Kirigami.Theme.positiveTextColor : "gray"
+                    color: cellDelegate.model.status === D2R.ProfileState.Running ? Kirigami.Theme.positiveTextColor : "gray"
                 }
 
-                // Columns 1 & 4: Standard text display (Account, Launch Parameters)
+                // Columns 1: Account
                 Label {
-                    visible: cellDelegate.column === 1 || cellDelegate.column === 4
+                    visible: cellDelegate.column === 1
                     anchors.fill: parent
                     anchors.topMargin: Kirigami.Units.gridUnit * 0.4
                     anchors.bottomMargin: Kirigami.Units.gridUnit * 0.4
                     anchors.leftMargin: Kirigami.Units.gridUnit
                     anchors.rightMargin: Kirigami.Units.gridUnit
-                    text: cellDelegate.display ?? ""
+                    text: cellDelegate.model.name ?? ""
                     color: Kirigami.Theme.textColor
                     font.family: cellDelegate.column === 4 ? "monospace" : ""
                     verticalAlignment: Text.AlignVCenter
@@ -280,8 +283,18 @@ Kirigami.Card {
                     anchors.bottomMargin: Kirigami.Units.gridUnit * 0.4
                     anchors.leftMargin: Kirigami.Units.smallSpacing
                     anchors.rightMargin: Kirigami.Units.smallSpacing
-                    model: [i18nc("@item:incombobox", "Token"), i18nc("@item:incombobox", "Password"), i18nc("@item:incombobox", "Steam")]
-                    currentIndex: authComboBox.model.indexOf(cellDelegate.display)
+                    model: authMethodModel
+                    textRole: "name"   // Displays literal string (e.g., "HighContrast")
+                    valueRole: "value"
+
+                    Component.onCompleted: {
+                        authComboBox.currentIndex = authComboBox.indexOfValue(cellDelegate.model.authMethod);
+                    }
+
+                    onActivated: {
+                        console.log("Selected Name: " + currentText);
+                        console.log("Selected Raw Enum Value: " + currentValue);
+                    }
                 }
 
                 // Column 3: ComboBox for Region
@@ -295,8 +308,34 @@ Kirigami.Card {
                     anchors.bottomMargin: Kirigami.Units.gridUnit * 0.4
                     anchors.leftMargin: Kirigami.Units.smallSpacing
                     anchors.rightMargin: Kirigami.Units.smallSpacing
-                    model: [i18nc("@item:incombobox", "Europe"), i18nc("@item:incombobox", "Americas"), i18nc("@item:incombobox", "Asia")]
-                    currentIndex: regionComboBox.model.indexOf(cellDelegate.display)
+                    model: regionModel
+                    currentIndex: regionComboBox.indexOfValue(cellDelegate.model.region)
+                    textRole: "name"
+                    valueRole: "value" // Evaluates to raw numerical enum index (e.g., 3)
+
+                    Component.onCompleted: {
+                        regionComboBox.currentIndex = regionComboBox.indexOfValue(cellDelegate.model.region);
+                    }
+
+                    onActivated: {
+                        console.log("Selected Name: " + currentText);
+                        console.log("Selected Raw Enum Value: " + currentValue);
+                    }
+                }
+
+                // Column 4: Game Parameters
+                Label {
+                    visible: cellDelegate.column === 4
+                    anchors.fill: parent
+                    anchors.topMargin: Kirigami.Units.gridUnit * 0.4
+                    anchors.bottomMargin: Kirigami.Units.gridUnit * 0.4
+                    anchors.leftMargin: Kirigami.Units.gridUnit
+                    anchors.rightMargin: Kirigami.Units.gridUnit
+                    text: cellDelegate.model.gameParameters ?? ""
+                    color: Kirigami.Theme.textColor
+                    font.family: cellDelegate.column === 4 ? "monospace" : ""
+                    verticalAlignment: Text.AlignVCenter
+                    elide: Text.ElideRight
                 }
 
                 // Column 5: Action Button
@@ -312,8 +351,8 @@ Kirigami.Card {
                     anchors.bottomMargin: Kirigami.Units.gridUnit * 0.4
                     width: Kirigami.Units.gridUnit * 6
 
-                    text: cellDelegate.display ?? ""
-                    icon.name: cellDelegate.display === "Start" ? "media-playback-playing" : "media-playback-stopped"
+                    text: cellDelegate.model.status === D2R.ProfileState.Running ? "Stop" : "Start"
+                    icon.name: cellDelegate.model.status === D2R.ProfileState.Running ? "media-playback-pause" : "media-playback-start"
 
                     background: Rectangle {
                         color: actionButton.text === "Start" ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.negativeTextColor
@@ -349,63 +388,6 @@ Kirigami.Card {
                     }
                 }
             }
-        }
-
-        TableModel {
-            id: _exampleModel
-            TableModelColumn {
-                display: "status"
-            }
-            TableModelColumn {
-                display: "account"
-            }
-            TableModelColumn {
-                display: "authMethod"
-            }
-            TableModelColumn {
-                display: "region"
-            }
-            TableModelColumn {
-                display: "launchParameters"
-            }
-            TableModelColumn {
-                display: "actions"
-            }
-
-            rows: [
-                {
-                    "status": "Running",
-                    "account": "cow",
-                    "authMethod": "Token",
-                    "region": "Europe",
-                    "launchParameters": "-w",
-                    "actions": "Stop"
-                },
-                {
-                    "status": "Stopped",
-                    "account": "dog",
-                    "authMethod": "Token",
-                    "region": "Europe",
-                    "launchParameters": "-w",
-                    "actions": "Start"
-                },
-                {
-                    "status": "Stopped",
-                    "account": "sheep",
-                    "authMethod": "Password",
-                    "region": "Europe",
-                    "launchParameters": "-w",
-                    "actions": "Start"
-                },
-                {
-                    "status": "Stopped",
-                    "account": "goat",
-                    "authMethod": "Steam",
-                    "region": "Europe",
-                    "launchParameters": "-w",
-                    "actions": "Start"
-                }
-            ]
         }
     }
 }
