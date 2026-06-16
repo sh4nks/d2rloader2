@@ -68,8 +68,8 @@ QVariant ProfileTableModel::data(const QModelIndex &index, int role) const
     switch (role) {
     case ProfileRoles::StatusRole:
         return profile->status();
-    case ProfileRoles::NameRole:
-        return profile->name();
+    case ProfileRoles::ProfileNameRole:
+        return profile->profileName();
     case ProfileRoles::AuthMethodRole:
         return profile->authMethod();
     case ProfileRoles::RegionRole:
@@ -87,7 +87,7 @@ QHash<int, QByteArray> ProfileTableModel::roleNames() const
 {
     static QHash<int, QByteArray> roles{
         {StatusRole, "status"},
-        {NameRole, "name"},
+        {ProfileNameRole, "profileName"},
         {AuthMethodRole, "authMethod"},
         {RegionRole, "region"},
         {GameParametersRole, "gameParameters"},
@@ -103,7 +103,7 @@ QVariant ProfileTableModel::headerData(int section, Qt::Orientation orientation,
             return QStringLiteral("Status");
         }
 
-        if (section == NameRole) {
+        if (section == ProfileNameRole) {
             return QStringLiteral("Profile");
         }
 

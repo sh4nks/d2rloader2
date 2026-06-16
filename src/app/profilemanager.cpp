@@ -1,13 +1,10 @@
 
 #include "profilemanager.h"
+#include "../accounts/models/profile.h"
 #include <QJsonObject>
 #include <qjsonarray.h>
 #include <qjsondocument.h>
 #include <qobject.h>
-
-/** *********************************
- *  ProfileManager Initizalization
- ** ********************************/
 
 ProfileManager::ProfileManager()
 {
@@ -128,6 +125,7 @@ void ProfileManager::loadFromJson(QJsonDocument doc)
 
     for (const auto value : objs_array) {
         QJsonObject obj = value.toObject();
+        auto profile = Profile::fromJson(obj);
         // add(obj["id"].toInt(), obj["name"].toString(), obj["checked"].toBool(), obj["score"].toDouble(), obj["filepath"].toString());
     }
 }

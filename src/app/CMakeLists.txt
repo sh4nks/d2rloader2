@@ -11,7 +11,6 @@ ecm_add_qml_module(d2rloader_static URI com.someblocks.d2rloader
         qml/Main.qml
         qml/Heading.qml
         qml/AboutDialog.qml
-        qml/AccountTable.qml
         qml/TerrorZones.qml
         qml/DiabloClone.qml
         qml/ApplicationLog.qml
@@ -20,14 +19,6 @@ ecm_add_qml_module(d2rloader_static URI com.someblocks.d2rloader
         gamemanager.cpp
         settingsmanager.h
         settingsmanager.cpp
-        models/profiletablemodel.h
-        models/profiletablemodel.cpp
-        models/profile.h
-        models/profile.cpp
-        models/region.h
-        models/region.cpp
-        models/authmethod.h
-        models/authmethod.cpp
     DEPENDENCIES
         QtCore
         QtQml
@@ -35,11 +26,12 @@ ecm_add_qml_module(d2rloader_static URI com.someblocks.d2rloader
         org.kde.kirigamiaddons.statefulapp
     IMPORTS
         com.someblocks.d2rloader.settings
+        com.someblocks.d2rloader.accounts
         ${EXTRA_IMPORTS}
 )
 
 target_include_directories(d2rloader_static PRIVATE ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/models)
-target_link_libraries(d2rloader_static PRIVATE d2rloader_staticplugin Settingsplugin)
+target_link_libraries(d2rloader_static PRIVATE d2rloader_staticplugin Accountsplugin Settingsplugin)
 target_link_libraries(d2rloader_static PUBLIC
   Settings
   Qt6::Quick

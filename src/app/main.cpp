@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
                          KAboutLicense::MIT);
 
     aboutData.addAuthor(i18nc("@info:credit", "Peter Justin"),
-                        i18nc("@info:credit", "Developer"),
+                        i18nc("@info:credit", "Lead Developer"),
                         QStringLiteral("peter.justin@outlook.com"),
                         QStringLiteral("https://peterjustin.com"));
 

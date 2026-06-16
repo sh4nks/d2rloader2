@@ -265,7 +265,7 @@ Kirigami.Card {
                     anchors.bottomMargin: Kirigami.Units.gridUnit * 0.4
                     anchors.leftMargin: Kirigami.Units.gridUnit
                     anchors.rightMargin: Kirigami.Units.gridUnit
-                    text: cellDelegate.model.name ?? ""
+                    text: cellDelegate.model.profileName ?? ""
                     color: Kirigami.Theme.textColor
                     font.family: cellDelegate.column === 4 ? "monospace" : ""
                     verticalAlignment: Text.AlignVCenter

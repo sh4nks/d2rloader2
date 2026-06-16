@@ -11,7 +11,7 @@ class ProfileTableModel : public QAbstractTableModel
 public:
     enum ProfileRoles {
         StatusRole = Qt::UserRole + 1,
-        NameRole,
+        ProfileNameRole,
         AuthMethodRole,
         RegionRole,
         GameParametersRole,
