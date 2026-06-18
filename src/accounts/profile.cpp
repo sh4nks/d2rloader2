@@ -168,7 +168,39 @@ void Profile::setProtonPath(const QString &protonPath)
 
 Profile *fromJson(QJsonObject &jsonObj)
 {
-    auto profileName = jsonObj.find(QStringLiteral("profileName")) auto profile = new Profile(nullptr);
+    auto profileName = jsonObj.find(QStringLiteral("profileName"));
+    auto profile = new Profile(nullptr);
 
     return nullptr;
+}
+
+Profile *create(const ProfileState::Type status,
+                const QString &profileName,
+                const AuthMethodModel::AuthMethod authMethod,
+                const RegionModel::Region region,
+                const QString &email,
+                const QString &token,
+                const QString &tokenProtected,
+                const QString &password,
+                const QString &gameParameters,
+                const GameSettingsType::Type gameSettings,
+                const QString &gameSettingsPath,
+                const QString &gamePath,
+                const QString &protonPath)
+{
+    Profile *profile = new Profile(nullptr);
+    profile->setStatus(status);
+    profile->setProfileName(profileName);
+    profile->setAuthMethod(authMethod);
+    profile->setRegion(region);
+    profile->setEmail(email);
+    profile->setPassword(password);
+    profile->setToken(token);
+    profile->setTokenProtected(tokenProtected);
+    profile->setGameParameters(gameParameters);
+    profile->setGameSettings(gameSettings);
+    profile->setGameSettingsPath(gameSettingsPath);
+    profile->setGamePath(gamePath);
+    profile->setProtonPath(protonPath);
+    return profile;
 }

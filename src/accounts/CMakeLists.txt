@@ -6,14 +6,14 @@ ecm_add_qml_module(Accounts GENERATE_PLUGIN_SOURCE
     QML_FILES
         AccountTable.qml
     SOURCES
-        models/profiletablemodel.h
-        models/profiletablemodel.cpp
-        models/profile.h
-        models/profile.cpp
-        models/region.h
-        models/region.cpp
-        models/authmethod.h
-        models/authmethod.cpp
+        profiletablemodel.h
+        profiletablemodel.cpp
+        profile.h
+        profile.cpp
+        region.h
+        region.cpp
+        authmethod.h
+        authmethod.cpp
 )
 
 target_include_directories(Accounts PRIVATE ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/models)

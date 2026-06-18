@@ -106,6 +106,19 @@ public:
 
     void update(const QString &profileName, const AuthMethodModel::AuthMethod &authMethod, const RegionModel::Region &region, const QString &gameParameters);
 
+    static Profile *create(const ProfileState::Type status,
+                           const QString &profileName,
+                           const AuthMethodModel::AuthMethod authMethod,
+                           const RegionModel::Region region,
+                           const QString &email,
+                           const QString &token,
+                           const QString &tokenProtected,
+                           const QString &password,
+                           const QString &gameParameters,
+                           const GameSettingsType::Type gameSettings,
+                           const QString &gameSettingsPath,
+                           const QString &gamePath,
+                           const QString &protonPath);
     static Profile *fromJson(QJsonObject &jsonObj);
 
 Q_SIGNALS:
