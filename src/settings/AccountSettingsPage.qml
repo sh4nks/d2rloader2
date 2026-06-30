@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
 import org.kde.kirigamiaddons.formcard as FormCard
+import com.someblocks.d2rloader as D2R
 
 FormCard.FormCardPage {
     id: root
@@ -15,9 +16,9 @@ FormCard.FormCardPage {
      * Property used to pass data when navigating from outside the module.
      * This mimics the pattern used in NeoChat for opening specific sub-pages.
      */
-    property var initialAccountData
+    property var accountData
 
-    onInitialAccountDataChanged: if (initialAccountData) {
+    onAccountDataChanged: if (accountData) {
         initialAccountTimer.restart();
     }
 
@@ -26,8 +27,9 @@ FormCard.FormCardPage {
         interval: 10
         running: false
         onTriggered: {
-            root.QQC2.ApplicationWindow.window.pageStack.layers.push(accountEditorComponent, root.initialAccountData);
-            root.initialAccountData = null;
+            console.log(root.accountData);
+            root.QQC2.ApplicationWindow.window.pageStack.layers.push(accountEditorComponent, root.accountData);
+            root.accountData = null;
         }
     }
 
@@ -38,28 +40,22 @@ FormCard.FormCardPage {
     FormCard.FormCard {
         // Mocking the account model for the UI prototype
         Repeater {
-            model: 4
+            model: D2R.ProfileManager
+
             delegate: FormCard.AbstractFormDelegate {
                 id: accountDelegate
                 required property int index
-
-                readonly property string accountName: [i18nc("@info", "cow"), i18nc("@info", "dog"), i18nc("@info", "sheep"), i18nc("@info", "goat")][accountDelegate.index]
-                readonly property string region: i18nc("@info", "Europe")
-                readonly property string authMethod: [i18nc("@info", "Token"), i18nc("@info", "Token"), i18nc("@info", "Password"), i18nc("@info", "Steam")][accountDelegate.index]
+                required property var profile
 
                 onClicked: root.QQC2.ApplicationWindow.window.pageStack.layers.push(accountEditorComponent, {
                     isNew: false,
-                    accountName: accountDelegate.accountName,
-                    authMethod: accountDelegate.authMethod,
-                    region: accountDelegate.region
+                    profile: accountDelegate.profile
                 })
 
                 TapHandler {
                     onDoubleTapped: root.QQC2.ApplicationWindow.window.pageStack.layers.push(accountEditorComponent, {
                         isNew: false,
-                        accountName: accountDelegate.accountName,
-                        authMethod: accountDelegate.authMethod,
-                        region: accountDelegate.region
+                        profile: accountDelegate.profile
                     })
                 }
 
@@ -78,14 +74,14 @@ FormCard.FormCardPage {
 
                         QQC2.Label {
                             Layout.fillWidth: true
-                            text: accountDelegate.accountName
+                            text: accountDelegate.profile.profileName
                             font.bold: true
                             elide: Text.ElideRight
                         }
 
                         QQC2.Label {
                             Layout.fillWidth: true
-                            text: accountDelegate.authMethod + " • " + accountDelegate.region
+                            text: D2R.AuthMethodModel.getDisplayName(accountDelegate.profile.authMethod) + " • " + D2R.RegionModel.getDisplayName(accountDelegate.profile.region)
                             color: Kirigami.Theme.disabledTextColor
                             font: Kirigami.Theme.smallFont
                             elide: Text.ElideRight

@@ -6,8 +6,8 @@ ecm_add_qml_module(Accounts GENERATE_PLUGIN_SOURCE
     QML_FILES
         AccountTable.qml
     SOURCES
-        profiletablemodel.h
-        profiletablemodel.cpp
+        profilemanager.h
+        profilemanager.cpp
         profile.h
         profile.cpp
         region.h

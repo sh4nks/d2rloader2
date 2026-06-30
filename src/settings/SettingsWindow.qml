@@ -90,18 +90,16 @@ KirigamiSettings.ConfigurationView {
             isNew: true
         };
 
-        if (accountData) {
+        console.log("settings: accountData " + accountData);
+        if (accountData != null) {
             props = {
                 isNew: false,
-                accountName: accountData.account || "",
-                authMethod: accountData.authMethod || "Token",
-                region: accountData.region || "Europe",
-                launchParameters: accountData.launchParameters || "-w"
+                profile: ProfileManager.getProfile(accountData)
             };
         }
 
         root.openWithInitialProperties("accounts", {
-            initialAccountData: props
+            accountData: props
         });
     }
 }

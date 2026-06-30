@@ -101,6 +101,19 @@ void Profile::setToken(const QString &token)
     }
 }
 
+QString Profile::tokenProtected() const
+{
+    return m_tokenProtected;
+}
+
+void Profile::setTokenProtected(const QString &token)
+{
+    if (m_tokenProtected != token) {
+        m_tokenProtected = token;
+        Q_EMIT tokenChanged();
+    }
+}
+
 QString Profile::gameParameters() const
 {
     return m_gameParameters;
@@ -166,7 +179,7 @@ void Profile::setProtonPath(const QString &protonPath)
     }
 }
 
-Profile *fromJson(QJsonObject &jsonObj)
+Profile *Profile::fromJson(QJsonObject &jsonObj)
 {
     auto profileName = jsonObj.find(QStringLiteral("profileName"));
     auto profile = new Profile(nullptr);
@@ -174,19 +187,19 @@ Profile *fromJson(QJsonObject &jsonObj)
     return nullptr;
 }
 
-Profile *create(const ProfileState::Type status,
-                const QString &profileName,
-                const AuthMethodModel::AuthMethod authMethod,
-                const RegionModel::Region region,
-                const QString &email,
-                const QString &token,
-                const QString &tokenProtected,
-                const QString &password,
-                const QString &gameParameters,
-                const GameSettingsType::Type gameSettings,
-                const QString &gameSettingsPath,
-                const QString &gamePath,
-                const QString &protonPath)
+Profile *Profile::create(const ProfileState::Type status,
+                         const QString &profileName,
+                         const AuthMethodModel::AuthMethod authMethod,
+                         const RegionModel::Region region,
+                         const QString &email,
+                         const QString &token,
+                         const QString &tokenProtected,
+                         const QString &password,
+                         const QString &gameParameters,
+                         const GameSettingsType::Type gameSettings,
+                         const QString &gameSettingsPath,
+                         const QString &gamePath,
+                         const QString &protonPath)
 {
     Profile *profile = new Profile(nullptr);
     profile->setStatus(status);

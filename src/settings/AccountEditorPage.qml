@@ -6,25 +6,16 @@ import QtQuick.Controls as QQC2
 import QtQuick.Dialogs
 import org.kde.kirigami as Kirigami
 import org.kde.kirigamiaddons.formcard as FormCard
+import com.someblocks.d2rloader as D2R
 
 FormCard.FormCardPage {
     id: root
 
     title: root.isNew ? i18nc("@title", "Add Account") : i18nc("@title", "Edit Account")
 
-    property bool isNew: true
-    property string accountName: ""
-    property string authMethod: "Token"
-    property string region: "Europe"
-    property string launchParameters: "-w"
-    property string gameSettings: "Default"
-    property string customSettingsPath: ""
-    property string protonPath: ""
+    property D2R.Profile profile
 
-    // Authentication data
-    property string authToken: ""
-    property string email: ""
-    property string password: ""
+    property bool isNew: true
 
     // Helper function to convert URL to local path
     function urlToPath(url) {
@@ -41,13 +32,13 @@ FormCard.FormCardPage {
         id: customSettingsDialog
         title: i18nc("@title:window", "Select Custom Settings.json")
         nameFilters: ["JSON files (*.json)", "All files (*)"]
-        onAccepted: root.customSettingsPath = root.urlToPath(selectedFile)
+        onAccepted: root.profile.gameSettingsPath = root.urlToPath(selectedFile)
     }
 
     FolderDialog {
         id: protonPathDialog
         title: i18nc("@title:window", "Select Proton Runtime Directory")
-        onAccepted: root.protonPath = root.urlToPath(selectedFolder)
+        onAccepted: root.profile.protonPath = root.urlToPath(selectedFolder)
     }
 
     FormCard.FormHeader {
@@ -59,9 +50,9 @@ FormCard.FormCardPage {
             id: nameField
             label: i18nc("@label", "Account Name")
             description: i18nc("@info:label", "A unique identifier for this account.")
-            text: root.accountName
+            text: root.profile.profileName
             placeholderText: i18nc("@info:placeholder", "e.g. MyAccount")
-            onTextChanged: root.accountName = text
+            onTextChanged: root.profile.profileName = text
         }
 
         FormCard.FormDelegateSeparator {}
@@ -70,12 +61,22 @@ FormCard.FormCardPage {
             id: authField
             text: i18nc("@label", "Authentication Method")
             description: i18nc("@info:label", "The method used to log in to Battle.net.")
-            model: [i18nc("@item", "Token"), i18nc("@item", "Password"), i18nc("@item", "Steam")]
-            currentIndex: Math.max(0, model.indexOf(root.authMethod))
-            onCurrentIndexChanged: root.authMethod = model[currentIndex]
+            model: D2R.AuthMethodModel
+
+            textRole: "name"
+            valueRole: "value"
+
+            Component.onCompleted: {
+                authField.currentIndex = authField.indexOfValue(root.profile.authMethod);
+            }
+
+            onActivated: {
+                console.log("Selected Name: " + currentText);
+                console.log("Selected Raw Enum Value: " + currentValue);
+                root.profile.authMethod = currentValue;
+            }
         }
 
-        // --- Token Conditional Field ---
         FormCard.FormDelegateSeparator {
             visible: tokenField.visible
         }
@@ -84,10 +85,10 @@ FormCard.FormCardPage {
             id: tokenField
             label: i18nc("@label", "Authentication Token")
             description: i18nc("@info:label", "The Battle.net login token.")
-            visible: root.authMethod === "Token"
-            text: root.authToken
+            visible: root.profile.authMethod === D2R.AuthMethodModel.Token
+            text: root.profile.token
             placeholderText: i18nc("@info:placeholder", "Enter your login token...")
-            onTextChanged: root.authToken = text
+            onTextChanged: root.profile.token = text
         }
 
         // --- Password Conditional Fields ---
@@ -97,27 +98,24 @@ FormCard.FormCardPage {
 
         FormCard.FormTextFieldDelegate {
             id: emailField
-            label: i18nc("@label", "Email Address")
+            label: i18nc("@label", "Battle.net Email Address")
             description: i18nc("@info:label", "Your Battle.net account email.")
-            visible: root.authMethod === "Password"
-            text: root.email
+            visible: root.profile.authMethod === D2R.AuthMethodModel.Password
+            text: root.profile.email
             placeholderText: i18nc("@info:placeholder", "example@email.com")
-            onTextChanged: root.email = text
+            onTextChanged: root.profile.email = text
         }
 
         FormCard.FormDelegateSeparator {
             visible: passwordField.visible
         }
 
-        FormCard.FormTextFieldDelegate {
+        FormCard.FormPasswordFieldDelegate {
             id: passwordField
-            label: i18nc("@label", "Password")
-            description: i18nc("@info:label", "Your Battle.net account password.")
-            visible: root.authMethod === "Password"
-            echoMode: TextInput.Password
-            text: root.password
-            placeholderText: i18nc("@info:placeholder", "••••••••")
-            onTextChanged: root.password = text
+            label: i18nc("@label", "Battle.net Password")
+            visible: root.profile.authMethod === D2R.AuthMethodModel.Password
+            text: root.profile.password
+            onTextChanged: root.profile.password = text
         }
 
         FormCard.FormDelegateSeparator {}
@@ -126,9 +124,20 @@ FormCard.FormCardPage {
             id: regionField
             text: i18nc("@label", "Region")
             description: i18nc("@info:label", "The game server region for this account.")
-            model: [i18nc("@item", "Europe"), i18nc("@item", "Americas"), i18nc("@item", "Asia")]
-            currentIndex: Math.max(0, model.indexOf(root.region))
-            onCurrentIndexChanged: root.region = model[currentIndex]
+            model: D2R.RegionModel
+
+            textRole: "name"
+            valueRole: "value"
+
+            Component.onCompleted: {
+                regionField.currentIndex = regionField.indexOfValue(root.profile.region);
+            }
+
+            onActivated: {
+                console.log("Selected Name: " + currentText);
+                console.log("Selected Raw Enum Value: " + currentValue);
+                root.profile.region = currentValue;
+            }
         }
 
         FormCard.FormDelegateSeparator {}
@@ -137,9 +146,9 @@ FormCard.FormCardPage {
             id: paramsField
             label: i18nc("@label", "Launch Parameters")
             description: i18nc("@info:label", "Command line arguments passed to the game executable.")
-            text: root.launchParameters
+            text: root.profile.gameParameters
             placeholderText: i18nc("@info:placeholder", "-w -txt")
-            onTextChanged: root.launchParameters = text
+            onTextChanged: root.profile.gameParameters = text
         }
     }
 
@@ -165,9 +174,9 @@ FormCard.FormCardPage {
                     QQC2.TextField {
                         id: protonPathField
                         Layout.fillWidth: true
-                        text: root.protonPath
+                        text: root.profile.protonPath
                         placeholderText: i18nc("@info:placeholder", "e.g. GE-Proton or UMU-Latest")
-                        onTextChanged: root.protonPath = text
+                        onTextChanged: root.profile.protonPath = text
                     }
                     QQC2.Button {
                         icon.name: "folder-open"
@@ -190,8 +199,8 @@ FormCard.FormCardPage {
             text: i18nc("@label", "Settings Profile")
             description: i18nc("@info:label", "Select which game settings (Settings.json) to use for this account.")
             model: [i18nc("@item", "Default"), i18nc("@item", "Account Specific"), i18nc("@item", "Custom")]
-            currentIndex: Math.max(0, model.indexOf(root.gameSettings))
-            onCurrentIndexChanged: root.gameSettings = model[currentIndex]
+            // currentIndex: Math.max(0, model.indexOf(root.gameSettings))
+            // onCurrentIndexChanged: root.gameSettings = model[currentIndex]
         }
 
         FormCard.FormDelegateSeparator {
@@ -200,7 +209,8 @@ FormCard.FormCardPage {
 
         FormCard.AbstractFormDelegate {
             id: customSettingsDelegate
-            visible: root.gameSettings === "Custom"
+            // visible: root.gameSettings === "Custom"
+            visible: true
             contentItem: ColumnLayout {
                 spacing: Kirigami.Units.smallSpacing
                 QQC2.Label {
@@ -217,9 +227,9 @@ FormCard.FormCardPage {
                     QQC2.TextField {
                         id: customSettingsPathField
                         Layout.fillWidth: true
-                        text: root.customSettingsPath
+                        text: root.profile.gameSettingsPath
                         placeholderText: i18nc("@info:placeholder", "Path to Settings.json...")
-                        onTextChanged: root.customSettingsPath = text
+                        onTextChanged: root.profile.gameSettingsPath = text
                     }
                     QQC2.Button {
                         icon.name: "document-open"
@@ -254,7 +264,7 @@ FormCard.FormCardPage {
             icon.name: root.isNew ? "list-add" : "document-save"
             highlighted: true
             onClicked: {
-                // Logic to persist the account would go here
+                D2R.ProfileManager.save(root.profile);
                 root.Kirigami.PageStack.pageStack.pop();
             }
         }

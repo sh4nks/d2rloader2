@@ -71,19 +71,17 @@ Kirigami.ApplicationWindow {
         // Fixed Upper Section: Accounts Table
         D2R.AccountTable {
             id: accountTable
-            modelData: D2R.ProfileTableModel {
-                id: profileTableModel
-            }
+            modelData: D2R.ProfileManager
             Layout.topMargin: Kirigami.Units.smallSpacing * 6
             Layout.fillWidth: true
             Layout.fillHeight: true
             onSettingsClicked: D2R.SettingsWindow.open()
             onAddAccountClicked: {
+                D2R.ProfileManager.selectedIndex;
                 D2R.SettingsWindow.openAccountEditor();
             }
-            onEditAccountClicked: accountData => {
-                console.log("accountData", accountData);
-                D2R.SettingsWindow.openAccountEditor(accountData);
+            onEditAccountClicked: rowIndex => {
+                D2R.SettingsWindow.openAccountEditor(rowIndex);
             }
         }
 

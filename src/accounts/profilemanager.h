@@ -13,10 +13,9 @@ class ProfileManager : public QAbstractTableModel
     QML_SINGLETON
     QML_ELEMENT
 
-    Q_PROPERTY(bool isReady READ isReady NOTIFY profilesReady)
-    Q_PROPERTY(bool hasProfiles READ hasProfiles NOTIFY profilesChanged)
+    Q_PROPERTY(bool isReady READ isReady NOTIFY profileReady)
+    Q_PROPERTY(bool hasProfiles READ hasProfiles NOTIFY profileChanged)
     Q_PROPERTY(Profile *selectedProfile READ selectedProfile WRITE selectProfile NOTIFY profileSelected)
-    Q_PROPERTY(QString selectedProfileId READ selectedProfileId NOTIFY profileSelected)
     Q_PROPERTY(int selectedIndex READ selectedIndex NOTIFY profileSelected)
 
 public:
@@ -26,6 +25,7 @@ public:
         AuthMethodRole,
         RegionRole,
         GameParametersRole,
+        ProfileRole,
         ActionRole,
     };
     Q_ENUM(ProfileRoles)
@@ -44,9 +44,11 @@ public:
     bool isReady() const;
     bool hasProfiles() const;
     void selectProfile(Profile *profile);
-    Profile *selectedProfile() const;
-    QString selectedProfileId() const;
+    Q_INVOKABLE void selectProfileByIndex(int index);
+    Q_INVOKABLE Profile *selectedProfile() const;
     int selectedIndex() const;
+    Q_INVOKABLE Profile *getProfile(int index);
+    int getIndexOfProfile(Profile *profile);
     Q_INVOKABLE void removeProfile(Profile *profile);
     void addProfile(const QString &name);
     bool setProfiles(QList<Profile *> profiles);
@@ -56,12 +58,14 @@ public:
     Q_INVOKABLE int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     Q_INVOKABLE QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
     Q_INVOKABLE QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
+    Q_INVOKABLE void save(Profile *profile);
     QHash<int, QByteArray> roleNames() const override;
 
 Q_SIGNALS:
     void profileAdded(Profile *profile);
     void profileRemoved(Profile *profile);
-    void profileChanged();
+    void profileChanged(Profile *profile);
+    void profilesChanged();
     void profileReady();
     void profileSelected(Profile *profile);
 

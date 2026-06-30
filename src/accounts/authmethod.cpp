@@ -2,6 +2,7 @@
 #include <QAbstractListModel>
 #include <QMetaEnum>
 #include <qhashfunctions.h>
+#include <qtmetamacros.h>
 
 AuthMethodModel::AuthMethodModel(QObject *parent)
     : QAbstractListModel(parent)
@@ -64,6 +65,16 @@ Q_INVOKABLE int AuthMethodModel::indexOfShortcode(const QString &shortcode) cons
         }
     }
     return 0;
+}
+
+Q_INVOKABLE QString AuthMethodModel::getDisplayName(int authMethod) const
+{
+    for (const auto &item : m_items) {
+        if (static_cast<int>(item.value) == authMethod) {
+            return item.displayName;
+        }
+    }
+    return tr("Unknown");
 }
 
 #include "moc_authmethod.cpp"

@@ -3,15 +3,16 @@
 #include <QMetaEnum>
 #include <QString>
 #include <QVector>
+#include <qhashfunctions.h>
 #include <qqmlintegration.h>
 
 class AuthMethodModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT
+QML_SINGLETON // Tells Qt to manage this class as a single global instance
 
-public:
-    enum AuthMethod {
+    public : enum AuthMethod {
         Password = 0,
         Token,
         Steam
@@ -47,6 +48,7 @@ public:
     // Invokable utility functions
     Q_INVOKABLE int shortcodeToEnum(const QString &shortcode) const;
     Q_INVOKABLE int indexOfShortcode(const QString &shortcode) const;
+    Q_INVOKABLE QString getDisplayName(int authMethod) const;
 
 private:
     QVector<AuthMethodItem> m_items;

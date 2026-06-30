@@ -43,7 +43,7 @@ public:
     Q_ENUM(Type);
 };
 
-class Profile final : public QObject
+class Profile : public QObject
 {
     Q_OBJECT
     QML_ELEMENT
@@ -119,6 +119,7 @@ public:
                            const QString &gameSettingsPath,
                            const QString &gamePath,
                            const QString &protonPath);
+
     static Profile *fromJson(QJsonObject &jsonObj);
 
 Q_SIGNALS:
@@ -136,6 +137,8 @@ Q_SIGNALS:
     void protonPathChanged();
 
 private:
+    int id;
+    int position;
     ProfileState::Type m_status = ProfileState::Stopped;
     QString m_profileName;
     AuthMethodModel::AuthMethod m_authMethod;

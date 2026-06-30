@@ -1,7 +1,5 @@
 add_library(d2rloader_static STATIC
   d2rloader.h d2rloader.cpp
-
-  profilemanager.h profilemanager.cpp
 )
 
 ecm_add_qml_module(d2rloader_static URI com.someblocks.d2rloader

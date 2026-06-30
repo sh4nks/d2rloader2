@@ -12,7 +12,7 @@ Kirigami.Card {
     padding: 0
     signal settingsClicked
     signal addAccountClicked
-    signal editAccountClicked(var accountData)
+    signal editAccountClicked(int rowIndex)
     required property var modelData
 
     Layout.fillWidth: true
@@ -82,7 +82,7 @@ Kirigami.Card {
             MenuItem {
                 text: i18nc("@action:inmenu", "Edit")
                 icon.name: "edit-entry"
-                onTriggered: root.editAccountClicked(contextMenu.currentRowData)
+                onTriggered: root.editAccountClicked(contextMenu.currentRowIndex)
             }
             MenuItem {
                 text: i18nc("@action:inmenu", "Delete")
@@ -202,21 +202,11 @@ Kirigami.Card {
                     if (tableView.hoveredRow === -1) {
                         return;
                     }
-
-                    let rowData = tableView.model.data[tableView.hoveredRow];
-                    root.editAccountClicked(rowData);
+                    root.editAccountClicked(tableView.hoveredRow);
                 }
             }
 
             model: root.modelData
-
-            D2R.AuthMethodModel {
-                id: authMethodModel
-            }
-
-            D2R.RegionModel {
-                id: regionModel
-            }
 
             delegate: Rectangle {
                 id: cellDelegate
@@ -283,7 +273,8 @@ Kirigami.Card {
                     anchors.bottomMargin: Kirigami.Units.gridUnit * 0.4
                     anchors.leftMargin: Kirigami.Units.smallSpacing
                     anchors.rightMargin: Kirigami.Units.smallSpacing
-                    model: authMethodModel
+                    model: D2R.AuthMethodModel
+                    currentValue: cellDelegate.model.authMethod
                     textRole: "name"   // Displays literal string (e.g., "HighContrast")
                     valueRole: "value"
 
@@ -308,7 +299,8 @@ Kirigami.Card {
                     anchors.bottomMargin: Kirigami.Units.gridUnit * 0.4
                     anchors.leftMargin: Kirigami.Units.smallSpacing
                     anchors.rightMargin: Kirigami.Units.smallSpacing
-                    model: regionModel
+                    model: D2R.RegionModel
+                    currentValue: cellDelegate.model.region
                     currentIndex: regionComboBox.indexOfValue(cellDelegate.model.region)
                     textRole: "name"
                     valueRole: "value" // Evaluates to raw numerical enum index (e.g., 3)

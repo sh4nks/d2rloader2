@@ -66,4 +66,14 @@ Q_INVOKABLE int RegionModel::indexOfServer(const QString &server) const
     return 0;
 }
 
+Q_INVOKABLE QString RegionModel::getDisplayName(int region) const
+{
+    for (const auto &item : m_items) {
+        if (static_cast<int>(item.value) == region) {
+            return item.displayName;
+        }
+    }
+    return tr("Unknown");
+}
+
 #include "moc_region.cpp"

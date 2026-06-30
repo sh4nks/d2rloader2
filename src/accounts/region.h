@@ -9,8 +9,9 @@ class RegionModel : public QAbstractListModel
 {
     Q_OBJECT
     QML_ELEMENT
-public:
-    enum Region {
+QML_SINGLETON // Tells Qt to manage this class as a single global instance
+
+    public : enum Region {
         Europe = 0,
         Americas,
         Asia
@@ -46,6 +47,7 @@ public:
     // Invokable utility functions
     Q_INVOKABLE int serverToEnum(const QString &server) const;
     Q_INVOKABLE int indexOfServer(const QString &server) const;
+    Q_INVOKABLE QString getDisplayName(int region) const;
 
 private:
     QVector<RegionItem> m_items;

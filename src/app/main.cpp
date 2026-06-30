@@ -1,3 +1,4 @@
+#include "../accounts/profilemanager.h"
 #include "d2rloader.h"
 #include "settingsmanager.h"
 #include <KAboutData>
@@ -79,6 +80,8 @@ int main(int argc, char *argv[])
     // engine.rootContext()->setContextProperty(QStringLiteral("settingsManager"), sm);
     engine.rootContext()->setContextProperty(QStringLiteral("app"), d2rloader);
     qDebug() << engine.importPathList();
+
+    ProfileManager::instance().loadProfiles();
 
     // engine.load(QUrl(QStringLiteral("qrc:/qml/Main.qml")));
     engine.loadFromModule("com.someblocks.d2rloader", "Main");
