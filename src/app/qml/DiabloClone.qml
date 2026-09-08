@@ -7,8 +7,6 @@ import org.kde.kirigami as Kirigami
 
 Kirigami.Card {
     id: root
-    Layout.fillWidth: true
-    Layout.fillHeight: true
 
     header: CardHeader {
         title: i18nc("@title", "Diablo Clone Tracker")

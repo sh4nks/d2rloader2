@@ -90,7 +90,6 @@ KirigamiSettings.ConfigurationView {
             isNew: true
         };
 
-        console.log("settings: accountData " + accountData);
         if (accountData != null) {
             props = {
                 isNew: false,

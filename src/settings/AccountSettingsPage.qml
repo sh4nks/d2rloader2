@@ -18,19 +18,20 @@ FormCard.FormCardPage {
      */
     property var accountData
 
-    onAccountDataChanged: if (accountData) {
-        initialAccountTimer.restart();
+    onAccountDataChanged: if (root.accountData) {
+        Qt.callLater(root.showAccountEditor);
     }
 
-    Timer {
-        id: initialAccountTimer
-        interval: 10
-        running: false
-        onTriggered: {
-            console.log(root.accountData);
-            root.QQC2.ApplicationWindow.window.pageStack.layers.push(accountEditorComponent, root.accountData);
-            root.accountData = null;
+    /**
+     * Opens the editor for the account this page was navigated to with,
+     * deferred until the page itself is on the stack.
+     */
+    function showAccountEditor() {
+        if (!root.accountData) {
+            return;
         }
+        root.QQC2.ApplicationWindow.window.pageStack.layers.push(accountEditorComponent, root.accountData);
+        root.accountData = null;
     }
 
     FormCard.FormHeader {

@@ -14,10 +14,6 @@ Kirigami.Card {
     signal editAccountClicked(int rowIndex)
     required property var modelData
 
-    Layout.fillWidth: true
-    Layout.fillHeight: true
-    Layout.margins: 0
-
     header: Item {
         implicitHeight: headerLayout.implicitHeight + Kirigami.Units.smallSpacing * 2
         RowLayout {
@@ -60,7 +56,6 @@ Kirigami.Card {
 
     contentItem: ColumnLayout {
         spacing: 0
-        Layout.margins: 0
 
         // Set Kirigami Theme properties for the table area
         Kirigami.Theme.inherit: true

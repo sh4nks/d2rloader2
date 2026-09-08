@@ -7,8 +7,6 @@ import org.kde.kirigami as Kirigami
 
 Kirigami.Card {
     id: root
-    Layout.fillWidth: true
-    Layout.fillHeight: true
 
     header: CardHeader {
         title: i18nc("@title", "Application Log")
@@ -21,7 +19,6 @@ Kirigami.Card {
     }
     contentItem: ColumnLayout {
         spacing: 0
-        Layout.margins: 0
 
         Rectangle {
             Layout.fillWidth: true
@@ -89,7 +86,7 @@ Kirigami.Card {
                                 text: logDelegate.timestamp
                                 color: Kirigami.Theme.textColor
                                 opacity: 0.6
-                                font.family: "monospace"
+                                font.family: Kirigami.Theme.fixedWidthFont.family
                                 Layout.preferredWidth: Kirigami.Units.gridUnit * 4
                             }
 
@@ -105,26 +102,18 @@ Kirigami.Card {
                                     return Kirigami.Theme.positiveTextColor;
                                 }
                                 font.bold: true
-                                font.family: "monospace"
+                                font.family: Kirigami.Theme.fixedWidthFont.family
                                 Layout.preferredWidth: Kirigami.Units.gridUnit * 4
                             }
                             TextEdit {
                                 Layout.fillWidth: true
                                 text: logDelegate.message
-                                font.family: "monospace"
+                                font.family: Kirigami.Theme.fixedWidthFont.family
                                 color: Kirigami.Theme.textColor
                                 readOnly: true
                                 wrapMode: Text.WordWrap
                                 selectByMouse: true
                             }
-
-                            // Label {
-                            //     text: logDelegate.message
-                            //     Layout.fillWidth: true
-                            //     wrapMode: Text.WordWrap
-                            //     font.family: "monospace"
-                            //     color: Kirigami.Theme.textColor
-                            // }
                         }
                     }
 

@@ -52,7 +52,7 @@ FormCard.FormCardPage {
             description: i18nc("@info:label", "A unique identifier for this account.")
             text: root.profile.profileName
             placeholderText: i18nc("@info:placeholder", "e.g. MyAccount")
-            onTextChanged: root.profile.profileName = text
+            onEditingFinished: root.profile.profileName = text
         }
 
         FormCard.FormDelegateSeparator {}
@@ -70,11 +70,7 @@ FormCard.FormCardPage {
                 authField.currentIndex = authField.indexOfValue(root.profile.authMethod);
             }
 
-            onActivated: {
-                console.log("Selected Name: " + currentText);
-                console.log("Selected Raw Enum Value: " + currentValue);
-                root.profile.authMethod = currentValue;
-            }
+            onActivated: root.profile.authMethod = currentValue
         }
 
         FormCard.FormDelegateSeparator {
@@ -88,7 +84,7 @@ FormCard.FormCardPage {
             visible: root.profile.authMethod === Accounts.AuthMethodModel.Token
             text: root.profile.token
             placeholderText: i18nc("@info:placeholder", "Enter your login token...")
-            onTextChanged: root.profile.token = text
+            onEditingFinished: root.profile.token = text
         }
 
         // --- Password Conditional Fields ---
@@ -103,7 +99,7 @@ FormCard.FormCardPage {
             visible: root.profile.authMethod === Accounts.AuthMethodModel.Password
             text: root.profile.email
             placeholderText: i18nc("@info:placeholder", "example@email.com")
-            onTextChanged: root.profile.email = text
+            onEditingFinished: root.profile.email = text
         }
 
         FormCard.FormDelegateSeparator {
@@ -115,7 +111,7 @@ FormCard.FormCardPage {
             label: i18nc("@label", "Battle.net Password")
             visible: root.profile.authMethod === Accounts.AuthMethodModel.Password
             text: root.profile.password
-            onTextChanged: root.profile.password = text
+            onEditingFinished: root.profile.password = text
         }
 
         FormCard.FormDelegateSeparator {}
@@ -133,11 +129,7 @@ FormCard.FormCardPage {
                 regionField.currentIndex = regionField.indexOfValue(root.profile.region);
             }
 
-            onActivated: {
-                console.log("Selected Name: " + currentText);
-                console.log("Selected Raw Enum Value: " + currentValue);
-                root.profile.region = currentValue;
-            }
+            onActivated: root.profile.region = currentValue
         }
 
         FormCard.FormDelegateSeparator {}
@@ -148,7 +140,7 @@ FormCard.FormCardPage {
             description: i18nc("@info:label", "Command line arguments passed to the game executable.")
             text: root.profile.gameParameters
             placeholderText: i18nc("@info:placeholder", "-w -txt")
-            onTextChanged: root.profile.gameParameters = text
+            onEditingFinished: root.profile.gameParameters = text
         }
     }
 
@@ -176,7 +168,7 @@ FormCard.FormCardPage {
                         Layout.fillWidth: true
                         text: root.profile.protonPath
                         placeholderText: i18nc("@info:placeholder", "e.g. GE-Proton or UMU-Latest")
-                        onTextChanged: root.profile.protonPath = text
+                        onEditingFinished: root.profile.protonPath = text
                     }
                     QQC2.Button {
                         icon.name: "folder-open"
@@ -229,7 +221,7 @@ FormCard.FormCardPage {
                         Layout.fillWidth: true
                         text: root.profile.gameSettingsPath
                         placeholderText: i18nc("@info:placeholder", "Path to Settings.json...")
-                        onTextChanged: root.profile.gameSettingsPath = text
+                        onEditingFinished: root.profile.gameSettingsPath = text
                     }
                     QQC2.Button {
                         icon.name: "document-open"
