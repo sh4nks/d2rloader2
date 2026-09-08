@@ -3,6 +3,7 @@
 #include "profile.h"
 #include "region.h"
 #include <KConfigGroup>
+#include <KLocalizedString>
 #include <KSharedConfig>
 #include <qabstractitemmodel.h>
 #include <qhashfunctions.h>
@@ -32,8 +33,7 @@ int ProfileManager::rowCount(const QModelIndex &) const
 
 int ProfileManager::columnCount(const QModelIndex &) const
 {
-    // status, profile name, authmethod, region, params, actions
-    return 6;
+    return ProfileColumn::Count;
 }
 
 bool ProfileManager::hasProfiles() const
@@ -272,6 +272,8 @@ bool ProfileManager::setData(const QModelIndex &index, const QVariant &value, in
 QHash<int, QByteArray> ProfileManager::roleNames() const
 {
     static QHash<int, QByteArray> roles{
+        // HorizontalHeaderView looks up its labels through the "display" role.
+        {Qt::DisplayRole, "display"},
         {StatusRole, "status"},
         {ProfileRole, "profile"},
         {ProfileNameRole, "profileName"},
@@ -285,30 +287,24 @@ QHash<int, QByteArray> ProfileManager::roleNames() const
 
 QVariant ProfileManager::headerData(int section, Qt::Orientation orientation, int role) const
 {
-    if (role == Qt::DisplayRole && orientation == Qt::Horizontal) {
-        if (section == StatusRole) {
-            return QStringLiteral("Status");
-        }
+    if (role != Qt::DisplayRole || orientation != Qt::Horizontal) {
+        return QVariant();
+    }
 
-        if (section == ProfileNameRole) {
-            return QStringLiteral("Profile");
-        }
-
-        if (section == AuthMethodRole) {
-            return QStringLiteral("Auth Method");
-        }
-
-        if (section == RegionRole) {
-            return QStringLiteral("Region");
-        }
-
-        if (section == GameParametersRole) {
-            return QStringLiteral("Launch Parameters");
-        }
-
-        if (section == ActionRole) {
-            return QStringLiteral("Actions");
-        }
+    switch (section) {
+    case ProfileColumn::Status:
+        // The status indicator needs no label.
+        return QString();
+    case ProfileColumn::Name:
+        return i18nc("@title:column", "Account");
+    case ProfileColumn::AuthMethod:
+        return i18nc("@title:column", "Auth Method");
+    case ProfileColumn::Region:
+        return i18nc("@title:column", "Region");
+    case ProfileColumn::GameParameters:
+        return i18nc("@title:column", "Launch Parameters");
+    case ProfileColumn::Actions:
+        return i18nc("@title:column", "Actions");
     }
 
     return QVariant();

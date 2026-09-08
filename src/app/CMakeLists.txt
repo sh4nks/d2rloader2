@@ -7,8 +7,9 @@ ecm_add_qml_module(d2rloader_static URI com.someblocks.d2rloader
     GENERATE_PLUGIN_SOURCE
     QML_FILES
         qml/Main.qml
-        qml/Heading.qml
         qml/AboutDialog.qml
+        qml/CardHeader.qml
+        qml/ZoneEntry.qml
         qml/TerrorZones.qml
         qml/DiabloClone.qml
         qml/ApplicationLog.qml
@@ -21,10 +22,11 @@ ecm_add_qml_module(d2rloader_static URI com.someblocks.d2rloader
         QtCore
         QtQml
         QtQuick
+        org.kde.kirigami
         org.kde.kirigamiaddons.statefulapp
-    IMPORTS
         com.someblocks.d2rloader.settings
         com.someblocks.d2rloader.accounts
+    IMPORTS
         ${EXTRA_IMPORTS}
 )
 

@@ -10,6 +10,10 @@ ecm_add_qml_module(Accounts GENERATE_PLUGIN_SOURCE
         CellDelegateComboBox.qml
         CellDelegateLabel.qml
         CellDelegateStatus.qml
+    DEPENDENCIES
+        QtQuick
+        QtQuick.Controls
+        org.kde.kirigami
     SOURCES
         profilemanager.h
         profilemanager.cpp
@@ -25,6 +29,7 @@ target_include_directories(Accounts PRIVATE ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_
 target_link_libraries(Accounts PRIVATE
     Qt::Core
     Qt::Quick
+    KF6::I18n
     KF6::Kirigami
     KF6::ConfigCore
 )

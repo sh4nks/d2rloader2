@@ -8,6 +8,28 @@
 #include <qqmlintegration.h>
 #include <qvariant.h>
 
+/**
+ * The columns of the accounts table, in display order.
+ */
+class ProfileColumn : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_UNCREATABLE("")
+
+public:
+    enum Column {
+        Status = 0,
+        Name,
+        AuthMethod,
+        Region,
+        GameParameters,
+        Actions,
+        Count, /* number of columns, not a column itself */
+    };
+    Q_ENUM(Column)
+};
+
 class ProfileManager : public QAbstractTableModel
 {
     Q_OBJECT

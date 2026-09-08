@@ -10,19 +10,8 @@ Kirigami.Card {
     Layout.fillWidth: true
     Layout.fillHeight: true
 
-    header: RowLayout {
-        Layout.fillWidth: true
-        Layout.margins: Kirigami.Units.smallSpacing
-
-        Kirigami.Heading {
-            text: i18nc("@title", "Diablo Clone Tracker")
-            level: 2
-            Layout.alignment: Qt.AlignVCenter
-        }
-
-        Item {
-            Layout.fillWidth: true
-        }
+    header: CardHeader {
+        title: i18nc("@title", "Diablo Clone Tracker")
 
         Button {
             text: i18nc("@action:button", "Refresh")
@@ -32,7 +21,6 @@ Kirigami.Card {
             }
         }
     }
-
     contentItem: ColumnLayout {
         spacing: Kirigami.Units.gridUnit
         Layout.margins: Kirigami.Units.smallSpacing
@@ -79,43 +67,46 @@ Kirigami.Card {
             color: Kirigami.Theme.textColor
         }
 
-        GridLayout {
-            columns: 2
+        ColumnLayout {
             Layout.fillWidth: true
-            rowSpacing: Kirigami.Units.smallSpacing
-            columnSpacing: Kirigami.Units.gridUnit
+            spacing: Kirigami.Units.smallSpacing
 
-            Label {
-                text: i18nc("@label", "Americas:")
-                color: Kirigami.Theme.textColor
-            }
-            ProgressBar {
-                value: 0.5
-                Layout.fillWidth: true
-                Kirigami.Theme.colorSet: Kirigami.Theme.View
-                Kirigami.Theme.inherit: false
-            }
+            Repeater {
+                model: [
+                    {
+                        region: i18nc("@label", "Americas:"),
+                        progress: 0.5
+                    },
+                    {
+                        region: i18nc("@label", "Europe:"),
+                        progress: 0.33
+                    },
+                    {
+                        region: i18nc("@label", "Asia:"),
+                        progress: 0.16
+                    }
+                ]
 
-            Label {
-                text: i18nc("@label", "Europe:")
-                color: Kirigami.Theme.textColor
-            }
-            ProgressBar {
-                value: 0.33
-                Layout.fillWidth: true
-                Kirigami.Theme.colorSet: Kirigami.Theme.View
-                Kirigami.Theme.inherit: false
-            }
+                delegate: RowLayout {
+                    id: regionRow
+                    required property var modelData
 
-            Label {
-                text: i18nc("@label", "Asia:")
-                color: Kirigami.Theme.textColor
-            }
-            ProgressBar {
-                value: 0.16
-                Layout.fillWidth: true
-                Kirigami.Theme.colorSet: Kirigami.Theme.View
-                Kirigami.Theme.inherit: false
+                    Layout.fillWidth: true
+                    spacing: Kirigami.Units.gridUnit
+
+                    Label {
+                        text: regionRow.modelData.region
+                        color: Kirigami.Theme.textColor
+                        Layout.preferredWidth: Kirigami.Units.gridUnit * 5
+                    }
+
+                    ProgressBar {
+                        value: regionRow.modelData.progress
+                        Layout.fillWidth: true
+                        Kirigami.Theme.colorSet: Kirigami.Theme.View
+                        Kirigami.Theme.inherit: false
+                    }
+                }
             }
         }
 

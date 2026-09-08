@@ -18,6 +18,13 @@ ecm_add_qml_module(Settings GENERATE_PLUGIN_SOURCE
         GameSettingsPage.qml
         LaunchSequencePage.qml
         LaunchSequenceEditorPage.qml
+    DEPENDENCIES
+        QtQuick
+        QtQuick.Controls
+        org.kde.kirigami
+        org.kde.kirigamiaddons.formcard
+        org.kde.kirigamiaddons.settings
+        com.someblocks.d2rloader.accounts
 )
 
 target_include_directories(Settings PRIVATE ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/models)

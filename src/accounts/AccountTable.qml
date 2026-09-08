@@ -5,7 +5,6 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import Qt.labs.qmlmodels
 import org.kde.kirigami as Kirigami
-import com.someblocks.d2rloader as D2R
 
 Kirigami.Card {
     id: root
@@ -122,35 +121,34 @@ Kirigami.Card {
         HorizontalHeaderView {
             id: horizontalHeader
             syncView: tableView
-            // Column 0 is the status indicator (no text header)
-            model: ["", i18nc("@title:column", "Account"), i18nc("@title:column", "Auth Method"), i18nc("@title:column", "Region"), i18nc("@title:column", "Launch Parameters"), i18nc("@title:column", "Actions")]
             Layout.fillWidth: true
 
             delegate: Rectangle {
                 id: headerDelegate
-                required property var modelData
+                required property string display
                 required property int column
+
+                // Text columns are left aligned and share the cells' wider padding.
+                readonly property bool isTextColumn: headerDelegate.column === ProfileColumn.Name || headerDelegate.column === ProfileColumn.GameParameters
 
                 implicitWidth: tableView.columnWidthProvider(headerDelegate.column)
                 implicitHeight: Kirigami.Units.gridUnit * 2
                 color: Kirigami.Theme.alternateBackgroundColor
 
-                Rectangle {
+                Kirigami.Separator {
                     anchors.left: parent.left
                     anchors.right: parent.right
                     anchors.bottom: parent.bottom
-                    height: 1
-                    color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.2)
                 }
 
                 Label {
                     anchors.fill: parent
-                    anchors.leftMargin: (headerDelegate.column === 1 || headerDelegate.column === 4) ? Kirigami.Units.gridUnit : Kirigami.Units.smallSpacing
-                    anchors.rightMargin: (headerDelegate.column === 1 || headerDelegate.column === 4) ? Kirigami.Units.gridUnit : Kirigami.Units.smallSpacing
-                    text: headerDelegate.modelData ?? ""
+                    anchors.leftMargin: headerDelegate.isTextColumn ? Kirigami.Units.gridUnit : Kirigami.Units.smallSpacing
+                    anchors.rightMargin: headerDelegate.isTextColumn ? Kirigami.Units.gridUnit : Kirigami.Units.smallSpacing
+                    text: headerDelegate.display
                     font.bold: true
                     color: Kirigami.Theme.textColor
-                    horizontalAlignment: (headerDelegate.column === 1 || headerDelegate.column === 4) ? Text.AlignLeft : Text.AlignHCenter
+                    horizontalAlignment: headerDelegate.isTextColumn ? Text.AlignLeft : Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     elide: Text.ElideRight
                 }
@@ -181,15 +179,18 @@ Kirigami.Card {
                 }
             }
 
+            readonly property real statusColumnWidth: Kirigami.Units.gridUnit * 2
+            readonly property real actionsColumnWidth: Kirigami.Units.gridUnit * 7
+
             columnWidthProvider: function (column) {
-                if (column === 0) {
-                    return Kirigami.Units.gridUnit * 2;
+                if (column === ProfileColumn.Status) {
+                    return tableView.statusColumnWidth;
                 }
-                if (column === 5) {
-                    return Kirigami.Units.gridUnit * 7;
+                if (column === ProfileColumn.Actions) {
+                    return tableView.actionsColumnWidth;
                 }
-                // Distribute remaining width among other 4 columns (1, 2, 3, 4)
-                return (tableView.width - (Kirigami.Units.gridUnit * 9)) / 4;
+                // The remaining columns share whatever is left over.
+                return (tableView.width - tableView.statusColumnWidth - tableView.actionsColumnWidth) / (ProfileColumn.Count - 2);
             }
             onWidthChanged: tableView.forceLayout()
 
@@ -200,7 +201,7 @@ Kirigami.Card {
                         return;
                     }
                     if (tableView.hoveredRow > -1) {
-                        contextMenu.currentRowData = tableView.model.data[tableView.hoveredRow];
+                        contextMenu.currentRowData = root.modelData.getProfile(tableView.hoveredRow);
                         contextMenu.currentRowIndex = tableView.hoveredRow;
                         contextMenu.popup();
                     } else {
@@ -224,19 +225,19 @@ Kirigami.Card {
             delegate: DelegateChooser {
                 // Column 0: Status Indicator
                 DelegateChoice {
-                    column: 0
+                    column: ProfileColumn.Status
                     delegate: CellDelegateStatus {
                         required property var model
                         required property int row
 
                         highlighted: row === tableView.hoveredRow
-                        running: model.status === D2R.ProfileState.Running
+                        running: model.status === ProfileState.Running
                     }
                 }
 
                 // Column 1: Account
                 DelegateChoice {
-                    column: 1
+                    column: ProfileColumn.Name
                     delegate: CellDelegateLabel {
                         required property var model
                         required property int row
@@ -248,13 +249,13 @@ Kirigami.Card {
 
                 // Column 2: Auth Method
                 DelegateChoice {
-                    column: 2
+                    column: ProfileColumn.AuthMethod
                     delegate: CellDelegateComboBox {
                         required property var model
                         required property int row
 
                         highlighted: row === tableView.hoveredRow
-                        options: D2R.AuthMethodModel
+                        options: AuthMethodModel
                         value: model.authMethod
                         onValueSelected: newValue => model.authMethod = newValue
                     }
@@ -262,13 +263,13 @@ Kirigami.Card {
 
                 // Column 3: Region
                 DelegateChoice {
-                    column: 3
+                    column: ProfileColumn.Region
                     delegate: CellDelegateComboBox {
                         required property var model
                         required property int row
 
                         highlighted: row === tableView.hoveredRow
-                        options: D2R.RegionModel
+                        options: RegionModel
                         value: model.region
                         onValueSelected: newValue => model.region = newValue
                     }
@@ -276,7 +277,7 @@ Kirigami.Card {
 
                 // Column 4: Game Parameters
                 DelegateChoice {
-                    column: 4
+                    column: ProfileColumn.GameParameters
                     delegate: CellDelegateLabel {
                         required property var model
                         required property int row
@@ -289,13 +290,13 @@ Kirigami.Card {
 
                 // Column 5: Action Button
                 DelegateChoice {
-                    column: 5
+                    column: ProfileColumn.Actions
                     delegate: CellDelegateAction {
                         required property var model
                         required property int row
 
                         highlighted: row === tableView.hoveredRow
-                        running: model.status === D2R.ProfileState.Running
+                        running: model.status === ProfileState.Running
                         onTriggered: {
                             // Logic to toggle state
                         }

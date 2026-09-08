@@ -2,6 +2,7 @@ import QtQuick 6.6
 import QtQuick.Controls 6.6
 import QtQuick.Window 6.6
 import QtQuick.Layouts 6.6
+import org.kde.kirigami as Kirigami
 
 ApplicationWindow {
     id: aboutDialog
@@ -45,9 +46,9 @@ ApplicationWindow {
 
             Column {
                 Layout.fillHeight: true
-                Heading {
+                Kirigami.Heading {
                     text: i18nc("@title", "D2RLoader")
-                    level: 3
+                    level: 1
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     width: aboutDialog.width - (appIcon.width + mainRow.spacing + mainRow.anchors.leftMargin + mainRow.anchors.rightMargin)
                     horizontalAlignment: Text.AlignHCenter

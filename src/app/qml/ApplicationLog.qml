@@ -10,20 +10,8 @@ Kirigami.Card {
     Layout.fillWidth: true
     Layout.fillHeight: true
 
-    header: RowLayout {
-        Layout.fillWidth: true
-        Layout.margins: Kirigami.Units.smallSpacing
-
-        Kirigami.Heading {
-            text: i18nc("@title", "Application Log")
-            level: 2
-            color: Kirigami.Theme.textColor
-            Layout.alignment: Qt.AlignVCenter
-        }
-
-        Item {
-            Layout.fillWidth: true
-        }
+    header: CardHeader {
+        title: i18nc("@title", "Application Log")
 
         Button {
             text: i18nc("@action:button", "Clear Logs")
@@ -31,7 +19,6 @@ Kirigami.Card {
             onClicked: logModel.clear()
         }
     }
-
     contentItem: ColumnLayout {
         spacing: 0
         Layout.margins: 0

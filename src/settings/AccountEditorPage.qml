@@ -6,14 +6,14 @@ import QtQuick.Controls as QQC2
 import QtQuick.Dialogs
 import org.kde.kirigami as Kirigami
 import org.kde.kirigamiaddons.formcard as FormCard
-import com.someblocks.d2rloader as D2R
+import com.someblocks.d2rloader.accounts as Accounts
 
 FormCard.FormCardPage {
     id: root
 
     title: root.isNew ? i18nc("@title", "Add Account") : i18nc("@title", "Edit Account")
 
-    property D2R.Profile profile
+    property Accounts.Profile profile
 
     property bool isNew: true
 
@@ -61,7 +61,7 @@ FormCard.FormCardPage {
             id: authField
             text: i18nc("@label", "Authentication Method")
             description: i18nc("@info:label", "The method used to log in to Battle.net.")
-            model: D2R.AuthMethodModel
+            model: Accounts.AuthMethodModel
 
             textRole: "name"
             valueRole: "value"
@@ -85,7 +85,7 @@ FormCard.FormCardPage {
             id: tokenField
             label: i18nc("@label", "Authentication Token")
             description: i18nc("@info:label", "The Battle.net login token.")
-            visible: root.profile.authMethod === D2R.AuthMethodModel.Token
+            visible: root.profile.authMethod === Accounts.AuthMethodModel.Token
             text: root.profile.token
             placeholderText: i18nc("@info:placeholder", "Enter your login token...")
             onTextChanged: root.profile.token = text
@@ -100,7 +100,7 @@ FormCard.FormCardPage {
             id: emailField
             label: i18nc("@label", "Battle.net Email Address")
             description: i18nc("@info:label", "Your Battle.net account email.")
-            visible: root.profile.authMethod === D2R.AuthMethodModel.Password
+            visible: root.profile.authMethod === Accounts.AuthMethodModel.Password
             text: root.profile.email
             placeholderText: i18nc("@info:placeholder", "example@email.com")
             onTextChanged: root.profile.email = text
@@ -113,7 +113,7 @@ FormCard.FormCardPage {
         FormCard.FormPasswordFieldDelegate {
             id: passwordField
             label: i18nc("@label", "Battle.net Password")
-            visible: root.profile.authMethod === D2R.AuthMethodModel.Password
+            visible: root.profile.authMethod === Accounts.AuthMethodModel.Password
             text: root.profile.password
             onTextChanged: root.profile.password = text
         }
@@ -124,7 +124,7 @@ FormCard.FormCardPage {
             id: regionField
             text: i18nc("@label", "Region")
             description: i18nc("@info:label", "The game server region for this account.")
-            model: D2R.RegionModel
+            model: Accounts.RegionModel
 
             textRole: "name"
             valueRole: "value"
@@ -264,7 +264,7 @@ FormCard.FormCardPage {
             icon.name: root.isNew ? "list-add" : "document-save"
             highlighted: true
             onClicked: {
-                D2R.ProfileManager.save(root.profile);
+                Accounts.ProfileManager.save(root.profile);
                 root.Kirigami.PageStack.pageStack.pop();
             }
         }

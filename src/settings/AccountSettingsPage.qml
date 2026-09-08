@@ -5,7 +5,7 @@ import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
 import org.kde.kirigamiaddons.formcard as FormCard
-import com.someblocks.d2rloader as D2R
+import com.someblocks.d2rloader.accounts as Accounts
 
 FormCard.FormCardPage {
     id: root
@@ -40,7 +40,7 @@ FormCard.FormCardPage {
     FormCard.FormCard {
         // Mocking the account model for the UI prototype
         Repeater {
-            model: D2R.ProfileManager
+            model: Accounts.ProfileManager
 
             delegate: FormCard.AbstractFormDelegate {
                 id: accountDelegate
@@ -81,7 +81,7 @@ FormCard.FormCardPage {
 
                         QQC2.Label {
                             Layout.fillWidth: true
-                            text: D2R.AuthMethodModel.getDisplayName(accountDelegate.profile.authMethod) + " • " + D2R.RegionModel.getDisplayName(accountDelegate.profile.region)
+                            text: Accounts.AuthMethodModel.getDisplayName(accountDelegate.profile.authMethod) + " • " + Accounts.RegionModel.getDisplayName(accountDelegate.profile.region)
                             color: Kirigami.Theme.disabledTextColor
                             font: Kirigami.Theme.smallFont
                             elide: Text.ElideRight

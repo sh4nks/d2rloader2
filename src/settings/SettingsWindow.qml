@@ -4,7 +4,7 @@ pragma Singleton
 import QtQuick
 import org.kde.kirigamiaddons.settings as KirigamiSettings
 
-import com.someblocks.d2rloader 1.0
+import com.someblocks.d2rloader.accounts
 
 KirigamiSettings.ConfigurationView {
     id: root
@@ -16,31 +16,31 @@ KirigamiSettings.ConfigurationView {
             moduleId: "application"
             text: i18nc("@title:menu", "Application")
             icon.name: "settings-configure"
-            page: () => Qt.createComponent("com.someblocks.d2rloader", "ApplicationSettingsPage")
+            page: () => Qt.createComponent("com.someblocks.d2rloader.settings", "ApplicationSettingsPage")
         },
         KirigamiSettings.ConfigurationModule {
             moduleId: "accounts"
             text: i18nc("@title:menu", "Accounts")
             icon.name: "system-users"
-            page: () => Qt.createComponent("com.someblocks.d2rloader", "AccountSettingsPage")
+            page: () => Qt.createComponent("com.someblocks.d2rloader.settings", "AccountSettingsPage")
         },
         KirigamiSettings.ConfigurationModule {
             moduleId: "game_settings"
             text: i18nc("@title:menu", "Game Settings")
             icon.name: "folder-games-symbolic"
-            page: () => Qt.createComponent("com.someblocks.d2rloader", "GameSettingsPage")
+            page: () => Qt.createComponent("com.someblocks.d2rloader.settings", "GameSettingsPage")
         },
         KirigamiSettings.ConfigurationModule {
             moduleId: "live_info"
             text: i18nc("@title:menu", "DClone & TZ Info")
             icon.name: "internet-services"
-            page: () => Qt.createComponent("com.someblocks.d2rloader", "DiabloCloneSettingsPage")
+            page: () => Qt.createComponent("com.someblocks.d2rloader.settings", "DiabloCloneSettingsPage")
         },
         KirigamiSettings.ConfigurationModule {
             moduleId: "launch_sequence"
             text: i18nc("@title:menu", "Launch Sequence")
             icon.name: "media-playlist-play"
-            page: () => Qt.createComponent("com.someblocks.d2rloader", "LaunchSequencePage")
+            page: () => Qt.createComponent("com.someblocks.d2rloader.settings", "LaunchSequencePage")
         },
         KirigamiSettings.ConfigurationModule {
             moduleId: "about"

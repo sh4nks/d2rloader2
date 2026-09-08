@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
     KAboutData::setApplicationData(aboutData);
 
     // Register a singleton that will be accessible from QML.
-    qmlRegisterSingletonType("com.someblocks.d2rloader", // How the import statement should look like
+    qmlRegisterSingletonType("com.someblocks.d2rloader.settings", // How the import statement should look like
                              1,
                              0, // Major and minor versions of the import
                              "About", // The name of the QML object

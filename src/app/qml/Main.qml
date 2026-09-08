@@ -7,7 +7,8 @@ import QtQuick.Dialogs
 import QtQuick.Window
 import org.kde.kirigami as Kirigami
 
-import com.someblocks.d2rloader as D2R
+import com.someblocks.d2rloader.accounts as Accounts
+import com.someblocks.d2rloader.settings as Settings
 
 Kirigami.ApplicationWindow {
     id: mainWindow
@@ -22,7 +23,7 @@ Kirigami.ApplicationWindow {
             MenuItem {
                 text: i18nc("@action:inmenu", "&Settings")
                 icon.name: "settings-configure"
-                onTriggered: D2R.SettingsWindow.open()
+                onTriggered: Settings.SettingsWindow.open()
             }
             MenuItem {
                 text: i18nc("@action:inmenu", "&Save Settings...")
@@ -69,19 +70,19 @@ Kirigami.ApplicationWindow {
         spacing: 0
 
         // Fixed Upper Section: Accounts Table
-        D2R.AccountTable {
+        Accounts.AccountTable {
             id: accountTable
-            modelData: D2R.ProfileManager
+            modelData: Accounts.ProfileManager
             Layout.topMargin: Kirigami.Units.smallSpacing * 6
             Layout.fillWidth: true
             Layout.fillHeight: true
-            onSettingsClicked: D2R.SettingsWindow.open()
+            onSettingsClicked: Settings.SettingsWindow.open()
             onAddAccountClicked: {
-                D2R.ProfileManager.selectedIndex;
-                D2R.SettingsWindow.openAccountEditor();
+                Accounts.ProfileManager.selectedIndex;
+                Settings.SettingsWindow.openAccountEditor();
             }
             onEditAccountClicked: rowIndex => {
-                D2R.SettingsWindow.openAccountEditor(rowIndex);
+                Settings.SettingsWindow.openAccountEditor(rowIndex);
             }
         }
 
@@ -115,15 +116,15 @@ Kirigami.ApplicationWindow {
             Layout.preferredHeight: Kirigami.Units.gridUnit * 5
             currentIndex: tabBar.currentIndex
 
-            D2R.TerrorZones {
+            TerrorZones {
                 id: terrorZonesTab
             }
 
-            D2R.DiabloClone {
+            DiabloClone {
                 id: diabloCloneTab
             }
 
-            D2R.ApplicationLog {
+            ApplicationLog {
                 id: applicationLogTab
             }
         }
