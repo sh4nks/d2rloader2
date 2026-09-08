@@ -61,6 +61,8 @@ public:
     Q_INVOKABLE bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
     Q_INVOKABLE QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
     Q_INVOKABLE void save(Profile *profile);
+    Q_INVOKABLE void moveUp(int row);
+    Q_INVOKABLE void moveDown(int row);
     QHash<int, QByteArray> roleNames() const override;
 
 Q_SIGNALS:
@@ -75,7 +77,12 @@ private:
     explicit ProfileManager(QObject *parent = nullptr);
 
     ~ProfileManager() override;
+
+    int calculateNextId();
+    void saveOrder();
+    void loadAndRestoreOrder();
     Profile *m_selected_profile = nullptr;
     QList<Profile *> m_profiles;
     bool m_ready = false;
+    int m_sessionMaxId = 0;
 };

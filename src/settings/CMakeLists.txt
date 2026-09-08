@@ -24,4 +24,5 @@ target_include_directories(Settings PRIVATE ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_
 target_link_libraries(Settings PRIVATE
     KF6::ColorScheme
     KF6::I18n
+    KF6::ConfigCore
 )

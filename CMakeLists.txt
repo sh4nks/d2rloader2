@@ -77,6 +77,7 @@ find_package(KF6 REQUIRED COMPONENTS
     ColorScheme
     IconThemes
     CoreAddons
+    ConfigCore
     QQC2DesktopStyle
 )
 

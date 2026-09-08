@@ -278,14 +278,7 @@ Kirigami.Card {
                     textRole: "name"   // Displays literal string (e.g., "HighContrast")
                     valueRole: "value"
 
-                    onCurrentValueChanged: {
-                        console.log("currentValue: " + currentValue);
-                    }
-
                     onActivated: index => {
-                        let newValue = authComboBox.valueAt(index);
-                        console.log("Selected Name: " + currentText);
-                        console.log("Selected Raw Enum Value: " + newValue);
                         cellDelegate.model.authMethod = currentValue;
                     }
                 }
@@ -306,13 +299,7 @@ Kirigami.Card {
                     textRole: "name"
                     valueRole: "value" // Evaluates to raw numerical enum index (e.g., 3)
 
-                    Component.onCompleted: {
-                        regionComboBox.currentIndex = regionComboBox.indexOfValue(cellDelegate.model.region);
-                    }
-
                     onActivated: {
-                        console.log("Selected Name: " + currentText);
-                        console.log("Selected Raw Enum Value: " + currentValue);
                         cellDelegate.model.region = currentValue;
                     }
                 }

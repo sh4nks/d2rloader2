@@ -65,6 +65,9 @@ class Profile : public QObject
 public:
     explicit Profile(QObject *parent = nullptr);
 
+    int id() const;
+    void setId(const int id);
+
     ProfileState::Type status() const;
     void setStatus(const ProfileState::Type status);
 
@@ -137,8 +140,7 @@ Q_SIGNALS:
     void protonPathChanged();
 
 private:
-    int id;
-    int position;
+    int m_id;
     ProfileState::Type m_status = ProfileState::Stopped;
     QString m_profileName;
     AuthMethodModel::AuthMethod m_authMethod;

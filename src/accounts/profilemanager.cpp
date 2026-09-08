@@ -2,6 +2,8 @@
 #include "authmethod.h"
 #include "profile.h"
 #include "region.h"
+#include <KConfigGroup>
+#include <KSharedConfig>
 #include <qabstractitemmodel.h>
 #include <qhashfunctions.h>
 #include <qlist.h>
@@ -68,6 +70,24 @@ Profile *ProfileManager::getProfile(int index)
 
 void ProfileManager::addProfile(const QString &name)
 {
+    /*
+     *
+     int nextRowIndex = m_data.count();
+
+     beginInsertRows(QModelIndex(), nextRowIndex, nextRowIndex);
+
+     TableItem newItem;
+     newItem.uniqueId = calculateNextId();
+     newItem.name = name;
+     newItem.value = value;
+     m_data.append(newItem);
+
+     endInsertRows();
+     saveOrder();
+     *
+     *
+     */
+
     Profile *p = new Profile(nullptr);
     p->setProfileName(name);
 
@@ -92,6 +112,22 @@ void ProfileManager::removeProfile(Profile *profile)
     // config->deleteGroup(account->settingsGroupName());
     // config->sync();
 
+    /*
+     *
+
+
+     if (row < 0 || row >= m_data.count()) return;
+
+     beginRemoveRows(QModelIndex(), row, row);
+     m_data.removeAt(row);
+     endRemoveRows();
+
+     saveOrder();
+
+
+     *
+     */
+
     const auto index = m_profiles.indexOf(profile);
     beginRemoveRows(QModelIndex(), index, index);
     m_profiles.removeOne(profile);
@@ -106,6 +142,31 @@ void ProfileManager::removeProfile(Profile *profile)
 
     Q_EMIT profileRemoved(profile);
     Q_EMIT profilesChanged();
+}
+
+void ProfileManager::moveUp(int row)
+{
+    if (row <= 0 || row >= m_profiles.count())
+        return;
+
+    if (beginMoveRows(QModelIndex(), row, row, QModelIndex(), row - 1)) {
+        m_profiles.move(row, row - 1);
+        endMoveRows();
+        saveOrder();
+    }
+}
+
+void ProfileManager::moveDown(int row)
+{
+    if (row < 0 || row >= m_profiles.count() - 1)
+        return;
+
+    // Qt row movement logic: destination must be row + 2 to move below target row
+    if (beginMoveRows(QModelIndex(), row, row, QModelIndex(), row + 2)) {
+        m_profiles.move(row, row + 1);
+        endMoveRows();
+        saveOrder();
+    }
 }
 
 bool ProfileManager::isReady() const
@@ -282,6 +343,109 @@ void ProfileManager::save(Profile *profile)
     Q_EMIT dataChanged(topLeft, bottomRight);
     Q_EMIT profileChanged(profile);
 }
+
+int ProfileManager::calculateNextId()
+{
+    m_sessionMaxId++;
+    return m_sessionMaxId;
+}
+
+void ProfileManager::saveOrder()
+{
+    QList<int> orderedIds;
+    for (const auto &item : m_profiles) {
+        orderedIds.append(item->id());
+    }
+
+    KConfigGroup config = KSharedConfig::openConfig()->group("AccountTableSettings"_L1);
+    config.writeEntry("RowOrder", orderedIds);
+    config.sync();
+}
+
+void ProfileManager::loadAndRestoreOrder()
+{
+    // 1. Clean up old profiles from memory before loading new ones
+    qDeleteAll(m_profiles);
+    m_profiles.clear();
+
+    // Replace this block with your actual database/file loading logic
+    QList<Profile *> rawItems;
+
+    // Assign your loaded items to the manager container
+    m_profiles = rawItems;
+
+    // Example using your Profile::create factory:
+    Profile *p1 = Profile::create(ProfileState::Stopped,
+                                  "Alpha"_L1,
+                                  AuthMethodModel::AuthMethod(),
+                                  RegionModel::Region(),
+                                  "alpha@email.com"_L1,
+                                  ""_L1,
+                                  ""_L1,
+                                  ""_L1,
+                                  ""_L1,
+                                  GameSettingsType::None,
+                                  ""_L1,
+                                  ""_L1,
+                                  ""_L1);
+    p1->setId(101);
+    p1->setParent(this); // Memory management: this manager owns the profile lifespan
+    rawItems.append(p1);
+
+    Profile *p2 = Profile::create(ProfileState::Stopped,
+                                  "Beta"_L1,
+                                  AuthMethodModel::AuthMethod(),
+                                  RegionModel::Region(),
+                                  "beta@email.com"_L1,
+                                  ""_L1,
+                                  ""_L1,
+                                  ""_L1,
+                                  ""_L1,
+                                  GameSettingsType::None,
+                                  ""_L1,
+                                  ""_L1,
+                                  ""_L1);
+    p2->setId(102);
+    p2->setParent(this);
+    rawItems.append(p2);
+
+    // 3. Read saved ordering configuration
+    KConfigGroup config = KSharedConfig::openConfig()->group("AccountTableSettings"_L1);
+    QList<int> savedOrder = config.readEntry("RowOrder", QList<int>());
+
+    m_profiles = rawItems;
+
+    // 4. Sort the pointers safely based on your saved configuration
+    if (!savedOrder.isEmpty()) {
+        std::sort(m_profiles.begin(), m_profiles.end(), [&savedOrder](const Profile *a, const Profile *b) {
+            int indexA = savedOrder.indexOf(a->id());
+            int indexB = savedOrder.indexOf(b->id());
+
+            // If an ID isn't found in the saved order, push it to the end
+            if (indexA == -1)
+                return false;
+            if (indexB == -1)
+                return true;
+
+            return indexA < indexB;
+        });
+    }
+
+    // 5. Track session maximum ID limits safely
+    for (const auto *item : m_profiles) {
+        if (item->id() > m_sessionMaxId) {
+            m_sessionMaxId = item->id();
+        }
+    }
+    if (m_sessionMaxId == 0) {
+        m_sessionMaxId = 100;
+    }
+
+    // 6. Notify QML that the underlying data layout has changed
+    // (Call your specific change signal or model reset methods here)
+    // emit profilesChanged();
+}
+
 /*
      void ProfileManager::save(QString file_path)
     {

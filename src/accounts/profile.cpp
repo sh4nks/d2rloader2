@@ -9,6 +9,18 @@ Profile::Profile(QObject *parent)
 {
 }
 
+int Profile::id() const
+{
+    return m_id;
+}
+
+void Profile::setId(const int id)
+{
+    if (m_id != id) {
+        m_id = id;
+    }
+}
+
 ProfileState::Type Profile::status() const
 {
     return m_status;

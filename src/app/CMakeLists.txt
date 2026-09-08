@@ -42,6 +42,7 @@ target_link_libraries(d2rloader_static PUBLIC
   KF6::CoreAddons
   KF6::IconThemes
   KF6::I18nQml
+  KF6::ConfigCore
   KirigamiApp
   KirigamiAddonsComponents
   KirigamiAddonsStatefulApp

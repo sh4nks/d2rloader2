@@ -21,4 +21,5 @@ target_link_libraries(Accounts PRIVATE
     Qt::Core
     Qt::Quick
     KF6::Kirigami
+    KF6::ConfigCore
 )
