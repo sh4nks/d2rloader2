@@ -5,6 +5,11 @@ ecm_add_qml_module(Accounts GENERATE_PLUGIN_SOURCE
     OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/src/com/someblocks/d2rloader/accounts
     QML_FILES
         AccountTable.qml
+        CellDelegate.qml
+        CellDelegateAction.qml
+        CellDelegateComboBox.qml
+        CellDelegateLabel.qml
+        CellDelegateStatus.qml
     SOURCES
         profilemanager.h
         profilemanager.cpp

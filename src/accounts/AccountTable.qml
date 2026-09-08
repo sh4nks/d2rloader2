@@ -168,6 +168,19 @@ Kirigami.Card {
 
             property int hoveredRow: -1
 
+            // Cells live in their own components and cannot reach the view, so
+            // the hovered row is tracked here for all of them at once.
+            HoverHandler {
+                id: rowHoverHandler
+                onPointChanged: {
+                    const position = tableView.mapToItem(tableView.contentItem, rowHoverHandler.point.position);
+                    tableView.hoveredRow = tableView.cellAtPosition(position, true).y;
+                }
+                onHoveredChanged: if (!rowHoverHandler.hovered) {
+                    tableView.hoveredRow = -1;
+                }
+            }
+
             columnWidthProvider: function (column) {
                 if (column === 0) {
                     return Kirigami.Units.gridUnit * 2;
@@ -208,164 +221,84 @@ Kirigami.Card {
 
             model: root.modelData
 
-            delegate: Rectangle {
-                id: cellDelegate
-                required property var model
-                required property int column
-                required property int row
+            delegate: DelegateChooser {
+                // Column 0: Status Indicator
+                DelegateChoice {
+                    column: 0
+                    delegate: CellDelegateStatus {
+                        required property var model
+                        required property int row
 
-                implicitWidth: tableView.columnWidthProvider(cellDelegate.column)
-                implicitHeight: Kirigami.Units.gridUnit * 2.5
-                color: cellDelegate.row === tableView.hoveredRow ? Kirigami.Theme.activeBackgroundColor : Kirigami.Theme.backgroundColor
-
-                HoverHandler {
-                    onHoveredChanged: {
-                        if (hovered) {
-                            tableView.hoveredRow = cellDelegate.row;
-                        } else if (tableView.hoveredRow === cellDelegate.row) {
-                            tableView.hoveredRow = -1;
-                        }
+                        highlighted: row === tableView.hoveredRow
+                        running: model.status === D2R.ProfileState.Running
                     }
                 }
 
-                // border
-                Rectangle {
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    height: 1
-                    color: Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g, Kirigami.Theme.textColor.b, 0.1)
-                }
+                // Column 1: Account
+                DelegateChoice {
+                    column: 1
+                    delegate: CellDelegateLabel {
+                        required property var model
+                        required property int row
 
-                // Column 0: Status Indicator (Circle)
-                Rectangle {
-                    visible: cellDelegate.column === 0
-                    anchors.centerIn: parent
-                    width: Kirigami.Units.gridUnit * 0.6
-                    height: width
-                    radius: width / 2
-                    color: cellDelegate.model.status === D2R.ProfileState.Running ? Kirigami.Theme.positiveTextColor : "gray"
-                }
-
-                // Columns 1: Account
-                Label {
-                    visible: cellDelegate.column === 1
-                    anchors.fill: parent
-                    anchors.topMargin: Kirigami.Units.gridUnit * 0.4
-                    anchors.bottomMargin: Kirigami.Units.gridUnit * 0.4
-                    anchors.leftMargin: Kirigami.Units.gridUnit
-                    anchors.rightMargin: Kirigami.Units.gridUnit
-                    text: cellDelegate.model.profileName ?? ""
-                    color: Kirigami.Theme.textColor
-                    font.family: cellDelegate.column === 4 ? "monospace" : ""
-                    verticalAlignment: Text.AlignVCenter
-                    elide: Text.ElideRight
-                }
-
-                // Column 2: ComboBox for Auth Method
-                ComboBox {
-                    id: authComboBox
-                    Kirigami.Theme.colorSet: Kirigami.Theme.Button
-                    Kirigami.Theme.inherit: false
-                    visible: cellDelegate.column === 2
-                    anchors.fill: parent
-                    anchors.topMargin: Kirigami.Units.gridUnit * 0.4
-                    anchors.bottomMargin: Kirigami.Units.gridUnit * 0.4
-                    anchors.leftMargin: Kirigami.Units.smallSpacing
-                    anchors.rightMargin: Kirigami.Units.smallSpacing
-                    model: D2R.AuthMethodModel
-                    currentValue: cellDelegate.model.authMethod
-                    textRole: "name"   // Displays literal string (e.g., "HighContrast")
-                    valueRole: "value"
-
-                    onActivated: index => {
-                        cellDelegate.model.authMethod = currentValue;
+                        highlighted: row === tableView.hoveredRow
+                        text: model.profileName ?? ""
                     }
                 }
 
-                // Column 3: ComboBox for Region
-                ComboBox {
-                    id: regionComboBox
-                    Kirigami.Theme.colorSet: Kirigami.Theme.Button
-                    Kirigami.Theme.inherit: false
-                    visible: cellDelegate.column === 3
-                    anchors.fill: parent
-                    anchors.topMargin: Kirigami.Units.gridUnit * 0.4
-                    anchors.bottomMargin: Kirigami.Units.gridUnit * 0.4
-                    anchors.leftMargin: Kirigami.Units.smallSpacing
-                    anchors.rightMargin: Kirigami.Units.smallSpacing
-                    model: D2R.RegionModel
-                    currentValue: cellDelegate.model.region
-                    textRole: "name"
-                    valueRole: "value" // Evaluates to raw numerical enum index (e.g., 3)
+                // Column 2: Auth Method
+                DelegateChoice {
+                    column: 2
+                    delegate: CellDelegateComboBox {
+                        required property var model
+                        required property int row
 
-                    onActivated: {
-                        cellDelegate.model.region = currentValue;
+                        highlighted: row === tableView.hoveredRow
+                        options: D2R.AuthMethodModel
+                        value: model.authMethod
+                        onValueSelected: newValue => model.authMethod = newValue
+                    }
+                }
+
+                // Column 3: Region
+                DelegateChoice {
+                    column: 3
+                    delegate: CellDelegateComboBox {
+                        required property var model
+                        required property int row
+
+                        highlighted: row === tableView.hoveredRow
+                        options: D2R.RegionModel
+                        value: model.region
+                        onValueSelected: newValue => model.region = newValue
                     }
                 }
 
                 // Column 4: Game Parameters
-                Label {
-                    visible: cellDelegate.column === 4
-                    anchors.fill: parent
-                    anchors.topMargin: Kirigami.Units.gridUnit * 0.4
-                    anchors.bottomMargin: Kirigami.Units.gridUnit * 0.4
-                    anchors.leftMargin: Kirigami.Units.gridUnit
-                    anchors.rightMargin: Kirigami.Units.gridUnit
-                    text: cellDelegate.model.gameParameters ?? ""
-                    color: Kirigami.Theme.textColor
-                    font.family: cellDelegate.column === 4 ? "monospace" : ""
-                    verticalAlignment: Text.AlignVCenter
-                    elide: Text.ElideRight
+                DelegateChoice {
+                    column: 4
+                    delegate: CellDelegateLabel {
+                        required property var model
+                        required property int row
+
+                        highlighted: row === tableView.hoveredRow
+                        monospace: true
+                        text: model.gameParameters ?? ""
+                    }
                 }
 
                 // Column 5: Action Button
-                Button {
-                    id: actionButton
-                    Kirigami.Theme.colorSet: Kirigami.Theme.Button
-                    Kirigami.Theme.inherit: false
-                    visible: cellDelegate.column === 5
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.topMargin: Kirigami.Units.gridUnit * 0.4
-                    anchors.bottomMargin: Kirigami.Units.gridUnit * 0.4
-                    width: Kirigami.Units.gridUnit * 6
+                DelegateChoice {
+                    column: 5
+                    delegate: CellDelegateAction {
+                        required property var model
+                        required property int row
 
-                    text: cellDelegate.model.status === D2R.ProfileState.Running ? "Stop" : "Start"
-                    icon.name: cellDelegate.model.status === D2R.ProfileState.Running ? "media-playback-pause" : "media-playback-start"
-
-                    background: Rectangle {
-                        color: actionButton.text === "Start" ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.negativeTextColor
-                        radius: 4
-                        opacity: actionButton.pressed ? 0.8 : (actionButton.hovered ? 0.9 : 1.0)
-                    }
-
-                    contentItem: RowLayout {
-                        spacing: Kirigami.Units.smallSpacing
-                        Item {
-                            Layout.fillWidth: true
+                        highlighted: row === tableView.hoveredRow
+                        running: model.status === D2R.ProfileState.Running
+                        onTriggered: {
+                            // Logic to toggle state
                         }
-                        Kirigami.Icon {
-                            source: actionButton.icon.name ?? ""
-                            Layout.preferredWidth: Kirigami.Units.gridUnit * 0.8
-                            Layout.preferredHeight: Kirigami.Units.gridUnit * 0.8
-                            Layout.alignment: Qt.AlignVCenter
-                            color: Kirigami.Theme.highlightedTextColor
-                        }
-                        Label {
-                            text: actionButton.text ?? ""
-                            Layout.alignment: Qt.AlignVCenter
-                            color: Kirigami.Theme.highlightedTextColor
-                            font.bold: true
-                        }
-                        Item {
-                            Layout.fillWidth: true
-                        }
-                    }
-
-                    onClicked: {
-                        // Logic to toggle state
                     }
                 }
             }

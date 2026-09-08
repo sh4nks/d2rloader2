@@ -241,28 +241,32 @@ bool ProfileManager::setData(const QModelIndex &index, const QVariant &value, in
     case ProfileRoles::StatusRole:
         m_profiles[row]->setStatus(static_cast<ProfileState::Type>(value.toInt()));
         changed = true;
+        break;
     case ProfileRoles::ProfileNameRole:
         m_profiles[row]->setProfileName(value.toString());
         changed = true;
+        break;
     case ProfileRoles::AuthMethodRole:
         m_profiles[row]->setAuthMethod(static_cast<AuthMethodModel::AuthMethod>(value.toInt()));
         qDebug() << "(ProfileManager::setData) " << m_profiles[row]->authMethod();
         changed = true;
+        break;
     case ProfileRoles::RegionRole:
         m_profiles[row]->setRegion(static_cast<RegionModel::Region>(value.toInt()));
         qDebug() << "(ProfileManager::setData) " << m_profiles[row]->region();
         changed = true;
+        break;
     case ProfileRoles::GameParametersRole:
         m_profiles[row]->setGameParameters(value.toString());
         changed = true;
+        break;
     }
 
     if (changed) {
         // Crucial: Tell the view which specific roles changed
         Q_EMIT dataChanged(index, index, {Qt::DisplayRole, role});
-        return true;
     }
-    return true;
+    return changed;
 }
 
 QHash<int, QByteArray> ProfileManager::roleNames() const
