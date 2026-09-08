@@ -161,13 +161,28 @@ Kirigami.Card {
 
             property int hoveredRow: -1
 
+            /**
+             * The auth method, region and action cells carry controls of their
+             * own, so a click there is aimed at the control rather than at the
+             * row.
+             */
+            function columnHasControl(column: int): bool {
+                return column === ProfileColumn.AuthMethod || column === ProfileColumn.Region || column === ProfileColumn.Actions;
+            }
+
+            /**
+             * The cell under the given point, in this view's coordinates.
+             */
+            function cellAt(point: point): point {
+                return tableView.cellAtPosition(tableView.mapToItem(tableView.contentItem, point), true);
+            }
+
             // Cells live in their own components and cannot reach the view, so
-            // the hovered row is tracked here for all of them at once.
+            // the hovered cell is tracked here for all of them at once.
             HoverHandler {
                 id: rowHoverHandler
                 onPointChanged: {
-                    const position = tableView.mapToItem(tableView.contentItem, rowHoverHandler.point.position);
-                    tableView.hoveredRow = tableView.cellAtPosition(position, true).y;
+                    tableView.hoveredRow = tableView.cellAt(rowHoverHandler.point.position).y;
                 }
                 onHoveredChanged: if (!rowHoverHandler.hovered) {
                     tableView.hoveredRow = -1;
@@ -208,10 +223,11 @@ Kirigami.Card {
                         return;
                     }
 
-                    if (tableView.hoveredRow === -1) {
+                    const cell = tableView.cellAt(eventPoint.position);
+                    if (cell.y === -1 || tableView.columnHasControl(cell.x)) {
                         return;
                     }
-                    root.editAccountClicked(tableView.hoveredRow);
+                    root.editAccountClicked(cell.y);
                 }
             }
 
