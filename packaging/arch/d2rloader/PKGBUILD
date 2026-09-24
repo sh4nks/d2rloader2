@@ -1,0 +1,47 @@
+# Maintainer: Peter Justin <peter.justin@outlook.com>
+
+pkgname=d2rloader
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='Launch and manage several Diablo II: Resurrected accounts'
+arch=('x86_64')
+url='https://github.com/sh4nks/d2rloader2'
+license=('MIT')
+depends=(
+  gcc-libs
+  glibc
+  hicolor-icon-theme
+  kcolorscheme
+  kconfig
+  kcoreaddons
+  ki18n
+  kiconthemes
+  kirigami
+  kirigami-addons
+  knotifications
+  qqc2-desktop-style
+  qt6-base
+  qt6-declarative
+)
+makedepends=(extra-cmake-modules)
+optdepends=(
+  'umu-launcher: run the game through Proton'
+  'steam: launch Steam accounts'
+  'gamemode: run the game with GameMode'
+  'breeze: Breeze widget style'
+)
+source=("$pkgname-$pkgver.tar.gz::https://github.com/sh4nks/d2rloader2/archive/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cmake -B build -S d2rloader2-$pkgver \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DBUILD_TESTING=OFF
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm644 d2rloader2-$pkgver/LICENSE.md -t "$pkgdir/usr/share/licenses/$pkgname"
+}

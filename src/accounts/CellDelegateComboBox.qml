@@ -35,7 +35,10 @@ CellDelegate {
 
         textRole: "name"
         valueRole: "value"
-        currentIndex: comboBox.indexOfValue(root.value)
+        // indexOfValue() does not register the model as a binding dependency,
+        // so reading count first is what makes this re-evaluate once the model
+        // is populated.
+        currentIndex: comboBox.count > 0 ? comboBox.indexOfValue(root.value) : -1
 
         onActivated: root.valueSelected(comboBox.currentValue)
     }

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+                          http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+  <include>QStandardPaths</include>
+
+  <kcfgfile name="d2rloaderrc"/>
+
+  <group name="Window">
+    <entry name="appSize" type="Size">
+      <label>Size of the main window.</label>
+      <default code="true">QSize(1280, 720)</default>
+    </entry>
+    <entry name="appPosition" type="Point">
+      <label>Position of the main window.</label>
+      <default code="true">QPoint(64, 64)</default>
+    </entry>
+    <entry name="appTheme" type="String">
+      <label>Widget style used by the application.</label>
+      <default>Fusion</default>
+    </entry>
+    <entry name="showMenuBar" type="Bool">
+      <label>Whether the menu bar of the main window is shown.</label>
+      <default>true</default>
+    </entry>
+  </group>
+
+  <group name="Paths">
+    <entry name="gamePath" type="Path">
+      <label>Directory Diablo II: Resurrected is installed in.</label>
+    </entry>
+    <entry name="handlePath" type="Path">
+      <label>Path to Sysinternals handle.exe, used to release the game mutex.</label>
+    </entry>
+    <entry name="profilePath" type="Path">
+      <label>File the account configuration is stored in.</label>
+      <default code="true">QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + QStringLiteral("/d2rloader/accounts.json")</default>
+    </entry>
+    <entry name="wineprefixPath" type="Path">
+      <label>Directory holding one wineprefix per account, used to run the game.</label>
+      <default code="true">QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + QStringLiteral("/d2rloader/wineprefixes")</default>
+    </entry>
+    <entry name="protonPath" type="Path">
+      <label>Proton runtime used when an account does not override it.</label>
+      <default>UMU-Latest</default>
+    </entry>
+  </group>
+
+  <group name="D2Emu">
+    <entry name="d2emuUser" type="String">
+      <label>D2Emu.com account username.</label>
+    </entry>
+    <entry name="d2emuToken" type="String">
+      <label>D2Emu.com API key.</label>
+    </entry>
+    <entry name="useD2RInfo" type="Bool">
+      <label>Fetch Terror Zone and Diablo Clone data from the combined d2rinfo endpoint instead of querying d2emu.com directly.</label>
+      <default>true</default>
+    </entry>
+    <entry name="autoRefresh" type="Bool">
+      <label>Periodically fetch Terror Zone and Diablo Clone data.</label>
+      <default>true</default>
+    </entry>
+    <entry name="refreshInterval" type="Int">
+      <label>Minutes between automatic refreshes.</label>
+      <default>10</default>
+      <min>10</min>
+      <max>60</max>
+    </entry>
+    <entry name="dcloneMode" type="Enum">
+      <label>Which Diablo Clone realms to show, in the order the mode selector lists them.</label>
+      <choices>
+        <choice name="Softcore"/>
+        <choice name="Hardcore"/>
+        <choice name="SoftcoreLadder"/>
+        <choice name="HardcoreLadder"/>
+      </choices>
+      <default>SoftcoreLadder</default>
+    </entry>
+    <entry name="rotw" type="Bool">
+      <label>Show Return of the Warlock realms instead of the regular ones.</label>
+      <default>true</default>
+    </entry>
+  </group>
+
+  <group name="Notifications">
+    <entry name="tzNotifications" type="Bool">
+      <label>Show a desktop notification when the Terror Zone changes.</label>
+      <default>false</default>
+    </entry>
+    <entry name="dcloneNotifications" type="Bool">
+      <label>Show a desktop notification when Diablo Clone progress rises.</label>
+      <default>false</default>
+    </entry>
+    <entry name="dcloneThreshold" type="Int">
+      <label>Lowest Diablo Clone progress that triggers a notification.</label>
+      <default>4</default>
+      <min>1</min>
+      <max>6</max>
+    </entry>
+  </group>
+
+  <group name="LaunchSequence">
+    <entry name="selectedSequence" type="Int">
+      <label>Id of the launch sequence selected in the accounts header.</label>
+      <default>0</default>
+    </entry>
+    <entry name="sequenceDelay" type="Int">
+      <label>Seconds to wait after an account of a launch sequence has started before starting the next one.</label>
+      <default>10</default>
+      <min>1</min>
+      <max>300</max>
+    </entry>
+    <entry name="sequenceStopOnFailure" type="Bool">
+      <label>Whether a launch sequence stops when one of its accounts fails to start.</label>
+      <default>true</default>
+    </entry>
+    <entry name="sequenceRandomizeDelay" type="Bool">
+      <label>Whether up to half the delay is added at random between the accounts of a launch sequence.</label>
+      <default>false</default>
+    </entry>
+  </group>
+
+  <group name="Logging">
+    <entry name="logPath" type="Path">
+      <label>Directory log files are written to.</label>
+      <default code="true">QStandardPaths::writableLocation(QStandardPaths::GenericStateLocation) + QStringLiteral("/d2rloader/logs")</default>
+    </entry>
+    <entry name="logLevel" type="Enum">
+      <label>Lowest severity that is logged.</label>
+      <choices>
+        <choice name="Debug"/>
+        <choice name="Info"/>
+        <choice name="Warn"/>
+        <choice name="Error"/>
+      </choices>
+      <default>Info</default>
+    </entry>
+    <entry name="logToFile" type="Bool">
+      <label>Whether log output is also written to logPath.</label>
+      <default>false</default>
+    </entry>
+  </group>
+
+  <group name="Updates">
+    <entry name="checkForUpdates" type="Bool">
+      <label>Whether to check for new releases on startup.</label>
+      <default>true</default>
+    </entry>
+  </group>
+</kcfg>

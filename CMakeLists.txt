@@ -24,6 +24,7 @@ include(KDECMakeSettings)
 include(ECMAddTests)
 include(KDECompilerSettings NO_POLICY_SCOPE)
 include(ECMAddAppIcon)
+include(ECMInstallIcons)
 include(KDEGitCommitHooks)
 include(ECMCheckOutboundLicense)
 include(ECMQtDeclareLoggingCategory)
@@ -35,10 +36,7 @@ include(ECMGenerateHeaders)
 include(KDEClangFormat)
 
 
-string(TIMESTAMP CURRENT_TIMESTAMP "%s" UTC)
-set(APP_NAME ${CMAKE_PROJECT_NAME})
 set(APP_VERSION ${CMAKE_PROJECT_VERSION})
-set(APP_VERSION_CODE ${TIMESTAMP})
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(QT_QML_GENERATE_QMLLS_INI ON)
 
@@ -47,23 +45,29 @@ ecm_setup_version(${PROJECT_VERSION}
     VERSION_HEADER ${CMAKE_CURRENT_BINARY_DIR}/d2rloader-version.h
 )
 
-message(STATUS "[ECM]     ECM_MODULE_PATH           = ${ECM_MODULE_PATH}")
-message(STATUS "[KDE]     KDE_INSTALL_BINDIR        = ${KDE_INSTALL_BINDIR}")
-message(STATUS "[CMAKE]   CMAKE_VERSION             = ${CMAKE_VERSION}")
-message(STATUS "[SYSTEM]  SYSTEM NAME      = ${CMAKE_SYSTEM_NAME}")
-message(STATUS "[SYSTEM]  SYSTEM VERSION   = ${CMAKE_SYSTEM_VERSION}")
-message(STATUS "[PROJECT] NAME                      = ${CMAKE_PROJECT_NAME}")
-message(STATUS "[PROJECT] VERSION                   = ${CMAKE_PROJECT_VERSION}")
-message(STATUS "[PROJECT] SOURCE_DIR                = ${CMAKE_SOURCE_DIR}")
-message(STATUS "[PROJECT] BUILD_TYPE                = ${CMAKE_BUILD_TYPE}")
+message(STATUS "[ECM]     ECM_MODULE_PATH    = ${ECM_MODULE_PATH}")
+message(STATUS "[KDE]     KDE_INSTALL_BINDIR = ${KDE_INSTALL_BINDIR}")
+message(STATUS "[CMAKE]   CMAKE_VERSION      = ${CMAKE_VERSION}")
+message(STATUS "[SYSTEM]  SYSTEM NAME        = ${CMAKE_SYSTEM_NAME}")
+message(STATUS "[SYSTEM]  SYSTEM VERSION     = ${CMAKE_SYSTEM_VERSION}")
+message(STATUS "[PROJECT] NAME               = ${CMAKE_PROJECT_NAME}")
+message(STATUS "[PROJECT] VERSION            = ${CMAKE_PROJECT_VERSION}")
+message(STATUS "[PROJECT] SOURCE_DIR         = ${CMAKE_SOURCE_DIR}")
+message(STATUS "[PROJECT] BUILD_TYPE         = ${CMAKE_BUILD_TYPE}")
 
 find_package(Qt6 REQUIRED COMPONENTS
     Core
+    Network
     Quick
     Gui
     QuickControls2
     Widgets
 )
+
+# keeps the game windows in place through a KWin script on Plasma
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    find_package(Qt6 REQUIRED COMPONENTS DBus)
+endif()
 
 if (QT_KNOWN_POLICY_QTP0004)
   qt_policy(SET QTP0004 NEW)

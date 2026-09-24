@@ -1,0 +1,19 @@
+[Global]
+IconName=com.someblocks.d2rloader
+Name=D2RLoader
+Comment=A Diablo II: Resurrected Loader
+
+[Event/terrorzone]
+Name=Terror Zone changed
+Comment=A new Terror Zone has started
+Action=Popup
+
+[Event/nextterrorzone]
+Name=Next Terror Zone predicted
+Comment=The next Terror Zone has been announced
+Action=Popup
+
+[Event/dclone]
+Name=Diablo Clone progress
+Comment=Diablo Clone progress rose on a watched realm
+Action=Popup

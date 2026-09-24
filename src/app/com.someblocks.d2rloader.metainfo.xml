@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.someblocks.d2rloader</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>D2RLoader</name>
+  <summary>Launch and manage several Diablo II: Resurrected accounts</summary>
+  <description>
+    <p>D2RLoader starts Diablo II: Resurrected for several Battle.net accounts at once, each in a wineprefix of its own through umu and Proton. Steam accounts are handed to the Steam client.</p>
+    <p>It also shows the current terror zones and the Diablo Clone progress.</p>
+  </description>
+  <launchable type="desktop-id">com.someblocks.d2rloader.desktop</launchable>
+  <developer id="com.someblocks">
+    <name>Peter Justin</name>
+  </developer>
+  <url type="homepage">https://github.com/sh4nks/d2rloader</url>
+  <url type="bugtracker">https://github.com/sh4nks/d2rloader/issues</url>
+  <provides>
+    <binary>d2rloader</binary>
+  </provides>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0" date="2026-09-11"/>
+  </releases>
+</component>

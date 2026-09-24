@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=D2RLoader
+GenericName=Diablo II: Resurrected Loader
+Comment=Launch and manage several Diablo II: Resurrected accounts
+Exec=d2rloader
+Icon=com.someblocks.d2rloader
+Terminal=false
+Categories=Game;RolePlaying;
+Keywords=Diablo;D2R;Terror Zone;Diablo Clone;
+StartupNotify=true

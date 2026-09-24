@@ -1,10 +1,81 @@
 #include "profilemanager.h"
+#include "../core/logging.h"
 #include "authmethod.h"
+#include "d2rloaderconfig.h"
 #include "profile.h"
 #include "region.h"
-#include <KConfigGroup>
 #include <KLocalizedString>
-#include <KSharedConfig>
+#include <QDir>
+#include <QFileInfo>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QSaveFile>
+
+namespace
+{
+/**
+ * Schema version of the accounts file. Bump it when the on-disk shape changes
+ * in a way older builds cannot read.
+ */
+constexpr int AccountsFileVersion = 1;
+
+/**
+ * Reads the accounts array of the accounts file at \a path into \a accounts.
+ * Returns an error message, or an empty string on success.
+ */
+QString readAccountsFile(const QString &path, QJsonArray &accounts)
+{
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+        return file.errorString();
+    }
+
+    QJsonParseError error;
+    const QJsonDocument document = QJsonDocument::fromJson(file.readAll(), &error);
+    if (error.error != QJsonParseError::NoError) {
+        return i18nc("@info %1 is the parser error", "The file is not valid JSON: %1", error.errorString());
+    }
+
+    const QJsonObject root = document.object();
+    if (root[QStringLiteral("version")].toInt() > AccountsFileVersion) {
+        return i18nc("@info", "The file was written by a newer version of D2RLoader.");
+    }
+
+    accounts = root[QStringLiteral("accounts")].toArray();
+    return QString();
+}
+
+/**
+ * Writes \a profiles as an accounts file to \a path.
+ * Returns an error message, or an empty string on success.
+ */
+QString writeAccountsFile(const QString &path, const QList<Profile *> &profiles)
+{
+    QJsonArray accounts;
+    for (const Profile *profile : profiles) {
+        accounts.append(profile->toJson());
+    }
+
+    QJsonObject root;
+    root[QStringLiteral("version")] = AccountsFileVersion;
+    root[QStringLiteral("accounts")] = accounts;
+
+    // QSaveFile so a crash mid-write cannot leave a truncated accounts file.
+    QSaveFile file(path);
+    if (!file.open(QIODevice::WriteOnly)) {
+        return file.errorString();
+    }
+    file.write(QJsonDocument(root).toJson(QJsonDocument::Indented));
+    if (!file.commit()) {
+        return file.errorString();
+    }
+
+    // The file holds credentials in plain text, so keep it owner-only.
+    QFile::setPermissions(path, QFileDevice::ReadOwner | QFileDevice::WriteOwner);
+    return QString();
+}
+}
 #include <qabstractitemmodel.h>
 #include <qhashfunctions.h>
 #include <qlist.h>
@@ -47,12 +118,6 @@ void ProfileManager::selectProfile(Profile *profile)
     Q_EMIT profileSelected(profile);
 }
 
-void ProfileManager::selectProfileByIndex(int index)
-{
-    m_selected_profile = m_profiles.at(index);
-    Q_EMIT profileSelected(m_selected_profile);
-}
-
 Profile *ProfileManager::selectedProfile() const
 {
     return m_selected_profile;
@@ -65,70 +130,19 @@ int ProfileManager::selectedIndex() const
 
 Profile *ProfileManager::getProfile(int index)
 {
+    if (index < 0 || index >= m_profiles.size()) {
+        return nullptr;
+    }
     return m_profiles.at(index);
-}
-
-void ProfileManager::addProfile(const QString &name)
-{
-    /*
-     *
-     int nextRowIndex = m_data.count();
-
-     beginInsertRows(QModelIndex(), nextRowIndex, nextRowIndex);
-
-     TableItem newItem;
-     newItem.uniqueId = calculateNextId();
-     newItem.name = name;
-     newItem.value = value;
-     m_data.append(newItem);
-
-     endInsertRows();
-     saveOrder();
-     *
-     *
-     */
-
-    Profile *p = new Profile(nullptr);
-    p->setProfileName(name);
-
-    beginInsertRows(QModelIndex(), m_profiles.count(), m_profiles.count());
-    m_profiles.append(p);
-    endInsertRows();
-}
-
-bool ProfileManager::setProfiles(QList<Profile *> profiles)
-{
-    beginResetModel();
-    m_profiles.clear();
-    m_profiles = profiles;
-    endResetModel();
-    return true;
 }
 
 void ProfileManager::removeProfile(Profile *profile)
 {
-    // remove from settings
-    // auto config = KSharedConfig::openStateConfig();
-    // config->deleteGroup(account->settingsGroupName());
-    // config->sync();
-
-    /*
-     *
-
-
-     if (row < 0 || row >= m_data.count()) return;
-
-     beginRemoveRows(QModelIndex(), row, row);
-     m_data.removeAt(row);
-     endRemoveRows();
-
-     saveOrder();
-
-
-     *
-     */
-
     const auto index = m_profiles.indexOf(profile);
+    if (index < 0) {
+        return;
+    }
+
     beginRemoveRows(QModelIndex(), index, index);
     m_profiles.removeOne(profile);
     endRemoveRows();
@@ -140,8 +154,52 @@ void ProfileManager::removeProfile(Profile *profile)
     }
     Q_EMIT profileSelected(m_selected_profile);
 
+    writeAccounts();
+
     Q_EMIT profileRemoved(profile);
     Q_EMIT profilesChanged();
+    profile->deleteLater();
+}
+
+void ProfileManager::removeProfileAt(int row)
+{
+    if (row < 0 || row >= m_profiles.size()) {
+        return;
+    }
+    removeProfile(m_profiles.at(row));
+}
+
+void ProfileManager::cloneProfile(int row)
+{
+    if (row < 0 || row >= m_profiles.size()) {
+        return;
+    }
+
+    auto *clone = createDraft();
+    clone->copyFrom(m_profiles.at(row));
+    // A clone is a new account: commit() assigns it a fresh id and appends it.
+    clone->setId(0);
+    clone->setProfileName(uniqueProfileName(m_profiles.at(row)->profileName()));
+    commit(clone);
+}
+
+bool ProfileManager::isProfileNameTaken(const QString &name) const
+{
+    for (const Profile *profile : m_profiles) {
+        if (QString::compare(profile->profileName(), name, Qt::CaseInsensitive) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+QString ProfileManager::uniqueProfileName(const QString &base) const
+{
+    QString candidate = i18nc("@item:intable copy of an account, %1 is the original name", "%1 (copy)", base);
+    for (int suffix = 2; isProfileNameTaken(candidate); ++suffix) {
+        candidate = i18nc("@item:intable numbered copy of an account, %1 is the original name", "%1 (copy %2)", base, suffix);
+    }
+    return candidate;
 }
 
 void ProfileManager::moveUp(int row)
@@ -152,7 +210,7 @@ void ProfileManager::moveUp(int row)
     if (beginMoveRows(QModelIndex(), row, row, QModelIndex(), row - 1)) {
         m_profiles.move(row, row - 1);
         endMoveRows();
-        saveOrder();
+        writeAccounts();
     }
 }
 
@@ -165,7 +223,7 @@ void ProfileManager::moveDown(int row)
     if (beginMoveRows(QModelIndex(), row, row, QModelIndex(), row + 2)) {
         m_profiles.move(row, row + 1);
         endMoveRows();
-        saveOrder();
+        writeAccounts();
     }
 }
 
@@ -174,31 +232,17 @@ bool ProfileManager::isReady() const
     return m_ready;
 }
 
+QString ProfileManager::loadError() const
+{
+    return m_loadError;
+}
+
 void ProfileManager::loadProfiles()
 {
-    // TODO: implement loading from json
-    QList<Profile *> profileList;
-    for (int i = 0; i <= 3; i++) {
-        profileList.append(Profile::create(ProfileState::Type::Running,
-                                           u"Test Profile %1"_s.arg(i),
-                                           AuthMethodModel::Token,
-                                           RegionModel::Europe,
-                                           u"test%1@example.org"_s.arg(i),
-                                           "token"_L1,
-                                           "tokenProtected"_L1,
-                                           "secretsauce"_L1,
-                                           "-w"_L1,
-                                           GameSettingsType::Type::Custom,
-                                           "/dev/null/d2rconfig.json"_L1,
-                                           ""_L1,
-                                           ""_L1));
-    }
-
-    setProfiles(profileList);
-    addProfile(QStringLiteral("added test"));
-
-    Profile *profile = profileList.at(0);
-    profile->setStatus(ProfileState::Type::Stopped);
+    readAccounts();
+    m_ready = true;
+    Q_EMIT profileReady();
+    Q_EMIT profilesChanged();
 }
 
 QVariant ProfileManager::data(const QModelIndex &index, int role) const
@@ -223,6 +267,14 @@ QVariant ProfileManager::data(const QModelIndex &index, int role) const
         return profile->gameParameters();
     case ProfileRoles::ActionRole:
         return profile->status();
+    case ProfileRoles::GameSettingsRole:
+        return profile->gameSettings();
+    case ProfileRoles::GameSettingsPathRole:
+        return profile->gameSettingsPath();
+    case ProfileRoles::ProfileIdRole:
+        return profile->id();
+    case ProfileRoles::LootFilterRole:
+        return profile->lootFilter();
     }
 
     return QVariant();
@@ -248,16 +300,28 @@ bool ProfileManager::setData(const QModelIndex &index, const QVariant &value, in
         break;
     case ProfileRoles::AuthMethodRole:
         m_profiles[row]->setAuthMethod(static_cast<AuthMethodModel::AuthMethod>(value.toInt()));
-        qDebug() << "(ProfileManager::setData) " << m_profiles[row]->authMethod();
+        qCDebug(LOG_PROFILES) << "setData:" << m_profiles[row]->authMethod();
         changed = true;
         break;
     case ProfileRoles::RegionRole:
         m_profiles[row]->setRegion(static_cast<RegionModel::Region>(value.toInt()));
-        qDebug() << "(ProfileManager::setData) " << m_profiles[row]->region();
+        qCDebug(LOG_PROFILES) << "setData:" << m_profiles[row]->region();
         changed = true;
         break;
     case ProfileRoles::GameParametersRole:
         m_profiles[row]->setGameParameters(value.toString());
+        changed = true;
+        break;
+    case ProfileRoles::GameSettingsRole:
+        m_profiles[row]->setGameSettings(static_cast<GameSettingsType::Type>(value.toInt()));
+        changed = true;
+        break;
+    case ProfileRoles::GameSettingsPathRole:
+        m_profiles[row]->setGameSettingsPath(value.toString());
+        changed = true;
+        break;
+    case ProfileRoles::LootFilterRole:
+        m_profiles[row]->setLootFilter(value.toString());
         changed = true;
         break;
     }
@@ -265,6 +329,8 @@ bool ProfileManager::setData(const QModelIndex &index, const QVariant &value, in
     if (changed) {
         // Crucial: Tell the view which specific roles changed
         Q_EMIT dataChanged(index, index, {Qt::DisplayRole, role});
+        // Edits made inline in the table persist like any other change.
+        writeAccounts();
     }
     return changed;
 }
@@ -281,6 +347,10 @@ QHash<int, QByteArray> ProfileManager::roleNames() const
         {RegionRole, "region"},
         {GameParametersRole, "gameParameters"},
         {ActionRole, "actions"},
+        {GameSettingsRole, "gameSettings"},
+        {GameSettingsPathRole, "gameSettingsPath"},
+        {ProfileIdRole, "profileId"},
+        {LootFilterRole, "lootFilter"},
     };
     return roles;
 }
@@ -302,7 +372,7 @@ QVariant ProfileManager::headerData(int section, Qt::Orientation orientation, in
     case ProfileColumn::Region:
         return i18nc("@title:column", "Region");
     case ProfileColumn::GameParameters:
-        return i18nc("@title:column", "Launch Parameters");
+        return i18nc("@title:column", "Parameters");
     case ProfileColumn::Actions:
         return i18nc("@title:column", "Actions");
     }
@@ -315,33 +385,90 @@ QList<Profile *> ProfileManager::profiles() const
     return m_profiles;
 }
 
-int ProfileManager::getIndexOfProfile(Profile *profile)
+Profile *ProfileManager::createDraft()
 {
-    for (int i = 0; i < m_profiles.size(); i++) {
-        auto p = m_profiles[i];
-        if (QString::compare(p->profileName(), profile->profileName(), Qt::CaseInsensitive) == 0) {
-            return i;
-        }
-    }
-    return -1;
+    // Drafts are parented to the manager so QML never owns them, but they stay
+    // out of m_profiles until commit().
+    auto *draft = new Profile(this);
+    m_drafts.insert(draft);
+    return draft;
 }
 
-void ProfileManager::save(Profile *profile)
+Profile *ProfileManager::editDraft(int row)
 {
-    int idx = getIndexOfProfile(profile);
+    if (row < 0 || row >= m_profiles.size()) {
+        return createDraft();
+    }
 
-    // The top-left boundary of the change (Column 0)
-    QModelIndex topLeft = index(idx, 0);
+    auto *draft = createDraft();
+    draft->copyFrom(m_profiles.at(row));
+    return draft;
+}
 
-    // The bottom-right boundary of the change (Last Column)
-    QModelIndex bottomRight = index(idx, columnCount() - 1);
+void ProfileManager::commit(Profile *draft)
+{
+    // Only an outstanding draft can be committed, which also makes committing
+    // the same draft twice a no-op.
+    if (!draft || !m_drafts.remove(draft)) {
+        return;
+    }
 
-    qDebug() << "(ProfileManager::save) " << profile->authMethod();
-    qDebug() << "(ProfileManager::save) " << profile->region();
+    Profile *existing = profileById(draft->id());
+    if (existing) {
+        existing->copyFrom(draft);
+        const int row = m_profiles.indexOf(existing);
+        const QModelIndex changed = index(row, 0);
+        Q_EMIT dataChanged(changed, index(row, columnCount() - 1));
+        Q_EMIT profileChanged(existing);
+    } else {
+        draft->setId(calculateNextId());
+        beginInsertRows(QModelIndex(), m_profiles.count(), m_profiles.count());
+        m_profiles.append(draft);
+        endInsertRows();
+        watch(draft);
+        Q_EMIT profileAdded(draft);
+        Q_EMIT profilesChanged();
+    }
 
-    // Emit the signal to refresh the entire row range
-    Q_EMIT dataChanged(topLeft, bottomRight);
-    Q_EMIT profileChanged(profile);
+    writeAccounts();
+
+    if (existing) {
+        draft->deleteLater();
+    }
+}
+
+void ProfileManager::discard(Profile *draft)
+{
+    // Ignore anything that is not an outstanding draft: already committed,
+    // already discarded, or a profile that belongs to the model.
+    if (!draft || !m_drafts.remove(draft)) {
+        return;
+    }
+    draft->deleteLater();
+}
+
+Profile *ProfileManager::profileById(int id) const
+{
+    if (id <= 0) {
+        return nullptr;
+    }
+    for (Profile *profile : m_profiles) {
+        if (profile->id() == id) {
+            return profile;
+        }
+    }
+    return nullptr;
+}
+
+void ProfileManager::watch(Profile *profile)
+{
+    connect(profile, &Profile::statusChanged, this, [this, profile] {
+        const int row = m_profiles.indexOf(profile);
+        if (row >= 0) {
+            Q_EMIT dataChanged(index(row, ProfileColumn::Status), index(row, ProfileColumn::Actions), {StatusRole, ActionRole});
+        }
+    });
+    connect(profile, &Profile::windowPositionChanged, this, &ProfileManager::writeAccounts);
 }
 
 int ProfileManager::calculateNextId()
@@ -350,169 +477,154 @@ int ProfileManager::calculateNextId()
     return m_sessionMaxId;
 }
 
-void ProfileManager::saveOrder()
+QString ProfileManager::accountsFilePath() const
 {
-    QList<int> orderedIds;
-    for (const auto &item : m_profiles) {
-        orderedIds.append(item->id());
-    }
-
-    KConfigGroup config = KSharedConfig::openConfig()->group("AccountTableSettings"_L1);
-    config.writeEntry("RowOrder", orderedIds);
-    config.sync();
+    return D2RLoaderConfig::self()->profilePath();
 }
 
-void ProfileManager::loadAndRestoreOrder()
+bool ProfileManager::readAccounts()
 {
-    // 1. Clean up old profiles from memory before loading new ones
+    const QString path = accountsFilePath();
+
     qDeleteAll(m_profiles);
+    beginResetModel();
     m_profiles.clear();
 
-    // Replace this block with your actual database/file loading logic
-    QList<Profile *> rawItems;
-
-    // Assign your loaded items to the manager container
-    m_profiles = rawItems;
-
-    // Example using your Profile::create factory:
-    Profile *p1 = Profile::create(ProfileState::Stopped,
-                                  "Alpha"_L1,
-                                  AuthMethodModel::AuthMethod(),
-                                  RegionModel::Region(),
-                                  "alpha@email.com"_L1,
-                                  ""_L1,
-                                  ""_L1,
-                                  ""_L1,
-                                  ""_L1,
-                                  GameSettingsType::None,
-                                  ""_L1,
-                                  ""_L1,
-                                  ""_L1);
-    p1->setId(101);
-    p1->setParent(this); // Memory management: this manager owns the profile lifespan
-    rawItems.append(p1);
-
-    Profile *p2 = Profile::create(ProfileState::Stopped,
-                                  "Beta"_L1,
-                                  AuthMethodModel::AuthMethod(),
-                                  RegionModel::Region(),
-                                  "beta@email.com"_L1,
-                                  ""_L1,
-                                  ""_L1,
-                                  ""_L1,
-                                  ""_L1,
-                                  GameSettingsType::None,
-                                  ""_L1,
-                                  ""_L1,
-                                  ""_L1);
-    p2->setId(102);
-    p2->setParent(this);
-    rawItems.append(p2);
-
-    // 3. Read saved ordering configuration
-    KConfigGroup config = KSharedConfig::openConfig()->group("AccountTableSettings"_L1);
-    QList<int> savedOrder = config.readEntry("RowOrder", QList<int>());
-
-    m_profiles = rawItems;
-
-    // 4. Sort the pointers safely based on your saved configuration
-    if (!savedOrder.isEmpty()) {
-        std::sort(m_profiles.begin(), m_profiles.end(), [&savedOrder](const Profile *a, const Profile *b) {
-            int indexA = savedOrder.indexOf(a->id());
-            int indexB = savedOrder.indexOf(b->id());
-
-            // If an ID isn't found in the saved order, push it to the end
-            if (indexA == -1)
-                return false;
-            if (indexB == -1)
-                return true;
-
-            return indexA < indexB;
-        });
-    }
-
-    // 5. Track session maximum ID limits safely
-    for (const auto *item : m_profiles) {
-        if (item->id() > m_sessionMaxId) {
-            m_sessionMaxId = item->id();
-        }
-    }
-    if (m_sessionMaxId == 0) {
-        m_sessionMaxId = 100;
-    }
-
-    // 6. Notify QML that the underlying data layout has changed
-    // (Call your specific change signal or model reset methods here)
-    // emit profilesChanged();
-}
-
-/*
-     void ProfileManager::save(QString file_path)
-    {
-        QString full_file_path = file_path.contains(QString::fromUtf8(".json")) ? file_path : file_path.append(QString::fromUtf8(".json"));
-        qDebug() << "(ProfileManager) Requested save list as " << full_file_path;
-
-        // Get the current list as JSON
-        QJsonDocument doc = toJson();
-
-        // Save JSON
-        QFile jsonFile(full_file_path);
-        jsonFile.open(QFile::WriteOnly);
-        jsonFile.write(doc.toJson());
-        jsonFile.close();
-    }
-
-    bool ProfileManager::load(QString file_path)
-    {
-        if (!file_path.contains(QString::fromUtf8(".json"))) {
-            qCritical() << "(ProfileManager) Error, the file should be a JSON file";
-            return false;
-        }
-
-        qDebug() << "(ProfileManager) Requested load the list " << file_path;
-
-        // Load JSON file
-        QFile jsonFile(file_path);
-        jsonFile.open(QFile::ReadOnly);
-        QJsonDocument doc = QJsonDocument().fromJson(jsonFile.readAll());
-
-        // Parse it to the app list
-        loadFromJson(doc);
-
+    if (!QFile::exists(path)) {
+        // First run: no accounts yet is not an error.
+        endResetModel();
+        m_sessionMaxId = 0;
+        m_loaded = true;
         return true;
     }
 
-    QJsonDocument ProfileManager::toJson()
-    {
-        QJsonDocument doc;
-        // QJsonArray objs_array;
-        // for(const auto item : _item_list)
-        // {
-        //     QJsonObject json_obj;
-        //     json_obj.insert("id", item->id());
-        //     json_obj.insert("name", item->name());
-        //     json_obj.insert("score", item->score());
-        //     json_obj.insert("checked", item->checked());
-        //     json_obj.insert("filepath", item->filepath());
-
-        //     objs_array.push_back(json_obj);
-        // }
-
-        // QJsonDocument doc(objs_array);
-        // //qDebug() << doc.toJson();
-        return doc;
+    QJsonArray accounts;
+    const QString error = readAccountsFile(path, accounts);
+    if (!error.isEmpty()) {
+        qCWarning(LOG_PROFILES) << "cannot load" << path << ":" << error;
+        m_loadError = i18nc("@info %1 is the file, %2 the reason",
+                            "Could not load the accounts from \"%1\": %2\nChanges to the accounts will not be saved.",
+                            path,
+                            error);
+        endResetModel();
+        return false;
     }
 
-    void ProfileManager::loadFromJson(QJsonDocument doc)
-    {
-        // qDebug() << doc.toJson();
-        QJsonArray objs_array = doc.array();
-        qDebug() << "Loading " << objs_array.size() << " elements";
+    for (const QJsonValue &value : accounts) {
+        auto *profile = Profile::fromJson(value.toObject(), this);
+        m_profiles.append(profile);
+        watch(profile);
+    }
 
-        for (const auto value : objs_array) {
-            QJsonObject obj = value.toObject();
-            auto profile = Profile::fromJson(obj);
-            // add(obj["id"].toInt(), obj["name"].toString(), obj["checked"].toBool(), obj["score"].toDouble(), obj["filepath"].toString());
+    endResetModel();
+
+    // Seed the id counter from what was actually loaded, so ids stay unique
+    // across restarts.
+    m_sessionMaxId = 0;
+    for (const Profile *profile : m_profiles) {
+        m_sessionMaxId = std::max(m_sessionMaxId, profile->id());
+    }
+
+    m_loaded = true;
+    return true;
+}
+
+bool ProfileManager::writeAccounts()
+{
+    const QString path = accountsFilePath();
+
+    // The file exists but could not be read - it is either corrupt or was
+    // written by a newer version. Overwriting it would destroy accounts we
+    // simply failed to understand.
+    if (!m_loaded) {
+        qCWarning(LOG_PROFILES) << "refusing to overwrite" << path << "because it could not be loaded";
+        return false;
+    }
+
+    const QDir directory = QFileInfo(path).absoluteDir();
+    if (!directory.exists() && !directory.mkpath(QStringLiteral("."))) {
+        qCWarning(LOG_PROFILES) << "cannot create" << directory.absolutePath();
+        return false;
+    }
+
+    const QString error = writeAccountsFile(path, m_profiles);
+    if (!error.isEmpty()) {
+        qCWarning(LOG_PROFILES) << "cannot write" << path << ":" << error;
+        return false;
+    }
+    return true;
+}
+
+QString ProfileManager::exportAccounts(const QUrl &url) const
+{
+    return writeAccountsFile(url.toLocalFile(), m_profiles);
+}
+
+QString ProfileManager::importAccounts(const QUrl &url, bool replace)
+{
+    if (!m_loaded) {
+        return i18nc("@info", "The current accounts file could not be loaded, so no accounts can be added to it.");
+    }
+
+    // GameManager tracks a running game through its account, which replacing
+    // would delete.
+    if (replace) {
+        for (const Profile *profile : std::as_const(m_profiles)) {
+            if (profile->status() == ProfileState::Running || profile->status() == ProfileState::Starting) {
+                return i18nc("@info", "Stop all running games before replacing the accounts.");
+            }
         }
     }
- */
+
+    QJsonArray accounts;
+    const QString error = readAccountsFile(url.toLocalFile(), accounts);
+    if (!error.isEmpty()) {
+        return error;
+    }
+    if (accounts.isEmpty()) {
+        return i18nc("@info", "The file contains no accounts.");
+    }
+
+    // Fresh ids, so no launch sequence picks up an imported account through
+    // an id that belonged to another one.
+    QList<Profile *> imported;
+    for (const QJsonValue &value : accounts) {
+        auto *profile = Profile::fromJson(value.toObject(), this);
+        profile->setId(calculateNextId());
+        imported.append(profile);
+    }
+
+    QList<Profile *> removed;
+    if (replace) {
+        beginResetModel();
+        removed = std::exchange(m_profiles, imported);
+        endResetModel();
+        m_selected_profile = m_profiles.first();
+        Q_EMIT profileSelected(m_selected_profile);
+    } else {
+        beginInsertRows(QModelIndex(), m_profiles.count(), m_profiles.count() + imported.count() - 1);
+        for (Profile *profile : imported) {
+            // The wineprefix and the settings copy follow the name.
+            if (isProfileNameTaken(profile->profileName())) {
+                profile->setProfileName(uniqueProfileName(profile->profileName()));
+            }
+            m_profiles.append(profile);
+        }
+        endInsertRows();
+    }
+
+    for (Profile *profile : imported) {
+        watch(profile);
+        Q_EMIT profileAdded(profile);
+    }
+    for (Profile *profile : removed) {
+        Q_EMIT profileRemoved(profile);
+        profile->deleteLater();
+    }
+    Q_EMIT profilesChanged();
+
+    if (!writeAccounts()) {
+        return i18nc("@info", "The accounts file could not be written, so they will be gone after a restart.");
+    }
+    return QString();
+}

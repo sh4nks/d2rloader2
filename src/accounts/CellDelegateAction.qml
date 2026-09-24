@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import org.kde.kirigami as Kirigami
+import org.kde.ki18n
 
 /**
  * Cell holding the button that starts or stops the profile of this row.
@@ -9,6 +10,7 @@ CellDelegate {
     id: root
 
     property bool running: false
+    property bool starting: false
 
     signal triggered
 
@@ -24,14 +26,15 @@ CellDelegate {
         anchors.topMargin: root.verticalPadding
         anchors.bottomMargin: root.verticalPadding
         width: Kirigami.Units.gridUnit * 6
+        enabled: !root.starting
 
-        text: root.running ? i18nc("@action:button", "Stop") : i18nc("@action:button", "Start")
+        text: root.running ? KI18n.i18nc("@action:button", "Stop") : (root.starting ? KI18n.i18nc("@action:button", "Starting") : KI18n.i18nc("@action:button", "Start"))
         icon.name: root.running ? "media-playback-pause" : "media-playback-start"
 
         background: Rectangle {
             color: root.running ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.positiveTextColor
             radius: 4
-            opacity: button.pressed ? 0.8 : (button.hovered ? 0.9 : 1.0)
+            opacity: !button.enabled ? 0.5 : (button.pressed ? 0.8 : (button.hovered ? 0.9 : 1.0))
         }
 
         contentItem: Item {

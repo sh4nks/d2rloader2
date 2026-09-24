@@ -39,6 +39,8 @@ QML_SINGLETON // Tells Qt to manage this class as a single global instance
 
     explicit RegionModel(QObject *parent = nullptr);
 
+    static QString server(Region region);
+
     // QAbstractListModel interface overrides
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;

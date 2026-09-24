@@ -4,23 +4,31 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import org.kde.kirigami as Kirigami
+import org.kde.ki18n
+import com.someblocks.d2rloader.core
 
 Kirigami.Card {
     id: root
 
     header: CardHeader {
-        title: i18nc("@title", "Diablo Clone Tracker")
+        title: KI18n.i18nc("@title", "Diablo Clone Tracker")
+
+        Label {
+            text: GameInfo.lastUpdated.getTime() > 0 ? KI18n.i18nc("@info", "Last updated: %1", Qt.formatTime(GameInfo.lastUpdated, "hh:mm:ss")) : KI18n.i18nc("@info", "Not fetched yet")
+            font.italic: true
+            color: Kirigami.Theme.textColor
+            opacity: 0.6
+        }
 
         Button {
-            text: i18nc("@action:button", "Refresh")
+            text: KI18n.i18nc("@action:button", "Refresh")
             icon.name: "view-refresh"
-            onClicked: {
-                // Refresh logic
-            }
+            enabled: !GameInfo.loading
+            onClicked: GameInfo.refresh()
         }
     }
     contentItem: ColumnLayout {
-        spacing: Kirigami.Units.gridUnit
+        spacing: Kirigami.Units.largeSpacing
         Layout.margins: Kirigami.Units.smallSpacing
 
         Kirigami.Theme.colorSet: Kirigami.Theme.View
@@ -28,83 +36,54 @@ Kirigami.Card {
 
         RowLayout {
             Layout.fillWidth: true
-            Layout.leftMargin: Kirigami.Units.smallSpacing
-            Layout.rightMargin: Kirigami.Units.smallSpacing
-            spacing: Kirigami.Units.gridUnit
-
-            Kirigami.Icon {
-                source: "view-media-artist"
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 3
-                Layout.preferredHeight: Kirigami.Units.gridUnit * 3
-                color: Kirigami.Theme.negativeTextColor
-            }
-
-            ColumnLayout {
-                Label {
-                    text: i18nc("@label", "Current Progress:")
-                    font.bold: true
-                    color: Kirigami.Theme.textColor
-                }
-                Label {
-                    text: i18nc("@info", "Stage 3/6: Terror begins to form within Sanctuary")
-                    font.pointSize: 12
-                    color: Kirigami.Theme.textColor
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                }
-            }
-        }
-
-        Kirigami.Separator {
-            Layout.fillWidth: true
-        }
-
-        Label {
-            text: i18nc("@title", "Regional Progress (Softcore Ladder):")
-            font.bold: true
-            color: Kirigami.Theme.textColor
-        }
-
-        ColumnLayout {
-            Layout.fillWidth: true
             spacing: Kirigami.Units.smallSpacing
 
-            Repeater {
-                model: [
-                    {
-                        region: i18nc("@label", "Americas:"),
-                        progress: 0.5
-                    },
-                    {
-                        region: i18nc("@label", "Europe:"),
-                        progress: 0.33
-                    },
-                    {
-                        region: i18nc("@label", "Asia:"),
-                        progress: 0.16
-                    }
-                ]
+            Label {
+                text: KI18n.i18nc("@title", "Realm Progress")
+                font.bold: true
+                color: Kirigami.Theme.textColor
+                Layout.fillWidth: true
+            }
 
-                delegate: RowLayout {
-                    id: regionRow
-                    required property var modelData
-
-                    Layout.fillWidth: true
-                    spacing: Kirigami.Units.gridUnit
-
-                    Label {
-                        text: regionRow.modelData.region
-                        color: Kirigami.Theme.textColor
-                        Layout.preferredWidth: Kirigami.Units.gridUnit * 5
-                    }
-
-                    ProgressBar {
-                        value: regionRow.modelData.progress
-                        Layout.fillWidth: true
-                        Kirigami.Theme.colorSet: Kirigami.Theme.View
-                        Kirigami.Theme.inherit: false
-                    }
+            CheckBox {
+                text: KI18n.i18nc("@option:check a set of alternative realms", "Return of the Warlock")
+                checked: D2RLoaderConfig.rotw
+                onToggled: {
+                    D2RLoaderConfig.rotw = checked;
+                    D2RLoaderConfig.save();
                 }
+            }
+        }
+
+        // Header, sharing its column width with RealmProgress.
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Kirigami.Units.gridUnit
+
+            Label {
+                text: KI18n.i18nc("@title:column", "Region")
+                font.bold: true
+                opacity: 0.7
+                color: Kirigami.Theme.textColor
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 5
+            }
+            Label {
+                text: GameInfo.dcloneModeName
+                font.bold: true
+                opacity: 0.7
+                color: Kirigami.Theme.textColor
+                Layout.fillWidth: true
+            }
+        }
+
+        Repeater {
+            model: GameInfo.dcloneModel
+
+            delegate: RealmProgress {
+                required property var model
+
+                regionName: model.region
+                progress: model.progress
             }
         }
 
@@ -112,12 +91,11 @@ Kirigami.Card {
             Layout.fillHeight: true
         }
 
-        Label {
-            text: i18nc("@info", "Last updated: 2 minutes ago")
-            font.italic: true
-            color: Kirigami.Theme.textColor
-            opacity: 0.6
-            Layout.alignment: Qt.AlignRight
+        Kirigami.InlineMessage {
+            Layout.fillWidth: true
+            type: Kirigami.MessageType.Error
+            text: GameInfo.errorString
+            visible: GameInfo.errorString.length > 0
         }
     }
 }

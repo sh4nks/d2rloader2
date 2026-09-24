@@ -4,6 +4,7 @@
 #include <QJsonObject>
 #include <QMetaEnum>
 #include <QObject>
+#include <QPoint>
 #include <QVariantList>
 #include <QVariantMap>
 #include <qhashfunctions.h>
@@ -12,6 +13,8 @@
 #include <qobject.h>
 #include <qqmlintegration.h>
 #include <qtmetamacros.h>
+
+#include <optional>
 
 class ProfileState : public QObject
 {
@@ -24,6 +27,7 @@ public:
         Running = 0,
         Stopped,
         None,
+        Starting,
     };
     Q_ENUM(Type);
 };
@@ -61,6 +65,9 @@ class Profile : public QObject
     Q_PROPERTY(GameSettingsType::Type gameSettings READ gameSettings WRITE setGameSettings NOTIFY gameSettingsChanged)
     Q_PROPERTY(QString gamePath READ gamePath WRITE setGamePath NOTIFY gamePathChanged)
     Q_PROPERTY(QString protonPath READ protonPath WRITE setProtonPath NOTIFY protonPathChanged)
+    Q_PROPERTY(QString environmentVariables READ environmentVariables WRITE setEnvironmentVariables NOTIFY environmentVariablesChanged)
+    Q_PROPERTY(QString lootFilter READ lootFilter WRITE setLootFilter NOTIFY lootFilterChanged)
+    Q_PROPERTY(bool rememberWindowPosition READ rememberWindowPosition WRITE setRememberWindowPosition NOTIFY rememberWindowPositionChanged)
 
 public:
     explicit Profile(QObject *parent = nullptr);
@@ -86,9 +93,6 @@ public:
     QString token() const;
     void setToken(const QString &token);
 
-    QString tokenProtected() const;
-    void setTokenProtected(const QString &token);
-
     QString password() const;
     void setPassword(const QString &password);
 
@@ -104,26 +108,65 @@ public:
     QString protonPath() const;
     void setProtonPath(const QString &protonPath);
 
+    /**
+     * Extra environment for the game, one NAME=value per line.
+     */
+    QString environmentVariables() const;
+    void setEnvironmentVariables(const QString &environmentVariables);
+
+    /**
+     * The name of the library loot filter given to every character of this
+     * account, empty to leave the game's loot filters alone.
+     */
+    QString lootFilter() const;
+    void setLootFilter(const QString &lootFilter);
+
     GameSettingsType::Type gameSettings() const;
     void setGameSettings(const GameSettingsType::Type gameSettings);
 
-    void update(const QString &profileName, const AuthMethodModel::AuthMethod &authMethod, const RegionModel::Region &region, const QString &gameParameters);
+    /**
+     * Whether the game window is moved back to where it was when the game of
+     * this account last closed.
+     */
+    bool rememberWindowPosition() const;
+    void setRememberWindowPosition(bool rememberWindowPosition);
 
-    static Profile *create(const ProfileState::Type status,
-                           const QString &profileName,
-                           const AuthMethodModel::AuthMethod authMethod,
-                           const RegionModel::Region region,
-                           const QString &email,
-                           const QString &token,
-                           const QString &tokenProtected,
-                           const QString &password,
-                           const QString &gameParameters,
-                           const GameSettingsType::Type gameSettings,
-                           const QString &gameSettingsPath,
-                           const QString &gamePath,
-                           const QString &protonPath);
+    /**
+     * Where the game window of this account was last seen, empty until it
+     * was seen once.
+     */
+    std::optional<QPoint> windowPosition() const;
+    void setWindowPosition(const QPoint &windowPosition);
 
-    static Profile *fromJson(QJsonObject &jsonObj);
+    /**
+     * The title the game window of this account is renamed to, in the format
+     * of the original D2RLoader: "Account (server address)".
+     */
+    QString windowTitle() const;
+
+    /**
+     * The profile name reduced to lowercase ASCII words joined by "-",
+     * matching the original D2RLoader so that its per-account wineprefixes
+     * are reused. Falls back to the email, then to the id, when nothing of
+     * the name survives. Never empty.
+     */
+    QString normalizedName() const;
+
+    /**
+     * The wineprefix the game of this profile runs in when started through
+     * umu: normalizedName() under the configured wineprefixPath.
+     */
+    QString wineprefix() const;
+
+    /**
+     * Copies every persisted field, including the id, from \a other.
+     * The runtime status and the window position are left alone: both come
+     * from the running game, which an editor's draft must not overwrite.
+     */
+    void copyFrom(const Profile *other);
+
+    QJsonObject toJson() const;
+    static Profile *fromJson(const QJsonObject &json, QObject *parent = nullptr);
 
 Q_SIGNALS:
     void statusChanged(ProfileState::Type oldStatus, ProfileState::Type newStatus);
@@ -138,20 +181,27 @@ Q_SIGNALS:
     void gameSettingsPathChanged();
     void gamePathChanged();
     void protonPathChanged();
+    void environmentVariablesChanged();
+    void lootFilterChanged();
+    void rememberWindowPositionChanged();
+    void windowPositionChanged();
 
 private:
-    int m_id;
+    int m_id = 0; /* 0 means "not stored yet", see ProfileManager::commit() */
     ProfileState::Type m_status = ProfileState::Stopped;
     QString m_profileName;
-    AuthMethodModel::AuthMethod m_authMethod;
-    RegionModel::Region m_region;
+    AuthMethodModel::AuthMethod m_authMethod = AuthMethodModel::Password;
+    RegionModel::Region m_region = RegionModel::Europe;
     QString m_email;
     QString m_token;
-    QString m_tokenProtected;
     QString m_password;
     QString m_gameParameters;
     GameSettingsType::Type m_gameSettings = GameSettingsType::None;
     QString m_gameSettingsPath;
     QString m_gamePath;
     QString m_protonPath;
+    QString m_environmentVariables;
+    QString m_lootFilter;
+    bool m_rememberWindowPosition = true;
+    std::optional<QPoint> m_windowPosition;
 };

@@ -12,21 +12,30 @@ ecm_add_qml_module(Accounts GENERATE_PLUGIN_SOURCE
         CellDelegateStatus.qml
     DEPENDENCIES
         QtQuick
+        com.someblocks.d2rloader.core
         QtQuick.Controls
         org.kde.kirigami
+        org.kde.ki18n
     SOURCES
         profilemanager.h
         profilemanager.cpp
+        launchsequencemanager.h
+        launchsequencemanager.cpp
         profile.h
         profile.cpp
         region.h
         region.cpp
         authmethod.h
         authmethod.cpp
+        gamesettings.h
+        gamesettings.cpp
+        lootfilters.h
+        lootfilters.cpp
 )
 
-target_include_directories(Accounts PRIVATE ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/models)
+target_include_directories(Accounts PRIVATE ${CMAKE_BINARY_DIR})
 target_link_libraries(Accounts PRIVATE
+    Core
     Qt::Core
     Qt::Quick
     KF6::I18n

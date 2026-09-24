@@ -6,10 +6,21 @@
 RegionModel::RegionModel(QObject *parent)
     : QAbstractListModel(parent)
 {
-    m_items = {{Europe, tr("Europe"), QStringLiteral("eu.actual.battle.net")},
-               {Americas, tr("Americas"), QStringLiteral("us.actual.battle.net")},
-               {Asia, tr("Asia"), QStringLiteral("kr.actual.battle.net")}};
+    m_items = {{Europe, tr("Europe"), server(Europe)}, {Americas, tr("Americas"), server(Americas)}, {Asia, tr("Asia"), server(Asia)}};
 };
+
+QString RegionModel::server(Region region)
+{
+    switch (region) {
+    case Europe:
+        return QStringLiteral("eu.actual.battle.net");
+    case Americas:
+        return QStringLiteral("us.actual.battle.net");
+    case Asia:
+        return QStringLiteral("kr.actual.battle.net");
+    }
+    return QString();
+}
 
 int RegionModel::rowCount(const QModelIndex &parent) const
 {

@@ -5,12 +5,13 @@ import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
 import org.kde.kirigamiaddons.formcard as FormCard
+import org.kde.ki18n
 import com.someblocks.d2rloader.accounts as Accounts
 
 FormCard.FormCardPage {
     id: root
 
-    title: i18nc("@title", "Accounts")
+    title: KI18n.i18nc("@title", "Accounts")
 
     /**
      * Property used to pass data when navigating from outside the module.
@@ -30,12 +31,33 @@ FormCard.FormCardPage {
         if (!root.accountData) {
             return;
         }
-        root.QQC2.ApplicationWindow.window.pageStack.layers.push(accountEditorComponent, root.accountData);
+        (root.QQC2.ApplicationWindow.window as Kirigami.ApplicationWindow).pageStack.layers.push(accountEditorComponent, root.accountData);
         root.accountData = null;
     }
 
+    /**
+     * Opens the editor on a copy of the account at the given index, so that
+     * cancelling leaves the stored account untouched.
+     */
+    function editAccount(index) {
+        (root.QQC2.ApplicationWindow.window as Kirigami.ApplicationWindow).pageStack.layers.push(accountEditorComponent, {
+            isNew: false,
+            profile: Accounts.ProfileManager.editDraft(index)
+        });
+    }
+
+    /**
+     * Opens the editor on a new account that is only added once it is saved.
+     */
+    function addAccount() {
+        (root.QQC2.ApplicationWindow.window as Kirigami.ApplicationWindow).pageStack.layers.push(accountEditorComponent, {
+            isNew: true,
+            profile: Accounts.ProfileManager.createDraft()
+        });
+    }
+
     FormCard.FormHeader {
-        title: i18nc("@title:group", "Accounts")
+        title: KI18n.i18nc("@title:group", "Accounts")
     }
 
     FormCard.FormCard {
@@ -48,17 +70,7 @@ FormCard.FormCardPage {
                 required property int index
                 required property var profile
 
-                onClicked: root.QQC2.ApplicationWindow.window.pageStack.layers.push(accountEditorComponent, {
-                    isNew: false,
-                    profile: accountDelegate.profile
-                })
-
-                TapHandler {
-                    onDoubleTapped: root.QQC2.ApplicationWindow.window.pageStack.layers.push(accountEditorComponent, {
-                        isNew: false,
-                        profile: accountDelegate.profile
-                    })
-                }
+                onClicked: root.editAccount(accountDelegate.index)
 
                 contentItem: RowLayout {
                     spacing: Kirigami.Units.largeSpacing
@@ -95,38 +107,34 @@ FormCard.FormCardPage {
                         QQC2.ToolButton {
                             icon.name: "arrow-up"
                             QQC2.ToolTip.visible: hovered && enabled
-                            QQC2.ToolTip.text: i18nc("@info:tooltip", "Move Up")
+                            QQC2.ToolTip.text: KI18n.i18nc("@info:tooltip", "Move Up")
                             enabled: accountDelegate.index > 0
-                            onClicked: {
-                                // Logic to move account up would go here
-                            }
+                            onClicked: Accounts.ProfileManager.moveUp(accountDelegate.index)
                         }
                         QQC2.ToolButton {
                             icon.name: "arrow-down"
                             QQC2.ToolTip.visible: hovered && enabled
-                            QQC2.ToolTip.text: i18nc("@info:tooltip", "Move Down")
-                            enabled: accountDelegate.index < 3
-                            onClicked: {
-                                // Logic to move account down would go here
-                            }
+                            QQC2.ToolTip.text: KI18n.i18nc("@info:tooltip", "Move Down")
+                            enabled: accountDelegate.index < Accounts.ProfileManager.rowCount() - 1
+                            onClicked: Accounts.ProfileManager.moveDown(accountDelegate.index)
                         }
                     }
 
                     QQC2.ToolButton {
                         icon.name: "edit-copy"
                         QQC2.ToolTip.visible: hovered
-                        QQC2.ToolTip.text: i18nc("@info:tooltip", "Clone Account")
-                        onClicked: {
-                            // Logic to clone account would go here
-                        }
+                        QQC2.ToolTip.text: KI18n.i18nc("@info:tooltip", "Clone Account")
+                        onClicked: Accounts.ProfileManager.cloneProfile(accountDelegate.index)
                     }
 
                     QQC2.ToolButton {
                         icon.name: "edit-delete"
                         QQC2.ToolTip.visible: hovered
-                        QQC2.ToolTip.text: i18nc("@info:tooltip", "Delete Account")
+                        QQC2.ToolTip.text: KI18n.i18nc("@info:tooltip", "Delete Account")
                         onClicked: {
-                            // Logic to remove account would go here
+                            deletePrompt.row = accountDelegate.index;
+                            deletePrompt.accountName = accountDelegate.profile.profileName;
+                            deletePrompt.open();
                         }
                     }
 
@@ -143,12 +151,33 @@ FormCard.FormCardPage {
 
         FormCard.FormButtonDelegate {
             id: addAccountDelegate
-            text: i18nc("@action:button", "Add Account")
+            text: KI18n.i18nc("@action:button", "Add Account")
             icon.name: "list-add"
-            onClicked: root.QQC2.ApplicationWindow.window.pageStack.layers.push(accountEditorComponent, {
-                isNew: true
-            })
+            onClicked: root.addAccount()
         }
+    }
+
+    Kirigami.PromptDialog {
+        id: deletePrompt
+
+        property int row: -1
+        property string accountName
+
+        title: KI18n.i18nc("@title:window", "Delete Account")
+        subtitle: KI18n.i18nc("@info", "Delete the account \"%1\"? This cannot be undone.", deletePrompt.accountName)
+        standardButtons: Kirigami.Dialog.Cancel
+        showCloseButton: false
+
+        customFooterActions: [
+            Kirigami.Action {
+                text: KI18n.i18nc("@action:button", "Delete")
+                icon.name: "edit-delete"
+                onTriggered: {
+                    Accounts.ProfileManager.removeProfileAt(deletePrompt.row);
+                    deletePrompt.close();
+                }
+            }
+        ]
     }
 
     Component {

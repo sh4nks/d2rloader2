@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import Qt.labs.qmlmodels
 import org.kde.kirigami as Kirigami
+import org.kde.ki18n
 
 Kirigami.Card {
     id: root
@@ -12,7 +13,11 @@ Kirigami.Card {
     signal settingsClicked
     signal addAccountClicked
     signal editAccountClicked(int rowIndex)
+    signal startStopClicked(int rowIndex)
+    signal launchSequenceClicked(int sequenceIndex)
+    signal cancelSequenceClicked
     required property var modelData
+    property bool sequenceRunning: false
 
     header: Item {
         implicitHeight: headerLayout.implicitHeight + Kirigami.Units.smallSpacing * 2
@@ -24,7 +29,7 @@ Kirigami.Card {
             anchors.topMargin: Kirigami.Units.smallSpacing * 2
 
             Kirigami.Heading {
-                text: i18nc("@title", "Accounts")
+                text: KI18n.i18nc("@title", "Accounts")
                 level: 2
                 Layout.alignment: Qt.AlignVCenter
             }
@@ -35,15 +40,32 @@ Kirigami.Card {
 
             ComboBox {
                 id: launchSequenceSelector
-                model: [i18nc("@item:incombobox", "Default Sequence")]
+                model: LaunchSequenceManager
+                textRole: "name"
+                enabled: !root.sequenceRunning && count > 0
+                displayText: count > 0 ? currentText : KI18n.i18nc("@item:incombobox", "No Launch Sequences")
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 10
+                onActivated: index => LaunchSequenceManager.currentIndex = index
+
+                // Picking an entry overwrites currentIndex, which would break a
+                // plain binding.
+                Binding {
+                    target: launchSequenceSelector
+                    property: "currentIndex"
+                    value: LaunchSequenceManager.currentIndex
+                }
             }
 
             Button {
-                text: i18nc("@action:button", "Launch Sequence")
-                icon.name: "media-playback-start"
+                text: root.sequenceRunning ? KI18n.i18nc("@action:button", "Cancel Sequence") : KI18n.i18nc("@action:button", "Launch Sequence")
+                icon.name: root.sequenceRunning ? "media-playback-stop" : "media-playback-start"
+                enabled: root.sequenceRunning || launchSequenceSelector.currentIndex >= 0
                 onClicked: {
-                    // Logic to launch the selected sequence
+                    if (root.sequenceRunning) {
+                        root.cancelSequenceClicked();
+                    } else {
+                        root.launchSequenceClicked(launchSequenceSelector.currentIndex);
+                    }
                 }
             }
 
@@ -67,47 +89,59 @@ Kirigami.Card {
             property int currentRowIndex
 
             MenuItem {
-                text: i18nc("@action:inmenu", "Clone")
+                text: KI18n.i18nc("@action:inmenu", "Clone")
                 icon.name: "edit-copy"
-                onTriggered: {
-                    // Logic to clone contextMenu.currentRowData
-                }
+                onTriggered: root.modelData.cloneProfile(contextMenu.currentRowIndex)
             }
             MenuItem {
-                text: i18nc("@action:inmenu", "Edit")
+                text: KI18n.i18nc("@action:inmenu", "Edit")
                 icon.name: "edit-entry"
                 onTriggered: root.editAccountClicked(contextMenu.currentRowIndex)
             }
             MenuItem {
-                text: i18nc("@action:inmenu", "Delete")
+                text: KI18n.i18nc("@action:inmenu", "Delete")
                 icon.name: "edit-delete"
-                onTriggered: {
-                    // Logic to delete index contextMenu.currentRowIndex
-                }
+                onTriggered: deletePrompt.open()
             }
             MenuSeparator {}
             MenuItem {
-                text: i18nc("@action:inmenu", "Move Up")
+                text: KI18n.i18nc("@action:inmenu", "Move Up")
                 icon.name: "arrow-up"
                 enabled: contextMenu.currentRowIndex > 0
-                onTriggered: {
-                    // Logic to move row up
-                }
+                onTriggered: root.modelData.moveUp(contextMenu.currentRowIndex)
             }
             MenuItem {
-                text: i18nc("@action:inmenu", "Move Down")
+                text: KI18n.i18nc("@action:inmenu", "Move Down")
                 icon.name: "arrow-down"
                 enabled: contextMenu.currentRowIndex < root.modelData.rowCount() - 1
-                onTriggered: {
-                    // Logic to move row down
-                }
+                onTriggered: root.modelData.moveDown(contextMenu.currentRowIndex)
             }
+        }
+
+        Kirigami.PromptDialog {
+            id: deletePrompt
+
+            title: KI18n.i18nc("@title:window", "Delete Account")
+            subtitle: contextMenu.currentRowData ? KI18n.i18nc("@info", "Delete the account \"%1\"? This cannot be undone.", contextMenu.currentRowData.profileName) : ""
+            standardButtons: Kirigami.Dialog.Cancel
+            showCloseButton: false
+
+            customFooterActions: [
+                Kirigami.Action {
+                    text: KI18n.i18nc("@action:button", "Delete")
+                    icon.name: "edit-delete"
+                    onTriggered: {
+                        root.modelData.removeProfileAt(contextMenu.currentRowIndex);
+                        deletePrompt.close();
+                    }
+                }
+            ]
         }
 
         Menu {
             id: contextMenuAdd
             MenuItem {
-                text: i18nc("@action:inmenu", "Add new Account")
+                text: KI18n.i18nc("@action:inmenu", "Add new Account")
                 icon.name: "list-add"
                 onTriggered: root.addAccountClicked()
             }
@@ -243,6 +277,7 @@ Kirigami.Card {
 
                         highlighted: row === tableView.hoveredRow
                         running: model.status === ProfileState.Running
+                        starting: model.status === ProfileState.Starting
                     }
                 }
 
@@ -308,9 +343,8 @@ Kirigami.Card {
 
                         highlighted: row === tableView.hoveredRow
                         running: model.status === ProfileState.Running
-                        onTriggered: {
-                            // Logic to toggle state
-                        }
+                        starting: model.status === ProfileState.Starting
+                        onTriggered: root.startStopClicked(row)
                     }
                 }
             }

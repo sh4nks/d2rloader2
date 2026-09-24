@@ -1,19 +1,17 @@
 #include "../accounts/profilemanager.h"
-#include "d2rloader.h"
-#include "settingsmanager.h"
+#include "../core/logbuffer.h"
+#include "../core/logging.h"
 #include <KAboutData>
 #include <KIconTheme>
-#include <KLocalizedContext>
+#include <KLocalizedQmlContext>
 #include <KLocalizedString>
 #include <QApplication>
 #include <QGuiApplication>
 #include <QIcon>
 #include <QQmlApplicationEngine>
-#include <QQmlContext>
 #include <QQuickStyle>
 #include <QtQml>
 #include <kaboutdata.h>
-#include <print>
 #include <qhashfunctions.h>
 #include <qlogging.h>
 #include <qobject.h>
@@ -27,27 +25,20 @@ int main(int argc, char *argv[])
     QApplication::setOrganizationName(QStringLiteral("someblocks"));
     QApplication::setOrganizationDomain(QStringLiteral("someblocks.com"));
     QApplication::setApplicationName(QStringLiteral("D2RLoader"));
-    QApplication::setDesktopFileName(QStringLiteral("d2rloader"));
-    D2RLoader *d2rloader = D2RLoader::getInstance();
+    QApplication::setDesktopFileName(QStringLiteral("com.someblocks.d2rloader"));
+    LogBuffer::install();
 
-    std::println("D2RLoader started {}", d2rloader->appVersion().toStdString());
-
-    // Init app components
-    SettingsManager *sm = SettingsManager::getInstance();
-    if (!sm) {
-        qWarning() << "Cannot init app components!";
-        return EXIT_FAILURE;
-    }
+    qCInfo(LOG_APP) << "D2RLoader started" << APP_VERSION;
 
     QApplication::setStyle(QStringLiteral("breeze"));
     if (qEnvironmentVariableIsEmpty("QT_QUICK_CONTROLS_STYLE")) {
         QQuickStyle::setStyle(QStringLiteral("org.kde.desktop"));
     }
-    QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("d2rloader")));
+    QApplication::setWindowIcon(QIcon::fromTheme(QStringLiteral("com.someblocks.d2rloader")));
 
     KAboutData aboutData(QStringLiteral("d2rloader"),
                          i18nc("@title", "D2RLoader"),
-                         QStringLiteral("1.0"),
+                         QStringLiteral(APP_VERSION),
                          i18n("A Diablo 2 Resurrected Loader"),
                          KAboutLicense::MIT);
 
@@ -55,32 +46,20 @@ int main(int argc, char *argv[])
                         i18nc("@info:credit", "Lead Developer"),
                         QStringLiteral("peter.justin@outlook.com"),
                         QStringLiteral("https://peterjustin.com"));
+    aboutData.addCredit(QStringLiteral("Lorc"),
+                        i18nc("@info:credit", "Application icon based on \"Diablo skull\" from game-icons.net, licensed under CC BY 3.0"),
+                        QString(),
+                        QStringLiteral("https://game-icons.net/1x1/lorc/diablo-skull.html"));
 
     aboutData.setHomepage(QStringLiteral("https://github.com/sh4nks/d2rloader"));
     aboutData.setBugAddress("https://github.com/sh4nks/d2rloader/issues");
     aboutData.setCopyrightStatement(QStringLiteral("Copyright (c) 2025 - 2026 Peter Justin"));
     aboutData.setOrganizationDomain("someblocks.com"); //
-    aboutData.setDesktopFileName(QStringLiteral("d2rloader"));
+    aboutData.setDesktopFileName(QStringLiteral("com.someblocks.d2rloader"));
     KAboutData::setApplicationData(aboutData);
 
-    // Register a singleton that will be accessible from QML.
-    qmlRegisterSingletonType("com.someblocks.d2rloader.settings", // How the import statement should look like
-                             1,
-                             0, // Major and minor versions of the import
-                             "About", // The name of the QML object
-                             [](QQmlEngine *engine, QJSEngine *) -> QJSValue {
-                                 // Here we retrieve our aboutData and give it to the QML engine
-                                 // to turn it into a QML type
-                                 return engine->toScriptValue(KAboutData::applicationData());
-                             });
-
     QQmlApplicationEngine engine;
-    engine.rootContext()->setContextObject(new KLocalizedContext(&engine));
-    // engine.rootContext()->setContextProperty(QStringLiteral("profileTableModel"), tableProxy);
-    // engine.rootContext()->setContextProperty(QStringLiteral("settingsManager"), sm);
-    engine.rootContext()->setContextProperty(QStringLiteral("app"), d2rloader);
-    qDebug() << engine.importPathList();
-
+    KLocalization::setupLocalizedContext(&engine);
     ProfileManager::instance().loadProfiles();
 
     // engine.load(QUrl(QStringLiteral("qrc:/qml/Main.qml")));

@@ -3,6 +3,9 @@ import QtQuick.Controls 6.6
 import QtQuick.Window 6.6
 import QtQuick.Layouts 6.6
 import org.kde.kirigami as Kirigami
+import org.kde.ki18n
+
+import com.someblocks.d2rloader.settings as Settings
 
 ApplicationWindow {
     id: aboutDialog
@@ -13,7 +16,7 @@ ApplicationWindow {
     modality: Qt.ApplicationModal
     x: Screen.width / 2 - width / 2
     y: Screen.height / 2 - height / 2
-    title: i18nc("@title:window", "About")
+    title: KI18n.i18nc("@title:window", "About")
     visible: false
 
     RowLayout {
@@ -47,7 +50,7 @@ ApplicationWindow {
             Column {
                 Layout.fillHeight: true
                 Kirigami.Heading {
-                    text: i18nc("@title", "D2RLoader")
+                    text: KI18n.i18nc("@title", "D2RLoader")
                     level: 1
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     width: aboutDialog.width - (appIcon.width + mainRow.spacing + mainRow.anchors.leftMargin + mainRow.anchors.rightMargin)
@@ -60,7 +63,7 @@ ApplicationWindow {
                     horizontalAlignment: Text.AlignHCenter
                     width: aboutDialog.width - (appIcon.width + mainRow.spacing + mainRow.anchors.leftMargin + mainRow.anchors.rightMargin)
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                    text: i18nc("@info:label", "A Cross-platform and Open Source Diablo 2 Resurrected Loader written in C++/Qt")
+                    text: KI18n.i18nc("@info:label", "A Cross-platform and Open Source Diablo 2 Resurrected Loader written in C++/Qt")
                     font.pointSize: 8
                 }
 
@@ -69,40 +72,40 @@ ApplicationWindow {
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     width: aboutDialog.width - (appIcon.width + mainRow.spacing + mainRow.anchors.leftMargin + mainRow.anchors.rightMargin)
                     textFormat: Text.RichText
-                    text: i18nc("@info", "<strong>Version:</strong> 1.0.0 (Build Date: 24.09.2025)")
+                    text: KI18n.i18nc("@info %1 is the version number", "<strong>Version:</strong> %1", Application.version)
                 }
                 Label {
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     width: aboutDialog.width - (appIcon.width + mainRow.spacing + mainRow.anchors.leftMargin + mainRow.anchors.rightMargin)
                     textFormat: Text.RichText
-                    text: i18nc("@info", "<strong>Qt:</strong> 6.9.2")
+                    text: KI18n.i18nc("@info %1 is the Qt version number", "<strong>Qt:</strong> %1", Settings.About.qtVersion)
                 }
                 Label {
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     width: aboutDialog.width - (appIcon.width + mainRow.spacing + mainRow.anchors.leftMargin + mainRow.anchors.rightMargin)
                     textFormat: Text.RichText
-                    text: i18nc("@info", "<strong>Install Path:</strong> <code>/usr/bin/d2rloader</code>")
+                    text: KI18n.i18nc("@info", "<strong>Install Path:</strong> <code>/usr/bin/d2rloader</code>")
                 }
                 Label {
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     width: aboutDialog.width - (appIcon.width + mainRow.spacing + mainRow.anchors.leftMargin + mainRow.anchors.rightMargin)
                     textFormat: Text.RichText
-                    text: i18nc("@info", "<strong>License:</strong> MIT")
+                    text: KI18n.i18nc("@info", "<strong>License:</strong> MIT")
                 }
                 Label {
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     width: aboutDialog.width - (appIcon.width + mainRow.spacing + mainRow.anchors.leftMargin + mainRow.anchors.rightMargin)
                     textFormat: Text.RichText
-                    text: i18nc("@info", "<strong>Source Code:</strong> <a href=\"https://github.com/sh4nks/d2rloader\">GitHub</a>")
+                    text: KI18n.i18nc("@info", "<strong>Source Code:</strong> <a href=\"https://github.com/sh4nks/d2rloader\">GitHub</a>")
                 }
                 Label {
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WordWrap
-                    text: i18nc("@info", "TZ Info and DClone Info provided by <a href=\"https://d2emu.com\">D2Emu.com</a>")
+                    text: KI18n.i18nc("@info", "TZ Info and DClone Info provided by <a href=\"https://d2emu.com\">D2Emu.com</a>")
                     textFormat: Text.RichText
                     onLinkActivated: link => Qt.openUrlExternally(link)
                     width: aboutDialog.width - (appIcon.width + mainRow.spacing + mainRow.anchors.leftMargin + mainRow.anchors.rightMargin)
@@ -117,7 +120,7 @@ ApplicationWindow {
                 Label {
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WordWrap
-                    text: i18nc("@info", "Please report bugs or your suggestions on <a href=\"https://github.com/sh4nks/d2rloader/issues\">sh4nks/d2rloader</a>")
+                    text: KI18n.i18nc("@info", "Please report bugs or your suggestions on <a href=\"https://github.com/sh4nks/d2rloader/issues\">sh4nks/d2rloader</a>")
                     textFormat: Text.RichText
                     onLinkActivated: link => Qt.openUrlExternally(link)
                     opacity: 0.7
@@ -142,7 +145,7 @@ ApplicationWindow {
                 Button {
                     id: closeButton
                     onClicked: aboutDialog.close()
-                    text: i18nc("@action:button", "Close")
+                    text: KI18n.i18nc("@action:button", "Close")
                 }
             }
         }

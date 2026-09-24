@@ -1,0 +1,86 @@
+id: com.someblocks.d2rloader
+runtime: org.kde.Platform
+runtime-version: '6.11'
+sdk: org.kde.Sdk
+command: d2rloader
+
+finish-args:
+  - --share=ipc
+  - --share=network
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --socket=pulseaudio
+  - --device=all
+  # pressure-vessel runs the game in a subsandbox
+  - --allow=multiarch
+  - --allow=devel
+  - --allow=per-app-dev-shm
+  # game installs, wineprefixes and Steam's own prefix can be anywhere
+  - --filesystem=home
+  - --filesystem=/mnt
+  - --filesystem=/media
+  - --filesystem=/run/media
+  # wine enumerates disk drives through UDisks2
+  - --system-talk-name=org.freedesktop.UDisks2
+  # keeps the game windows in place through a KWin script on Plasma
+  - --talk-name=org.kde.KWin
+
+add-extensions:
+  org.freedesktop.Platform.Compat.i386:
+    directory: lib/i386-linux-gnu
+    version: '25.08'
+
+  org.freedesktop.Platform.GL32:
+    directory: lib/i386-linux-gnu/GL
+    version: '1.4'
+    versions: 25.08;1.4
+    subdirectories: true
+    no-autodownload: true
+    autodelete: false
+    add-ld-path: lib
+    merge-dirs: vulkan/icd.d;glvnd/egl_vendor.d;OpenCL/vendors;lib/dri;lib/d3d;vulkan/explicit_layer.d;vulkan/implicit_layer.d
+    download-if: active-gl-driver
+    enable-if: active-gl-driver
+    autoprune-unless: active-gl-driver
+
+modules:
+  - name: i386-extension-points
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/lib/i386-linux-gnu/GL
+      - install -Dm644 -t /app/etc ld.so.conf
+    sources:
+      - type: inline
+        dest-filename: ld.so.conf
+        contents: |
+          include /run/flatpak/ld.so.conf.d/app-*-org.freedesktop.Platform.GL32.*.conf
+          /app/lib32
+          /app/lib/i386-linux-gnu
+
+  - name: umu-launcher
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 umu-run /app/bin/umu-run
+    sources:
+      - type: archive
+        url: https://github.com/Open-Wine-Components/umu-launcher/releases/download/1.4.4/umu-launcher-1.4.4-zipapp.tar
+        sha256: eb590691841f7fad3fc3ad8fd5db4ccb87849fe7948e62b28ece7a4ee48cc851
+
+  - name: d2rloader
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DBUILD_TESTING=OFF
+    sources:
+      - type: dir
+        path: ../..
+        skip:
+          - .git
+          - .cache
+          - build
+          - build-appimage
+          - build-flatpak
+          - .flatpak-builder
+          - flatpak_app
+          - repo
+          - packaging

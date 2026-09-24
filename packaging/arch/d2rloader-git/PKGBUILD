@@ -1,0 +1,56 @@
+# Maintainer: Peter Justin <peter.justin@outlook.com>
+
+pkgname=d2rloader-git
+pkgver=0.1.0.r0.g0000000
+pkgrel=1
+pkgdesc='Launch and manage several Diablo II: Resurrected accounts'
+arch=('x86_64')
+url='https://github.com/sh4nks/d2rloader2'
+license=('MIT')
+depends=(
+  gcc-libs
+  glibc
+  hicolor-icon-theme
+  kcolorscheme
+  kconfig
+  kcoreaddons
+  ki18n
+  kiconthemes
+  kirigami
+  kirigami-addons
+  knotifications
+  qqc2-desktop-style
+  qt6-base
+  qt6-declarative
+)
+makedepends=(extra-cmake-modules git)
+optdepends=(
+  'umu-launcher: run the game through Proton'
+  'steam: launch Steam accounts'
+  'gamemode: run the game with GameMode'
+  'breeze: Breeze widget style'
+)
+provides=("${pkgname%-git}")
+conflicts=("${pkgname%-git}")
+source=("${pkgname%-git}::git+ssh://git@someblocks.com/sh4nks/d2rloader2.git")
+sha256sums=('SKIP')
+
+pkgver() {
+  cd "${pkgname%-git}"
+  local version
+  version=$(sed -n 's/^set(RELEASE_SERVICE_VERSION_\(MAJOR\|MINOR\|MICRO\) "\([0-9]*\)")$/\2/p' CMakeLists.txt | paste -sd.)
+  printf '%s.r%s.g%s' "$version" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+}
+
+build() {
+  cmake -B build -S "${pkgname%-git}" \
+    -DCMAKE_BUILD_TYPE=None \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DBUILD_TESTING=OFF
+  cmake --build build
+}
+
+package() {
+  DESTDIR="$pkgdir" cmake --install build
+  install -Dm644 "${pkgname%-git}/LICENSE.md" -t "$pkgdir/usr/share/licenses/$pkgname"
+}

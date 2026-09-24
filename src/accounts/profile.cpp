@@ -1,12 +1,75 @@
 #include "profile.h"
 #include "authmethod.h"
+#include "d2rloaderconfig.h"
 #include "region.h"
+#include <QDir>
+#include <QJsonObject>
+#include <QMetaEnum>
+#include <QRegularExpression>
 #include <qhashfunctions.h>
 #include <qobject.h>
+
+namespace
+{
+/**
+ * Enums are persisted by name rather than by value, so that reordering an
+ * enum cannot silently reinterpret already stored accounts.
+ */
+template<typename Enum>
+QString enumToKey(Enum value)
+{
+    const char *key = QMetaEnum::fromType<Enum>().valueToKey(static_cast<int>(value));
+    return key ? QString::fromLatin1(key) : QString();
+}
+
+template<typename Enum>
+Enum enumFromKey(const QJsonValue &value, Enum fallback)
+{
+    bool ok = false;
+    const int result = QMetaEnum::fromType<Enum>().keyToValue(value.toString().toLatin1().constData(), &ok);
+    return ok ? static_cast<Enum>(result) : fallback;
+}
+}
 
 Profile::Profile(QObject *parent)
     : QObject(parent)
 {
+}
+
+QString Profile::normalizedName() const
+{
+    static const QRegularExpression separators(QStringLiteral(R"([\t !"#$%&'()*\-/<=>?@\[\\\]^_`{|},.+]+)"));
+
+    const auto normalize = [](const QString &text) {
+        // Decomposing first turns accented letters into their ASCII base
+        // letter plus a combining mark, which is then dropped along with
+        // anything else outside ASCII.
+        QString ascii;
+        for (const QChar c : text.normalized(QString::NormalizationForm_KD)) {
+            if (c.unicode() < 128) {
+                ascii.append(c);
+            }
+        }
+        return ascii.toLower().split(separators, Qt::SkipEmptyParts).join(u'-');
+    };
+
+    for (const QString &candidate : {normalize(m_profileName), normalize(m_email)}) {
+        if (!candidate.isEmpty()) {
+            return candidate;
+        }
+    }
+    return QStringLiteral("account-%1").arg(m_id);
+}
+
+QString Profile::wineprefix() const
+{
+    return QDir(D2RLoaderConfig::self()->wineprefixPath()).filePath(normalizedName());
+}
+
+QString Profile::windowTitle() const
+{
+    const QString name = m_profileName.isEmpty() ? m_email : m_profileName;
+    return QStringLiteral("%1 (%2)").arg(name, RegionModel::server(m_region));
 }
 
 int Profile::id() const
@@ -113,19 +176,6 @@ void Profile::setToken(const QString &token)
     }
 }
 
-QString Profile::tokenProtected() const
-{
-    return m_tokenProtected;
-}
-
-void Profile::setTokenProtected(const QString &token)
-{
-    if (m_tokenProtected != token) {
-        m_tokenProtected = token;
-        Q_EMIT tokenChanged();
-    }
-}
-
 QString Profile::gameParameters() const
 {
     return m_gameParameters;
@@ -191,41 +241,127 @@ void Profile::setProtonPath(const QString &protonPath)
     }
 }
 
-Profile *Profile::fromJson(QJsonObject &jsonObj)
+QString Profile::environmentVariables() const
 {
-    auto profileName = jsonObj.find(QStringLiteral("profileName"));
-    auto profile = new Profile(nullptr);
-
-    return nullptr;
+    return m_environmentVariables;
 }
 
-Profile *Profile::create(const ProfileState::Type status,
-                         const QString &profileName,
-                         const AuthMethodModel::AuthMethod authMethod,
-                         const RegionModel::Region region,
-                         const QString &email,
-                         const QString &token,
-                         const QString &tokenProtected,
-                         const QString &password,
-                         const QString &gameParameters,
-                         const GameSettingsType::Type gameSettings,
-                         const QString &gameSettingsPath,
-                         const QString &gamePath,
-                         const QString &protonPath)
+void Profile::setEnvironmentVariables(const QString &environmentVariables)
 {
-    Profile *profile = new Profile(nullptr);
-    profile->setStatus(status);
-    profile->setProfileName(profileName);
-    profile->setAuthMethod(authMethod);
-    profile->setRegion(region);
-    profile->setEmail(email);
-    profile->setPassword(password);
-    profile->setToken(token);
-    profile->setTokenProtected(tokenProtected);
-    profile->setGameParameters(gameParameters);
-    profile->setGameSettings(gameSettings);
-    profile->setGameSettingsPath(gameSettingsPath);
-    profile->setGamePath(gamePath);
-    profile->setProtonPath(protonPath);
+    if (m_environmentVariables != environmentVariables) {
+        m_environmentVariables = environmentVariables;
+        Q_EMIT environmentVariablesChanged();
+    }
+}
+
+QString Profile::lootFilter() const
+{
+    return m_lootFilter;
+}
+
+void Profile::setLootFilter(const QString &lootFilter)
+{
+    if (m_lootFilter != lootFilter) {
+        m_lootFilter = lootFilter;
+        Q_EMIT lootFilterChanged();
+    }
+}
+
+bool Profile::rememberWindowPosition() const
+{
+    return m_rememberWindowPosition;
+}
+
+void Profile::setRememberWindowPosition(bool rememberWindowPosition)
+{
+    if (m_rememberWindowPosition != rememberWindowPosition) {
+        m_rememberWindowPosition = rememberWindowPosition;
+        Q_EMIT rememberWindowPositionChanged();
+    }
+}
+
+std::optional<QPoint> Profile::windowPosition() const
+{
+    return m_windowPosition;
+}
+
+void Profile::setWindowPosition(const QPoint &windowPosition)
+{
+    if (m_windowPosition != windowPosition) {
+        m_windowPosition = windowPosition;
+        Q_EMIT windowPositionChanged();
+    }
+}
+
+void Profile::copyFrom(const Profile *other)
+{
+    if (!other || other == this) {
+        return;
+    }
+
+    setId(other->id());
+    setProfileName(other->profileName());
+    setAuthMethod(other->authMethod());
+    setRegion(other->region());
+    setEmail(other->email());
+    setToken(other->token());
+    setPassword(other->password());
+    setGameParameters(other->gameParameters());
+    setGameSettings(other->gameSettings());
+    setGameSettingsPath(other->gameSettingsPath());
+    setGamePath(other->gamePath());
+    setProtonPath(other->protonPath());
+    setEnvironmentVariables(other->environmentVariables());
+    setLootFilter(other->lootFilter());
+    setRememberWindowPosition(other->rememberWindowPosition());
+}
+
+QJsonObject Profile::toJson() const
+{
+    // The status is runtime state and deliberately not persisted.
+    QJsonObject json{
+        {QStringLiteral("id"), m_id},
+        {QStringLiteral("profileName"), m_profileName},
+        {QStringLiteral("authMethod"), enumToKey(m_authMethod)},
+        {QStringLiteral("region"), enumToKey(m_region)},
+        {QStringLiteral("email"), m_email},
+        {QStringLiteral("token"), m_token},
+        {QStringLiteral("password"), m_password},
+        {QStringLiteral("gameParameters"), m_gameParameters},
+        {QStringLiteral("gameSettings"), enumToKey(m_gameSettings)},
+        {QStringLiteral("gameSettingsPath"), m_gameSettingsPath},
+        {QStringLiteral("gamePath"), m_gamePath},
+        {QStringLiteral("protonPath"), m_protonPath},
+        {QStringLiteral("environmentVariables"), m_environmentVariables},
+        {QStringLiteral("lootFilter"), m_lootFilter},
+        {QStringLiteral("rememberWindowPosition"), m_rememberWindowPosition},
+    };
+    if (m_windowPosition) {
+        json[QStringLiteral("windowPosition")] = QJsonObject{{QStringLiteral("x"), m_windowPosition->x()}, {QStringLiteral("y"), m_windowPosition->y()}};
+    }
+    return json;
+}
+
+Profile *Profile::fromJson(const QJsonObject &json, QObject *parent)
+{
+    auto *profile = new Profile(parent);
+    profile->setId(json[QStringLiteral("id")].toInt());
+    profile->setProfileName(json[QStringLiteral("profileName")].toString());
+    profile->setAuthMethod(enumFromKey(json[QStringLiteral("authMethod")], AuthMethodModel::Password));
+    profile->setRegion(enumFromKey(json[QStringLiteral("region")], RegionModel::Europe));
+    profile->setEmail(json[QStringLiteral("email")].toString());
+    profile->setToken(json[QStringLiteral("token")].toString());
+    profile->setPassword(json[QStringLiteral("password")].toString());
+    profile->setGameParameters(json[QStringLiteral("gameParameters")].toString());
+    profile->setGameSettings(enumFromKey(json[QStringLiteral("gameSettings")], GameSettingsType::None));
+    profile->setGameSettingsPath(json[QStringLiteral("gameSettingsPath")].toString());
+    profile->setGamePath(json[QStringLiteral("gamePath")].toString());
+    profile->setProtonPath(json[QStringLiteral("protonPath")].toString());
+    profile->setEnvironmentVariables(json[QStringLiteral("environmentVariables")].toString());
+    profile->setLootFilter(json[QStringLiteral("lootFilter")].toString());
+    profile->setRememberWindowPosition(json[QStringLiteral("rememberWindowPosition")].toBool(true));
+    if (const QJsonValue position = json[QStringLiteral("windowPosition")]; position.isObject()) {
+        profile->setWindowPosition(QPoint(position[QStringLiteral("x")].toInt(), position[QStringLiteral("y")].toInt()));
+    }
     return profile;
 }

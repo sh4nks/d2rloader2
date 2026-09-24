@@ -1,56 +1,73 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
 import org.kde.kirigamiaddons.formcard as FormCard
 import org.kde.ki18n
+import com.someblocks.d2rloader.accounts as Accounts
 
 FormCard.FormCardPage {
     id: root
 
-    title: root.isNew ? i18nc("@title", "New Launch Sequence") : i18nc("@title", "Edit Launch Sequence")
+    /**
+     * Row of the sequence being edited, or -1 for a new one.
+     */
+    property int sequenceIndex: -1
+    property string sequenceName
+    property var selectedIds: []
 
-    property bool isNew: true
-    property string sequenceName: ""
-    property var selectedAccounts: []
+    readonly property bool isNew: root.sequenceIndex < 0
+
+    title: root.isNew ? KI18n.i18nc("@title", "New Launch Sequence") : KI18n.i18nc("@title", "Edit Launch Sequence")
 
     FormCard.FormHeader {
-        title: i18nc("@title:group", "Sequence Configuration")
+        title: KI18n.i18nc("@title:group", "Sequence Configuration")
     }
 
     FormCard.FormCard {
         FormCard.FormTextFieldDelegate {
             id: nameField
-            label: i18nc("@label", "Sequence Name")
-            description: i18nc("@info:label", "A descriptive name for this launch sequence.")
+            label: KI18n.i18nc("@label", "Sequence Name")
+            description: KI18n.i18nc("@info:label", "A descriptive name for this launch sequence.")
             text: root.sequenceName
-            placeholderText: i18nc("@info:placeholder", "e.g. Morning Farming")
-            onTextChanged: root.sequenceName = text
+            placeholderText: KI18n.i18nc("@info:placeholder", "e.g. Morning Farming")
         }
     }
 
     FormCard.FormHeader {
-        title: i18nc("@title:group", "Select Accounts")
+        title: KI18n.i18nc("@title:group", "Select Accounts")
     }
 
     FormCard.FormCard {
         Repeater {
-            model: 6 // Mocking available accounts for the UI prototype
+            model: Accounts.ProfileManager
             delegate: FormCard.FormCheckDelegate {
                 id: accountCheck
-                required property int index
+                required property int profileId
+                required property var profile
 
-                text: [i18nc("@info", "cow"), i18nc("@info", "dog"), i18nc("@info", "sheep"), i18nc("@info", "goat"), i18nc("@info", "BooBoo"), i18nc("@info", "MFer")][accountCheck.index]
-                description: i18nc("@info", "Account ID: %1", (index + 1))
-
-                checked: false
+                text: accountCheck.profile.profileName
+                description: Accounts.AuthMethodModel.getDisplayName(accountCheck.profile.authMethod) + " - " + Accounts.RegionModel.getDisplayName(accountCheck.profile.region)
+                checked: root.selectedIds.includes(accountCheck.profileId)
                 onToggled: {
-                    // Logic to update selectedAccounts list
+                    if (accountCheck.checked) {
+                        root.selectedIds = root.selectedIds.concat([accountCheck.profileId]);
+                    } else {
+                        root.selectedIds = root.selectedIds.filter(id => id !== accountCheck.profileId);
+                    }
                 }
             }
         }
+
+        FormCard.FormTextDelegate {
+            visible: !Accounts.ProfileManager.hasProfiles
+            text: KI18n.i18nc("@info", "There are no accounts yet.")
+        }
+    }
+
+    FormCard.FormSectionText {
+        text: KI18n.i18nc("@info", "Accounts start in the order of the accounts table.")
     }
 
     FormCard.FormHeader {
@@ -59,21 +76,21 @@ FormCard.FormCardPage {
 
     FormCard.FormCard {
         FormCard.FormButtonDelegate {
-            text: root.isNew ? i18nc("@action:button", "Create Sequence") : i18nc("@action:button", "Save Changes")
+            text: root.isNew ? KI18n.i18nc("@action:button", "Create Sequence") : KI18n.i18nc("@action:button", "Save Changes")
             icon.name: root.isNew ? "list-add" : "document-save"
-            highlighted: true
+            enabled: nameField.text.trim().length > 0
             onClicked: {
-                // Logic to persist the sequence would go here
-                root.QQC2.ApplicationWindow.window.pageStack.layers.pop();
+                Accounts.LaunchSequenceManager.save(root.sequenceIndex, nameField.text.trim(), root.selectedIds);
+                (root.QQC2.ApplicationWindow.window as Kirigami.ApplicationWindow).pageStack.layers.pop();
             }
         }
 
         FormCard.FormDelegateSeparator {}
 
         FormCard.FormButtonDelegate {
-            text: i18nc("@action:button", "Cancel")
+            text: KI18n.i18nc("@action:button", "Cancel")
             icon.name: "dialog-cancel"
-            onClicked: root.QQC2.ApplicationWindow.window.pageStack.layers.pop()
+            onClicked: (root.QQC2.ApplicationWindow.window as Kirigami.ApplicationWindow).pageStack.layers.pop()
         }
     }
 }

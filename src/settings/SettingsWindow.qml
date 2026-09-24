@@ -3,53 +3,60 @@ pragma Singleton
 
 import QtQuick
 import org.kde.kirigamiaddons.settings as KirigamiSettings
+import org.kde.ki18n
 
 import com.someblocks.d2rloader.accounts
 
 KirigamiSettings.ConfigurationView {
     id: root
 
-    title: i18nc("@title:window", "Preferences")
+    title: KI18n.i18nc("@title:window", "Preferences")
 
     modules: [
         KirigamiSettings.ConfigurationModule {
             moduleId: "application"
-            text: i18nc("@title:menu", "Application")
+            text: KI18n.i18nc("@title:menu", "Application")
             icon.name: "settings-configure"
             page: () => Qt.createComponent("com.someblocks.d2rloader.settings", "ApplicationSettingsPage")
         },
         KirigamiSettings.ConfigurationModule {
             moduleId: "accounts"
-            text: i18nc("@title:menu", "Accounts")
+            text: KI18n.i18nc("@title:menu", "Accounts")
             icon.name: "system-users"
             page: () => Qt.createComponent("com.someblocks.d2rloader.settings", "AccountSettingsPage")
         },
         KirigamiSettings.ConfigurationModule {
             moduleId: "game_settings"
-            text: i18nc("@title:menu", "Game Settings")
+            text: KI18n.i18nc("@title:menu", "Game Settings")
             icon.name: "folder-games-symbolic"
             page: () => Qt.createComponent("com.someblocks.d2rloader.settings", "GameSettingsPage")
         },
         KirigamiSettings.ConfigurationModule {
+            moduleId: "loot_filters"
+            text: KI18n.i18nc("@title:menu", "Loot Filters")
+            icon.name: "view-filter"
+            page: () => Qt.createComponent("com.someblocks.d2rloader.settings", "LootFilterPage")
+        },
+        KirigamiSettings.ConfigurationModule {
             moduleId: "live_info"
-            text: i18nc("@title:menu", "DClone & TZ Info")
+            text: KI18n.i18nc("@title:menu", "DClone & TZ Info")
             icon.name: "internet-services"
             page: () => Qt.createComponent("com.someblocks.d2rloader.settings", "DiabloCloneSettingsPage")
         },
         KirigamiSettings.ConfigurationModule {
             moduleId: "launch_sequence"
-            text: i18nc("@title:menu", "Launch Sequence")
+            text: KI18n.i18nc("@title:menu", "Launch Sequence")
             icon.name: "media-playlist-play"
             page: () => Qt.createComponent("com.someblocks.d2rloader.settings", "LaunchSequencePage")
         },
         KirigamiSettings.ConfigurationModule {
             moduleId: "about"
-            text: i18nc("@title:menu", "About D2RLoader")
+            text: KI18n.i18nc("@title:menu", "About D2RLoader")
             icon.name: "help-about"
-            category: i18nc("@title:group", "About")
+            category: KI18n.i18nc("@title:group", "About")
             initialProperties: () => {
                 return {
-                    "aboutData": About
+                    "aboutData": About.aboutData
                 };
             }
             page: () => Qt.createComponent("org.kde.kirigamiaddons.formcard", "AboutPage")
@@ -86,19 +93,19 @@ KirigamiSettings.ConfigurationView {
      * @param accountData Data for the account to edit, or null for a new account.
      */
     function openAccountEditor(accountData = null) {
-        let props = {
-            isNew: true
+        // The editor always works on a draft, so Cancel can simply throw it
+        // away and a new account has something to bind to from the start.
+        const props = accountData != null ? {
+            isNew: false,
+            profile: ProfileManager.editDraft(accountData)
+        } : {
+            isNew: true,
+            profile: ProfileManager.createDraft()
         };
-
-        if (accountData != null) {
-            props = {
-                isNew: false,
-                profile: ProfileManager.getProfile(accountData)
-            };
-        }
 
         root.openWithInitialProperties("accounts", {
             accountData: props
         });
     }
+
 }

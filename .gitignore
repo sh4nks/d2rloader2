@@ -87,3 +87,14 @@ bin/D2RLoader
 cmake-build-debug
 Generated
 .qmlls.ini
+
+# packaging
+.flatpak-builder/
+packaging/arch/*/src/
+packaging/arch/*/pkg/
+packaging/arch/*/d2rloader*/
+packaging/arch/*/*.pkg.tar.*
+packaging/arch/*/*.tar.gz
+repo/
+*.flatpak
+TODO.md
