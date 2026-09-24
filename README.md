@@ -3,6 +3,9 @@
 Note: I'll probably merge this repo into [sh4nks/d2rloader](https://github.com/sh4nks/d2rloader) once
 the upgrade path is implemented. For now consider this an beta where only Linux works.
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/sh4nks/d2rloader/packaging/screenshot.png" width="800">
+</p>
 
 ## Getting Started
 
