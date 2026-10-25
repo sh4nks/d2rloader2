@@ -44,9 +44,36 @@ jobs:
           bundle: D2RLoader-${{ env.VERSION }}-x86_64.flatpak
           artifact-name: flatpak
 
+  windows:
+    name: Windows
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: zip
+          # The package list from the README's "Windows" section.
+          pacboy: >-
+            gcc:p cmake:p ninja:p qt6-base:p qt6-declarative:p qt6-svg:p
+            extra-cmake-modules:p kirigami:p kirigami-addons:p ki18n:p
+            knotifications:p kcolorscheme:p kiconthemes:p kcoreaddons:p
+            kconfig:p qqc2-desktop-style:p breeze:p breeze-icons:p icoutils:p
+      - name: Build zip
+        run: packaging/windows/build-zip.sh
+      - uses: actions/upload-artifact@v7
+        with:
+          name: windows
+          path: build-windows/D2RLoader-*-windows-x86_64.zip
+          if-no-files-found: error
+
   release:
     name: Release
-    needs: [appimage, flatpak]
+    needs: [appimage, flatpak, windows]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -59,4 +86,5 @@ jobs:
           files: |
             *.AppImage
             *.flatpak
+            *.zip
           fail_on_unmatched_files: true

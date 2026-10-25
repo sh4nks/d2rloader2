@@ -1,7 +1,7 @@
 # D2RLoader 2
 
 Note: I'll probably merge this repo into [sh4nks/d2rloader](https://github.com/sh4nks/d2rloader) once
-the upgrade path is implemented. For now consider this an beta where only Linux works.
+the upgrade path is implemented. For now consider this a beta where launching the game only works on Linux.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/sh4nks/d2rloader2/master/packaging/screenshot.png" width="800">
@@ -9,8 +9,8 @@ the upgrade path is implemented. For now consider this an beta where only Linux 
 
 ## Getting Started
 
-D2RLoader currently only supports Linux (via Wine/[UMU-Launcher](https://github.com/Open-Wine-Components/umu-launcher)).
-However Windows support is planned in the future.
+D2RLoader currently only launches the game on Linux (via Wine/[UMU-Launcher](https://github.com/Open-Wine-Components/umu-launcher)).
+The application itself also builds and runs on Windows (see [Building on Windows](#windows)), but launching the game there is still to come.
 
 Accounts, Loot Filters, Game Settings and WINEPREFIXES are stored in ``$XDG_CONFIG_DIRS/d2rloader/``.
 Application specific settings are stored in ``$XDG_CONFIG_DIRS/d2rloaderrc``.
@@ -63,6 +63,26 @@ $ cmake -B build/
 $ cmake --build build/
 ```
 
+### Windows
+
+The Windows build uses the UCRT64 environment of [MSYS2](https://www.msys2.org/), which ships Qt 6 and
+KDE Frameworks 6 as prebuilt packages. Launching the game is not implemented on Windows yet.
+
+Install MSYS2 (for example with ``winget install MSYS2.MSYS2``), open the _MSYS2 UCRT64_ shell and
+install the toolchain and the dependencies:
+
+```bash
+$ pacman -S --needed mingw-w64-ucrt-x86_64-{gcc,cmake,ninja,qt6-base,qt6-declarative,qt6-svg,extra-cmake-modules,kirigami,kirigami-addons,ki18n,knotifications,kcolorscheme,kiconthemes,kcoreaddons,kconfig,qqc2-desktop-style,breeze,breeze-icons,icoutils}
+```
+
+Then build and run it from the same shell, which has the Qt and KDE libraries in its ``PATH``:
+
+```bash
+$ cmake -B build/ -G Ninja -DCMAKE_BUILD_TYPE=Release
+$ cmake --build build/
+$ ./build/bin/d2rloader.exe
+```
+
 
 ## Packaging
 
@@ -70,6 +90,19 @@ $ cmake --build build/
 
 ```bash
 $ packaging/appimage/build-appimage.sh
+```
+
+
+### Building the Windows zip
+
+From the MSYS2 UCRT64 shell set up as described under [Windows](#windows), with ``zip`` installed as well
+(``pacman -S --needed zip``). The script builds a release binary, deploys the Qt and KDE Frameworks
+libraries, QML modules, plugins and icons next to it and zips the result into
+``build-windows/D2RLoader-<version>-windows-x86_64.zip``. The zip is portable: extract it anywhere and
+run ``D2RLoader/d2rloader.exe``.
+
+```bash
+$ packaging/windows/build-zip.sh
 ```
 
 

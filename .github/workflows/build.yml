@@ -1,0 +1,49 @@
+name: Build
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  linux:
+    name: Linux
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    steps:
+      - name: Install dependencies
+        run: |
+          pacman -Syu --noconfirm --needed \
+            git gcc cmake ninja extra-cmake-modules \
+            qt6-base qt6-declarative qt6-svg \
+            kirigami kirigami-addons ki18n knotifications kcolorscheme \
+            kiconthemes kcoreaddons kconfig qqc2-desktop-style breeze
+      - uses: actions/checkout@v7
+      - name: Configure
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build
+
+  windows:
+    name: Windows
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          # The package list from the README's "Windows" section.
+          pacboy: >-
+            gcc:p cmake:p ninja:p qt6-base:p qt6-declarative:p qt6-svg:p
+            extra-cmake-modules:p kirigami:p kirigami-addons:p ki18n:p
+            knotifications:p kcolorscheme:p kiconthemes:p kcoreaddons:p
+            kconfig:p qqc2-desktop-style:p breeze:p breeze-icons:p icoutils:p
+      - name: Configure
+        run: cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build

@@ -81,6 +81,9 @@ target_sources(d2rloader PRIVATE ${D2RLOADER_ICON})
 
 target_compile_definitions(d2rloader_static PUBLIC APP_VERSION=\"${APP_VERSION}\")
 set_target_properties(d2rloader PROPERTIES OUTPUT_NAME "d2rloader")
+# A GUI application on Windows, so no console window opens alongside it.
+# Debug builds keep the console, where the log output goes.
+set_target_properties(d2rloader PROPERTIES WIN32_EXECUTABLE $<NOT:$<CONFIG:Debug>>)
 install(TARGETS d2rloader ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
 install(FILES d2rloader.notifyrc DESTINATION ${KDE_INSTALL_KNOTIFYRCDIR})
 install(FILES com.someblocks.d2rloader.desktop DESTINATION ${KDE_INSTALL_APPDIR})
