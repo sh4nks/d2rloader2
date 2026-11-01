@@ -255,6 +255,32 @@ constexpr RealmSpec RealmSpecs[] = {
     {"kr", true, true},
 };
 
+/**
+ * The immunity codes the API reports, folded to one code each: it sometimes
+ * lists an immunity as its name next to its code, as in ["Lightning", "l"].
+ * Anything unknown is kept as it is.
+ */
+QStringList immunityCodes(const QJsonArray &values)
+{
+    static const QHash<QString, QString> codes{
+        {QStringLiteral("fire"), QStringLiteral("f")},
+        {QStringLiteral("cold"), QStringLiteral("c")},
+        {QStringLiteral("lightning"), QStringLiteral("l")},
+        {QStringLiteral("poison"), QStringLiteral("p")},
+        {QStringLiteral("magic"), QStringLiteral("m")},
+        {QStringLiteral("physical"), QStringLiteral("ph")},
+    };
+    QStringList result;
+    for (const QJsonValue &value : values) {
+        const QString text = value.toString().trimmed();
+        const QString code = codes.value(text.toLower(), text);
+        if (!code.isEmpty() && !result.contains(code)) {
+            result.append(code);
+        }
+    }
+    return result;
+}
+
 QString regionName(const QString &code)
 {
     if (code == QLatin1String("eu")) {
@@ -712,8 +738,8 @@ void GameInfo::applyTerrorZones(const QJsonObject &tz)
         return result;
     };
 
-    m_currentImmunities = strings(QStringLiteral("current_immunities"));
-    m_nextImmunities = strings(QStringLiteral("next_immunities"));
+    m_currentImmunities = immunityCodes(tz[QStringLiteral("current_immunities")].toArray());
+    m_nextImmunities = immunityCodes(tz[QStringLiteral("next_immunities")].toArray());
     m_currentBossPacks = integers(QStringLiteral("current_num_boss_packs"));
     m_nextBossPacks = integers(QStringLiteral("next_num_boss_packs"));
     m_currentSuperUniques = strings(QStringLiteral("current_superuniques"));

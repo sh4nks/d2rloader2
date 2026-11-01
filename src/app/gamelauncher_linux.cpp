@@ -7,7 +7,6 @@
 #include "kwinwindowpositions.h"
 
 #include <KLocalizedString>
-#include <QDesktopServices>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -28,7 +27,6 @@
 
 namespace
 {
-const QString SteamAppId = QStringLiteral("2536520");
 const QString DefaultProtonPath = QStringLiteral("UMU-Latest");
 
 /**
@@ -37,13 +35,6 @@ const QString DefaultProtonPath = QStringLiteral("UMU-Latest");
  * new version is downloaded next to the old one.
  */
 const QString TokenToolVersion = QStringLiteral("v0.0.4");
-
-/**
- * The game window shows up a while after D2R.exe starts, longer on a first
- * start that compiles shaders, so renaming it is retried for about 2 minutes.
- */
-const int RenameAttempts = 60;
-const std::chrono::seconds RenameInterval{2};
 const QUrl TokenToolUrl(QStringLiteral("https://github.com/sh4nks/d2rreg/releases/download/%1/d2rreg.exe").arg(TokenToolVersion));
 
 QString tokenToolPath()
@@ -442,13 +433,7 @@ void LinuxGameLauncher::launchSteam(Profile *profile, const QStringList &argumen
 {
     // Inside the Flatpak the host's Steam is only reachable through its URL handler.
     if (QFileInfo::exists(QStringLiteral("/.flatpak-info"))) {
-        const QUrl url(QStringLiteral("steam://run/%1//%2/").arg(SteamAppId, arguments.join(u' ')));
-        qCInfo(LOG_GAME) << "launching" << profile->profileName() << "through" << url;
-        if (!QDesktopServices::openUrl(url)) {
-            Q_EMIT failed(profile, i18nc("@info", "Could not start Steam."));
-            return;
-        }
-        Q_EMIT launched(profile, 0);
+        launchSteamUrl(profile, arguments);
         return;
     }
 
@@ -458,7 +443,7 @@ void LinuxGameLauncher::launchSteam(Profile *profile, const QStringList &argumen
         return;
     }
 
-    const QStringList steamArguments = QStringList{QStringLiteral("-applaunch"), SteamAppId} + arguments;
+    const QStringList steamArguments = QStringList{QStringLiteral("-applaunch"), GameSettings::SteamAppId} + arguments;
     qCInfo(LOG_GAME) << "launching" << profile->profileName() << "through Steam:" << steam << steamArguments;
     if (!QProcess::startDetached(steam, steamArguments)) {
         Q_EMIT failed(profile, i18nc("@info", "Could not start Steam."));
@@ -688,8 +673,15 @@ void LinuxGameLauncher::restoreWindowPosition(Profile *profile)
         return;
     }
 
+    // Without the wineserver, wine would set up a prefix of its own.
+    const qint64 wineserver = wineserverProcess(profile->normalizedName());
+    if (wineEnvironment(wineserver).value(QStringLiteral("WINEPREFIX")).isEmpty()) {
+        qCDebug(LOG_GAME) << "not moving the window of" << profile->profileName() << "- its wineserver is gone";
+        return;
+    }
+
     const QStringList arguments{QStringLiteral("--move-window"), profile->windowTitle(), QString::number(position->x()), QString::number(position->y())};
-    QProcess *process = tokenToolProcess(wineserverProcess(profile->normalizedName()), arguments, this);
+    QProcess *process = tokenToolProcess(wineserver, arguments, this);
 
     connect(process, &QProcess::errorOccurred, this, [process](QProcess::ProcessError error) {
         if (error == QProcess::FailedToStart) {
@@ -712,7 +704,13 @@ void LinuxGameLauncher::restoreWindowPosition(Profile *profile)
 void LinuxGameLauncher::watchWindowPosition(Profile *profile)
 {
     const QString title = profile->windowTitle();
-    QProcess *process = tokenToolProcess(wineserverProcess(profile->normalizedName()), {QStringLiteral("--watch-window"), title}, this);
+    // Without the wineserver, wine would set up a prefix of its own.
+    const qint64 wineserver = wineserverProcess(profile->normalizedName());
+    if (wineEnvironment(wineserver).value(QStringLiteral("WINEPREFIX")).isEmpty()) {
+        qCDebug(LOG_GAME) << "not following the window" << title << "- its wineserver is gone";
+        return;
+    }
+    QProcess *process = tokenToolProcess(wineserver, {QStringLiteral("--watch-window"), title}, this);
 
     // d2rreg prints "x y" whenever the window settles somewhere new, and exits
     // once the window is gone.
@@ -793,16 +791,7 @@ QProcessEnvironment LinuxGameLauncher::environment(const Profile *profile) const
     env.insert(QStringLiteral("WINEDLLOVERRIDES"), QStringLiteral("winemenubuilder="));
     env.insert(QStringLiteral("PROTONPATH"), protonPath);
 
-    const QStringList lines = profile->environmentVariables().split(u'\n');
-    for (const QString &line : lines) {
-        const QString variable = line.trimmed();
-        const qsizetype separator = variable.indexOf(u'=');
-        if (separator > 0) {
-            env.insert(variable.left(separator).trimmed(), variable.mid(separator + 1).trimmed());
-        } else if (!variable.isEmpty()) {
-            qCWarning(LOG_GAME) << "ignoring environment line without NAME=value:" << variable;
-        }
-    }
+    addProfileEnvironment(env, profile);
 
     // Stopping and adopting the game rely on these, so they cannot be overridden.
     env.insert(QStringLiteral("WINEPREFIX"), prefix);

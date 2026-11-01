@@ -31,6 +31,8 @@ ecm_add_qml_module(Accounts GENERATE_PLUGIN_SOURCE
         gamesettings.cpp
         lootfilters.h
         lootfilters.cpp
+        legacyconfig.h
+        legacyconfig.cpp
 )
 
 target_include_directories(Accounts PRIVATE ${CMAKE_BINARY_DIR})

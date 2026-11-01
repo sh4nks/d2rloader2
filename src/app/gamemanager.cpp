@@ -20,6 +20,8 @@ GameManager::GameManager(QObject *parent)
             sequenceStepDone(false);
         }
     });
+    // Replacing or reloading the accounts leaves the sequence nothing to go on with.
+    connect(&ProfileManager::instance(), &QAbstractItemModel::modelReset, this, &GameManager::cancelSequence);
 
     if (!m_launcher) {
         return;

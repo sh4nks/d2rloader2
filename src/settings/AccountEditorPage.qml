@@ -27,22 +27,11 @@ FormCard.FormCardPage {
         Accounts.LootFilters.refresh();
     }
 
-    // Closing the settings window mid-edit destroys this page without going
-    // through Save or Cancel. Anything still outstanding is thrown away;
-    // committed and cancelled drafts are no longer outstanding, so this is a
-    // no-op for them.
+    // The draft is released only once this page is gone, whether Save or
+    // Cancel popped it or the settings window was closed: the fields keep
+    // reading it while the page animates out. A draft adopted as a new account
+    // is no longer outstanding, so this is a no-op for it.
     Component.onDestruction: Accounts.ProfileManager.discard(root.profile)
-
-    // Helper function to convert URL to local path
-    function urlToPath(url) {
-        if (!url)
-            return "";
-        let path = url.toString();
-        if (path.startsWith("file://")) {
-            path = path.substring(7);
-        }
-        return decodeURIComponent(path);
-    }
 
     function copyCurrentSettings() {
         const error = Accounts.GameSettings.copyCurrent(root.profile, true);
@@ -160,19 +149,19 @@ FormCard.FormCardPage {
         id: customSettingsDialog
         title: KI18n.i18nc("@title:window", "Select Custom Settings.json")
         nameFilters: ["JSON files (*.json)", "All files (*)"]
-        onAccepted: root.profile.gameSettingsPath = root.urlToPath(selectedFile)
+        onAccepted: root.profile.gameSettingsPath = Paths.toLocalFile(selectedFile)
     }
 
     FolderDialog {
         id: gamePathDialog
         title: KI18n.i18nc("@title:window", "Select Game Directory")
-        onAccepted: root.profile.gamePath = root.urlToPath(selectedFolder)
+        onAccepted: root.profile.gamePath = Paths.toLocalFile(selectedFolder)
     }
 
     FolderDialog {
         id: protonPathDialog
         title: KI18n.i18nc("@title:window", "Select Proton Runtime Directory")
-        onAccepted: root.profile.protonPath = root.urlToPath(selectedFolder)
+        onAccepted: root.profile.protonPath = Paths.toLocalFile(selectedFolder)
     }
 
     FormCard.FormHeader {
@@ -577,13 +566,28 @@ FormCard.FormCardPage {
     }
 
     FormCard.FormCard {
+        Kirigami.InlineMessage {
+            id: saveMessage
+            Layout.fillWidth: true
+            Layout.margins: Kirigami.Units.smallSpacing
+            type: Kirigami.MessageType.Error
+            visible: saveMessage.text.length > 0
+        }
+
         FormCard.FormButtonDelegate {
             id: saveButton
             text: root.isNew ? KI18n.i18nc("@action:button", "Create Account") : KI18n.i18nc("@action:button", "Save Changes")
             icon.name: root.isNew ? "list-add" : "document-save"
             highlighted: true
             onClicked: {
-                Accounts.ProfileManager.commit(root.profile);
+                // The name decides whether the draft can be saved, and the
+                // field may not have committed it yet.
+                root.profile.profileName = nameField.text;
+                const error = Accounts.ProfileManager.commit(root.profile);
+                if (error.length > 0) {
+                    saveMessage.text = error;
+                    return;
+                }
                 (root.QQC2.ApplicationWindow.window as Kirigami.ApplicationWindow).pageStack.layers.pop();
             }
         }
@@ -594,10 +598,7 @@ FormCard.FormCardPage {
             id: cancelButton
             text: KI18n.i18nc("@action:button", "Cancel")
             icon.name: "dialog-cancel"
-            onClicked: {
-                Accounts.ProfileManager.discard(root.profile);
-                (root.QQC2.ApplicationWindow.window as Kirigami.ApplicationWindow).pageStack.layers.pop();
-            }
+            onClicked: (root.QQC2.ApplicationWindow.window as Kirigami.ApplicationWindow).pageStack.layers.pop()
         }
     }
 }

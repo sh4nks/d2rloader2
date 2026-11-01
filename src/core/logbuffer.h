@@ -84,6 +84,7 @@ private:
     };
 
     explicit LogBuffer(QObject *parent = nullptr);
+    ~LogBuffer() override;
 
     void append(Entry entry);
     void applyLogLevel();

@@ -9,15 +9,14 @@
 #include <QRegularExpression>
 #include <QStandardPaths>
 
+#if defined(Q_OS_WIN)
+#include <shlobj.h>
+#endif
+
+const QString GameSettings::SteamAppId = QStringLiteral("2536520");
+
 namespace
 {
-const QString SteamAppId = QStringLiteral("2536520");
-
-QString settingsFolder()
-{
-    return QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + QStringLiteral("/d2rloader/game_settings");
-}
-
 /**
  * The Proton prefix Steam runs the game in. Steam may keep the game in any
  * of its libraries, which are listed in libraryfolders.vdf.
@@ -30,7 +29,7 @@ QString steamPrefix()
         home + QStringLiteral("/.local/share/Steam"),
         home + QStringLiteral("/.var/app/com.valvesoftware.Steam/.local/share/Steam"),
     };
-    const QString compatdata = QStringLiteral("/steamapps/compatdata/%1/pfx").arg(SteamAppId);
+    const QString compatdata = QStringLiteral("/steamapps/compatdata/%1/pfx").arg(GameSettings::SteamAppId);
 
     for (const QString &root : roots) {
         if (!QFileInfo::exists(root + QStringLiteral("/steamapps"))) {
@@ -62,6 +61,11 @@ GameSettings::GameSettings(QObject *parent)
     : QObject(parent)
 {
     refresh();
+}
+
+QString GameSettings::settingsFolder()
+{
+    return QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + QStringLiteral("/d2rloader/game_settings");
 }
 
 QString GameSettings::gamePrefix(const Profile *profile)

@@ -16,6 +16,16 @@ Accounts, Loot Filters, Game Settings and WINEPREFIXES are stored in ``$XDG_CONF
 Application specific settings are stored in ``$XDG_CONFIG_DIRS/d2rloaderrc``.
 
 
+### Upgrading from the previous D2RLoader
+
+The first start imports the configuration of the [previous D2RLoader](https://github.com/sh4nks/d2rloader)
+when its ``settings.json`` is found in ``%APPDATA%\d2rloader`` on Windows or ``~/.config/d2rloader`` on Linux:
+the settings this D2RLoader has no value for yet, the accounts unless it already has an accounts file of its
+own, and the game settings files of the accounts. On Linux both use the same ``accounts.json``, so the previous
+one is kept as ``accounts.json.bak``; the previous D2RLoader cannot read the new format. An ``accounts.json``
+of the previous D2RLoader can also be loaded at any time through _Settings -> Load Account Settings..._.
+
+
 ## Linux
 
 - Download the provided AppImage or the Flatpak from the [release page](https://github.com/sh4nks/d2rloader2/releases).
@@ -23,6 +33,22 @@ Application specific settings are stored in ``$XDG_CONFIG_DIRS/d2rloaderrc``.
 - Install D2R from your favorite Game Launcher (Lutris/Bottles, etc)
 - Add a profile with one of the configured auth methods below.
 - Have fun!
+
+
+## Windows
+
+- Download the installer or the portable zip from the [release page](https://github.com/sh4nks/d2rloader2/releases).
+    - The installer puts D2RLoader into ``%LOCALAPPDATA%\Programs`` for the current user and needs no
+      administrator rights. The zip runs from wherever it is extracted. Both keep their settings in ``%LOCALAPPDATA%``.
+    - Neither is code signed, so SmartScreen warns on the first start: choose _More info_ -> _Run anyway_.
+    - You can also build the app yourself as described in [Building on Windows](#windows-1) below.
+- Install D2R through the Battle.net app and set its directory in the application settings.
+- Add a profile with one of the configured auth methods below.
+- Have fun!
+
+Several accounts can play at once: the game refuses to start while another instance is running, and
+D2RLoader releases that check in each game after starting it. No administrator rights and no extra
+tools (like handle.exe) are needed for that.
 
 
 ## Auth Methods
@@ -72,7 +98,7 @@ Install MSYS2 (for example with ``winget install MSYS2.MSYS2``), open the _MSYS2
 install the toolchain and the dependencies:
 
 ```bash
-$ pacman -S --needed mingw-w64-ucrt-x86_64-{gcc,cmake,ninja,qt6-base,qt6-declarative,qt6-svg,extra-cmake-modules,kirigami,kirigami-addons,ki18n,knotifications,kcolorscheme,kiconthemes,kcoreaddons,kconfig,qqc2-desktop-style,breeze,breeze-icons,icoutils}
+$ pacman -S --needed mingw-w64-ucrt-x86_64-{gcc,libgomp,cmake,ninja,qt6-base,qt6-declarative,qt6-svg,extra-cmake-modules,kirigami,kirigami-addons,ki18n,knotifications,kcolorscheme,kiconthemes,kcoreaddons,kconfig,qqc2-desktop-style,breeze,breeze-icons,icoutils}
 ```
 
 Then build and run it from the same shell, which has the Qt and KDE libraries in its ``PATH``:
@@ -103,6 +129,18 @@ run ``D2RLoader/d2rloader.exe``.
 
 ```bash
 $ packaging/windows/build-zip.sh
+```
+
+
+### Building the Windows installer
+
+Needs the zip built first and [Inno Setup](https://jrsoftware.org/isinfo.php) 6 or 7, which the script looks for
+in its default folder unless ``ISCC`` points at ``ISCC.exe``. It packs the staged ``build-windows/D2RLoader``
+folder into ``build-windows/D2RLoader-<version>-windows-x86_64-setup.exe``, a per-user installer that needs
+no administrator rights.
+
+```bash
+$ packaging/windows/build-installer.sh
 ```
 
 

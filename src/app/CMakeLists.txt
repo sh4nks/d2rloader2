@@ -5,7 +5,6 @@ ecm_add_qml_module(d2rloader_static URI com.someblocks.d2rloader
     GENERATE_PLUGIN_SOURCE
     QML_FILES
         qml/Main.qml
-        qml/AboutDialog.qml
         qml/ZoneEntry.qml
         qml/RealmProgress.qml
         qml/RealmProgressBar.qml

@@ -19,6 +19,17 @@ constexpr int SequencesFileVersion = 1;
 LaunchSequenceManager::LaunchSequenceManager(QObject *parent)
     : QAbstractListModel(parent)
 {
+    reload();
+    connect(D2RLoaderConfig::self(), &D2RLoaderConfig::profilePathChanged, this, &LaunchSequenceManager::reload);
+    connect(&ProfileManager::instance(), &ProfileManager::profileRemoved, this, &LaunchSequenceManager::forgetProfile);
+}
+
+void LaunchSequenceManager::reload()
+{
+    beginResetModel();
+    m_sequences.clear();
+    m_loaded = false;
+    m_loadError.clear();
     if (const QString error = read(); !error.isEmpty()) {
         qCWarning(LOG_PROFILES) << "cannot load" << filePath() << ":" << error;
         m_loadError = i18nc("@info %1 is the file, %2 the reason",
@@ -26,7 +37,9 @@ LaunchSequenceManager::LaunchSequenceManager(QObject *parent)
                             filePath(),
                             error);
     }
-    connect(&ProfileManager::instance(), &ProfileManager::profileRemoved, this, &LaunchSequenceManager::forgetProfile);
+    endResetModel();
+    Q_EMIT loadErrorChanged();
+    Q_EMIT currentIndexChanged();
 }
 
 LaunchSequenceManager &LaunchSequenceManager::instance()

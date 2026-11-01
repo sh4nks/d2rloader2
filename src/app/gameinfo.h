@@ -128,7 +128,8 @@ public:
     QDateTime predictionAvailableTime() const;
 
     /**
-     * Immunity codes as the API reports them: f, c, l, p, m and ph.
+     * Immunity codes, each once: f, c, l, p, m and ph. The names the API
+     * sometimes lists next to them are folded into the codes.
      */
     QStringList currentImmunities() const;
     QStringList nextImmunities() const;

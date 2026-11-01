@@ -43,14 +43,12 @@ QString levelName(QtMsgType type)
  */
 bool isApplicationCategory(const QString &category)
 {
-    static const QStringList allowed{
-        QStringLiteral("d2rloader.app"),
-        QStringLiteral("d2rloader.profiles"),
-        QStringLiteral("d2rloader.gameinfo"),
-        QStringLiteral("d2rloader.game"),
-        QStringLiteral("d2rloader.qml"),
-    };
-    return allowed.contains(category);
+    for (const char *allowed : {"d2rloader.app", "d2rloader.profiles", "d2rloader.gameinfo", "d2rloader.game", "d2rloader.qml"}) {
+        if (category == QLatin1StringView(allowed)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &message)
@@ -65,6 +63,13 @@ void messageHandler(QtMsgType type, const QMessageLogContext &context, const QSt
 LogBuffer::LogBuffer(QObject *parent)
     : QObject(parent)
 {
+}
+
+LogBuffer::~LogBuffer()
+{
+    // Messages logged during static destruction would otherwise reach this
+    // object after it is gone.
+    qInstallMessageHandler(s_previousHandler);
 }
 
 LogBuffer &LogBuffer::instance()

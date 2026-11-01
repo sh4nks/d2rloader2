@@ -25,6 +25,11 @@ public:
     explicit GameSettings(QObject *parent = nullptr);
 
     /**
+     * The Steam app id of the game.
+     */
+    static const QString SteamAppId;
+
+    /**
      * The wineprefix the game of \a profile runs in: Steam's own prefix for
      * Steam accounts, otherwise the profile's prefix under wineprefixPath.
      * Empty when Steam cannot be found.
@@ -41,6 +46,11 @@ public:
      * The Settings.json the game reads for \a profile.
      */
     static QString currentSettingsPath(const Profile *profile);
+
+    /**
+     * The folder the account specific copies of Settings.json are kept in.
+     */
+    static QString settingsFolder();
 
     /**
      * The account specific copy of Settings.json for \a profile.

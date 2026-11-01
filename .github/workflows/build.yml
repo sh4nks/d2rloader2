@@ -39,7 +39,7 @@ jobs:
           update: true
           # The package list from the README's "Windows" section.
           pacboy: >-
-            gcc:p cmake:p ninja:p qt6-base:p qt6-declarative:p qt6-svg:p
+            gcc:p libgomp:p cmake:p ninja:p qt6-base:p qt6-declarative:p qt6-svg:p
             extra-cmake-modules:p kirigami:p kirigami-addons:p ki18n:p
             knotifications:p kcolorscheme:p kiconthemes:p kcoreaddons:p
             kconfig:p qqc2-desktop-style:p breeze:p breeze-icons:p icoutils:p

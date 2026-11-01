@@ -14,25 +14,31 @@ FormCard.FormCardPage {
     title: KI18n.i18nc("@title", "Accounts")
 
     /**
-     * Property used to pass data when navigating from outside the module.
-     * This mimics the pattern used in NeoChat for opening specific sub-pages.
+     * Set by SettingsWindow.openAccountEditor(): the row of the account the
+     * editor opens on once this page is up, -1 for a new account. Undefined
+     * when the page is opened on its own.
      */
-    property var accountData
+    property var editRow
 
-    onAccountDataChanged: if (root.accountData) {
+    onEditRowChanged: if (root.editRow !== undefined) {
         Qt.callLater(root.showAccountEditor);
     }
 
     /**
-     * Opens the editor for the account this page was navigated to with,
-     * deferred until the page itself is on the stack.
+     * Opens the editor for the row this page was navigated to with, deferred
+     * until the page itself is on the stack.
      */
     function showAccountEditor() {
-        if (!root.accountData) {
+        if (root.editRow === undefined) {
             return;
         }
-        (root.QQC2.ApplicationWindow.window as Kirigami.ApplicationWindow).pageStack.layers.push(accountEditorComponent, root.accountData);
-        root.accountData = null;
+        const row = root.editRow;
+        root.editRow = undefined;
+        if (row < 0) {
+            root.addAccount();
+        } else {
+            root.editAccount(row);
+        }
     }
 
     /**
@@ -94,7 +100,7 @@ FormCard.FormCardPage {
 
                         QQC2.Label {
                             Layout.fillWidth: true
-                            text: Accounts.AuthMethodModel.getDisplayName(accountDelegate.profile.authMethod) + " • " + Accounts.RegionModel.getDisplayName(accountDelegate.profile.region)
+                            text: Accounts.AuthMethodModel.getDisplayName(accountDelegate.profile.authMethod) + " - " + Accounts.RegionModel.getDisplayName(accountDelegate.profile.region)
                             color: Kirigami.Theme.disabledTextColor
                             font: Kirigami.Theme.smallFont
                             elide: Text.ElideRight
@@ -129,8 +135,10 @@ FormCard.FormCardPage {
 
                     QQC2.ToolButton {
                         icon.name: "edit-delete"
+                        // GameManager follows a running game through its account.
+                        enabled: accountDelegate.profile.status !== Accounts.ProfileState.Running && accountDelegate.profile.status !== Accounts.ProfileState.Starting
                         QQC2.ToolTip.visible: hovered
-                        QQC2.ToolTip.text: KI18n.i18nc("@info:tooltip", "Delete Account")
+                        QQC2.ToolTip.text: enabled ? KI18n.i18nc("@info:tooltip", "Delete Account") : KI18n.i18nc("@info:tooltip", "Stop the game before deleting the account")
                         onClicked: {
                             deletePrompt.row = accountDelegate.index;
                             deletePrompt.accountName = accountDelegate.profile.profileName;

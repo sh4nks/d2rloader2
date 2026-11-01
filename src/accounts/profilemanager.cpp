@@ -2,6 +2,7 @@
 #include "../core/logging.h"
 #include "authmethod.h"
 #include "d2rloaderconfig.h"
+#include "legacyconfig.h"
 #include "profile.h"
 #include "region.h"
 #include <KLocalizedString>
@@ -22,9 +23,10 @@ constexpr int AccountsFileVersion = 1;
 
 /**
  * Reads the accounts array of the accounts file at \a path into \a accounts.
+ * A file of the previous D2RLoader, which is a bare array, sets \a legacy.
  * Returns an error message, or an empty string on success.
  */
-QString readAccountsFile(const QString &path, QJsonArray &accounts)
+QString readAccountsFile(const QString &path, QJsonArray &accounts, bool &legacy)
 {
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
@@ -35,6 +37,12 @@ QString readAccountsFile(const QString &path, QJsonArray &accounts)
     const QJsonDocument document = QJsonDocument::fromJson(file.readAll(), &error);
     if (error.error != QJsonParseError::NoError) {
         return i18nc("@info %1 is the parser error", "The file is not valid JSON: %1", error.errorString());
+    }
+
+    legacy = document.isArray();
+    if (legacy) {
+        accounts = document.array();
+        return QString();
     }
 
     const QJsonObject root = document.object();
@@ -76,13 +84,6 @@ QString writeAccountsFile(const QString &path, const QList<Profile *> &profiles)
     return QString();
 }
 }
-#include <qabstractitemmodel.h>
-#include <qhashfunctions.h>
-#include <qlist.h>
-#include <qtmetamacros.h>
-#include <qvariant.h>
-
-using namespace Qt::StringLiterals;
 
 ProfileManager::ProfileManager(QObject *parent)
     : QAbstractTableModel(parent)
@@ -142,6 +143,11 @@ void ProfileManager::removeProfile(Profile *profile)
     if (index < 0) {
         return;
     }
+    // GameManager follows a running game through its account.
+    if (profile->status() == ProfileState::Running || profile->status() == ProfileState::Starting) {
+        qCWarning(LOG_PROFILES) << "not removing" << profile->profileName() << "while its game runs";
+        return;
+    }
 
     beginRemoveRows(QModelIndex(), index, index);
     m_profiles.removeOne(profile);
@@ -183,10 +189,10 @@ void ProfileManager::cloneProfile(int row)
     commit(clone);
 }
 
-bool ProfileManager::isProfileNameTaken(const QString &name) const
+bool ProfileManager::isProfileNameTaken(const QString &name, const Profile *except) const
 {
     for (const Profile *profile : m_profiles) {
-        if (QString::compare(profile->profileName(), name, Qt::CaseInsensitive) == 0) {
+        if (profile != except && QString::compare(profile->profileName(), name, Qt::CaseInsensitive) == 0) {
             return true;
         }
     }
@@ -237,10 +243,37 @@ QString ProfileManager::loadError() const
     return m_loadError;
 }
 
+QString ProfileManager::notice() const
+{
+    return m_notice;
+}
+
 void ProfileManager::loadProfiles()
 {
-    readAccounts();
+    const LegacyConfig::Result legacy = LegacyConfig::migrate(this);
+    m_notice = legacy.notice;
+    if (legacy.accountsConverted) {
+        beginResetModel();
+        for (Profile *profile : legacy.profiles) {
+            // The wineprefix and the settings copy follow the name.
+            if (isProfileNameTaken(profile->profileName())) {
+                profile->setProfileName(uniqueProfileName(profile->profileName()));
+            }
+            m_profiles.append(profile);
+        }
+        endResetModel();
+        for (Profile *profile : std::as_const(m_profiles)) {
+            watch(profile);
+        }
+        m_sessionMaxId = m_profiles.count();
+        m_loaded = true;
+        writeAccounts();
+    } else {
+        readAccounts();
+    }
     m_ready = true;
+    // From now on a change of the setting switches to that file.
+    connect(D2RLoaderConfig::self(), &D2RLoaderConfig::profilePathChanged, this, &ProfileManager::reload);
     Q_EMIT profileReady();
     Q_EMIT profilesChanged();
 }
@@ -405,15 +438,25 @@ Profile *ProfileManager::editDraft(int row)
     return draft;
 }
 
-void ProfileManager::commit(Profile *draft)
+QString ProfileManager::commit(Profile *draft)
 {
-    // Only an outstanding draft can be committed, which also makes committing
-    // the same draft twice a no-op.
-    if (!draft || !m_drafts.remove(draft)) {
-        return;
+    // Only an outstanding draft can be committed. A new one is adopted by the
+    // model; a copy of an existing account stays outstanding, because the
+    // editor keeps reading it while its page animates out, and is deleted by
+    // discard() once the page is gone.
+    if (!draft || !m_drafts.contains(draft)) {
+        return QString();
     }
 
     Profile *existing = profileById(draft->id());
+    // The name is the key of the wineprefix, the settings copy and the window
+    // title, so two accounts cannot share one.
+    if (draft->profileName().trimmed().isEmpty()) {
+        return i18nc("@info", "Give the account a name.");
+    }
+    if (isProfileNameTaken(draft->profileName(), existing)) {
+        return i18nc("@info", "There is already an account named \"%1\".", draft->profileName());
+    }
     if (existing) {
         existing->copyFrom(draft);
         const int row = m_profiles.indexOf(existing);
@@ -421,6 +464,7 @@ void ProfileManager::commit(Profile *draft)
         Q_EMIT dataChanged(changed, index(row, columnCount() - 1));
         Q_EMIT profileChanged(existing);
     } else {
+        m_drafts.remove(draft);
         draft->setId(calculateNextId());
         beginInsertRows(QModelIndex(), m_profiles.count(), m_profiles.count());
         m_profiles.append(draft);
@@ -431,10 +475,7 @@ void ProfileManager::commit(Profile *draft)
     }
 
     writeAccounts();
-
-    if (existing) {
-        draft->deleteLater();
-    }
+    return QString();
 }
 
 void ProfileManager::discard(Profile *draft)
@@ -486,20 +527,28 @@ bool ProfileManager::readAccounts()
 {
     const QString path = accountsFilePath();
 
-    qDeleteAll(m_profiles);
     beginResetModel();
+    qDeleteAll(m_profiles);
     m_profiles.clear();
+    m_selected_profile = nullptr;
+    m_sessionMaxId = 0;
+    m_loaded = false;
+    m_loadError.clear();
 
     if (!QFile::exists(path)) {
         // First run: no accounts yet is not an error.
         endResetModel();
-        m_sessionMaxId = 0;
         m_loaded = true;
         return true;
     }
 
     QJsonArray accounts;
-    const QString error = readAccountsFile(path, accounts);
+    bool legacy = false;
+    QString error = readAccountsFile(path, accounts, legacy);
+    // Normally LegacyConfig::migrate() has converted such a file already.
+    if (legacy) {
+        error = i18nc("@info", "The file is in the format of the previous D2RLoader.");
+    }
     if (!error.isEmpty()) {
         qCWarning(LOG_PROFILES) << "cannot load" << path << ":" << error;
         m_loadError = i18nc("@info %1 is the file, %2 the reason",
@@ -520,13 +569,21 @@ bool ProfileManager::readAccounts()
 
     // Seed the id counter from what was actually loaded, so ids stay unique
     // across restarts.
-    m_sessionMaxId = 0;
     for (const Profile *profile : m_profiles) {
         m_sessionMaxId = std::max(m_sessionMaxId, profile->id());
     }
 
     m_loaded = true;
     return true;
+}
+
+void ProfileManager::reload()
+{
+    qCInfo(LOG_PROFILES) << "the accounts file is now" << accountsFilePath();
+    readAccounts();
+    Q_EMIT profileSelected(nullptr);
+    Q_EMIT profileReady();
+    Q_EMIT profilesChanged();
 }
 
 bool ProfileManager::writeAccounts()
@@ -577,7 +634,8 @@ QString ProfileManager::importAccounts(const QUrl &url, bool replace)
     }
 
     QJsonArray accounts;
-    const QString error = readAccountsFile(url.toLocalFile(), accounts);
+    bool legacy = false;
+    const QString error = readAccountsFile(url.toLocalFile(), accounts, legacy);
     if (!error.isEmpty()) {
         return error;
     }
@@ -588,16 +646,27 @@ QString ProfileManager::importAccounts(const QUrl &url, bool replace)
     // Fresh ids, so no launch sequence picks up an imported account through
     // an id that belonged to another one.
     QList<Profile *> imported;
-    for (const QJsonValue &value : accounts) {
-        auto *profile = Profile::fromJson(value.toObject(), this);
+    if (legacy) {
+        imported = LegacyConfig::convertAccounts(accounts, QString(), this);
+    } else {
+        for (const QJsonValue &value : accounts) {
+            imported.append(Profile::fromJson(value.toObject(), this));
+        }
+    }
+    for (Profile *profile : std::as_const(imported)) {
         profile->setId(calculateNextId());
-        imported.append(profile);
     }
 
     QList<Profile *> removed;
     if (replace) {
         beginResetModel();
-        removed = std::exchange(m_profiles, imported);
+        removed = std::exchange(m_profiles, QList<Profile *>());
+        for (Profile *profile : imported) {
+            if (isProfileNameTaken(profile->profileName())) {
+                profile->setProfileName(uniqueProfileName(profile->profileName()));
+            }
+            m_profiles.append(profile);
+        }
         endResetModel();
         m_selected_profile = m_profiles.first();
         Q_EMIT profileSelected(m_selected_profile);

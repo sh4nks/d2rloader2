@@ -16,23 +16,11 @@ FormCard.FormCardPage {
 
     readonly property bool isWindows: Qt.platform.os === "windows"
 
-    // Helper function to convert URL to local path
-    function urlToPath(url) {
-        if (!url)
-            return "";
-        let path = url.toString();
-        if (path.startsWith("file://")) {
-            path = path.substring(7);
-        }
-        // Decode URI components (like %20 to space)
-        return decodeURIComponent(path);
-    }
-
     FolderDialog {
         id: gamePathDialog
         title: KI18n.i18nc("@title:window", "Select Game Directory")
         onAccepted: {
-            D2RLoaderConfig.gamePath = root.urlToPath(selectedFolder);
+            D2RLoaderConfig.gamePath = Paths.toLocalFile(selectedFolder);
             D2RLoaderConfig.save();
         }
     }
@@ -52,7 +40,7 @@ FormCard.FormCardPage {
         title: KI18n.i18nc("@title:window", "Select Account Settings File")
         nameFilters: [KI18n.i18nc("@item", "JSON files (*.json)"), KI18n.i18nc("@item", "All files (*)")]
         onAccepted: {
-            D2RLoaderConfig.profilePath = root.urlToPath(selectedFile);
+            D2RLoaderConfig.profilePath = Paths.toLocalFile(selectedFile);
             D2RLoaderConfig.save();
         }
     }
@@ -61,7 +49,7 @@ FormCard.FormCardPage {
         id: winePrefixDialog
         title: KI18n.i18nc("@title:window", "Select Wineprefix Directory")
         onAccepted: {
-            D2RLoaderConfig.wineprefixPath = root.urlToPath(selectedFolder);
+            D2RLoaderConfig.wineprefixPath = Paths.toLocalFile(selectedFolder);
             D2RLoaderConfig.save();
         }
     }
@@ -70,7 +58,7 @@ FormCard.FormCardPage {
         id: protonPathDialog
         title: KI18n.i18nc("@title:window", "Select Proton Runtime Directory")
         onAccepted: {
-            D2RLoaderConfig.protonPath = root.urlToPath(selectedFolder);
+            D2RLoaderConfig.protonPath = Paths.toLocalFile(selectedFolder);
             D2RLoaderConfig.save();
         }
     }
@@ -79,7 +67,7 @@ FormCard.FormCardPage {
         id: logPathDialog
         title: KI18n.i18nc("@title:window", "Select Log Directory")
         onAccepted: {
-            D2RLoaderConfig.logPath = root.urlToPath(selectedFolder);
+            D2RLoaderConfig.logPath = Paths.toLocalFile(selectedFolder);
             D2RLoaderConfig.save();
         }
     }
@@ -178,7 +166,7 @@ FormCard.FormCardPage {
                     text: KI18n.i18nc("@label", "Account Settings File")
                 }
                 QQC2.Label {
-                    text: KI18n.i18nc("@info:label", "The JSON file where all account and profile configurations are stored.")
+                    text: KI18n.i18nc("@info:label", "The JSON file where all account and profile configurations are stored. The accounts in it are loaded as soon as it changes.")
                     font: Kirigami.Theme.smallFont
                     opacity: 0.7
                     wrapMode: Text.WordWrap

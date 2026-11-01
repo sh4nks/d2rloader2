@@ -50,11 +50,12 @@ int main(int argc, char *argv[])
                         i18nc("@info:credit", "Application icon based on \"Diablo skull\" from game-icons.net, licensed under CC BY 3.0"),
                         QString(),
                         QStringLiteral("https://game-icons.net/1x1/lorc/diablo-skull.html"));
+    aboutData.addCredit(QStringLiteral("d2emu.com"), i18nc("@info:credit", "Terror Zone and Diablo Clone data"), QString(), QStringLiteral("https://d2emu.com"));
 
-    aboutData.setHomepage(QStringLiteral("https://github.com/sh4nks/d2rloader"));
-    aboutData.setBugAddress("https://github.com/sh4nks/d2rloader/issues");
+    aboutData.setHomepage(QStringLiteral("https://github.com/sh4nks/d2rloader2"));
+    aboutData.setBugAddress("https://github.com/sh4nks/d2rloader2/issues");
     aboutData.setCopyrightStatement(QStringLiteral("Copyright (c) 2025 - 2026 Peter Justin"));
-    aboutData.setOrganizationDomain("someblocks.com"); //
+    aboutData.setOrganizationDomain("someblocks.com");
     aboutData.setDesktopFileName(QStringLiteral("com.someblocks.d2rloader"));
     KAboutData::setApplicationData(aboutData);
 

@@ -20,6 +20,7 @@ ecm_add_qml_module(Core GENERATE_PLUGIN_SOURCE
     SOURCES
         logbuffer.h
         logbuffer.cpp
+        paths.h
 )
 
 target_sources(Core PRIVATE

@@ -7,12 +7,7 @@
 #include <QPoint>
 #include <QVariantList>
 #include <QVariantMap>
-#include <qhashfunctions.h>
-#include <qjsonobject.h>
-#include <qjsonvalue.h>
-#include <qobject.h>
 #include <qqmlintegration.h>
-#include <qtmetamacros.h>
 
 #include <optional>
 

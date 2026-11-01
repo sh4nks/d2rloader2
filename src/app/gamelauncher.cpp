@@ -1,11 +1,15 @@
 #include "gamelauncher.h"
+#include "../accounts/gamesettings.h"
 #include "../accounts/profile.h"
+#include "../core/logging.h"
 #include "d2rloaderconfig.h"
 
 #include <KLocalizedString>
+#include <QDesktopServices>
 #include <QDir>
 #include <QFileInfo>
 #include <QProcess>
+#include <QUrl>
 
 #if defined(Q_OS_LINUX)
 #include "gamelauncher_linux.h"
@@ -69,4 +73,29 @@ QStringList GameLauncher::redacted(QStringList arguments)
         }
     }
     return arguments;
+}
+
+void GameLauncher::addProfileEnvironment(QProcessEnvironment &environment, const Profile *profile)
+{
+    const QStringList lines = profile->environmentVariables().split(u'\n');
+    for (const QString &line : lines) {
+        const QString variable = line.trimmed();
+        const qsizetype separator = variable.indexOf(u'=');
+        if (separator > 0) {
+            environment.insert(variable.left(separator).trimmed(), variable.mid(separator + 1).trimmed());
+        } else if (!variable.isEmpty()) {
+            qCWarning(LOG_GAME) << "ignoring environment line without NAME=value:" << variable;
+        }
+    }
+}
+
+void GameLauncher::launchSteamUrl(Profile *profile, const QStringList &arguments)
+{
+    const QUrl url(QStringLiteral("steam://run/%1//%2/").arg(GameSettings::SteamAppId, arguments.join(u' ')));
+    qCInfo(LOG_GAME) << "launching" << profile->profileName() << "through" << url;
+    if (!QDesktopServices::openUrl(url)) {
+        Q_EMIT failed(profile, i18nc("@info", "Could not start Steam."));
+        return;
+    }
+    Q_EMIT launched(profile, 0);
 }

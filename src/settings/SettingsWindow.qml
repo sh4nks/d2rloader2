@@ -2,6 +2,7 @@ pragma ComponentBehavior: Bound
 pragma Singleton
 
 import QtQuick
+import org.kde.kirigami as Kirigami
 import org.kde.kirigamiaddons.settings as KirigamiSettings
 import org.kde.ki18n
 
@@ -11,6 +12,16 @@ KirigamiSettings.ConfigurationView {
     id: root
 
     title: KI18n.i18nc("@title:window", "Preferences")
+
+    // The sidebar replaces the module page underneath pageStack.layers, so an
+    // editor pushed as a layer would keep covering the new page.
+    onConfigViewItemChanged: {
+        const window = root.configViewItem as Kirigami.ApplicationWindow;
+        if (!window) {
+            return;
+        }
+        window.pageStack.currentItemChanged.connect(() => window.pageStack.layers.clear());
+    }
 
     modules: [
         KirigamiSettings.ConfigurationModule {
@@ -64,48 +75,32 @@ KirigamiSettings.ConfigurationView {
     ]
 
     /**
-     * Opens a specific module with the provided initial properties.
-     *
-     * @param defaultModule The ID of the module to open.
-     * @param initialProperties A JavaScript object containing the properties to pass to the module's page.
+     * Takes the window to \a moduleId. open() alone only activates the
+     * window once it is open.
      */
-    function openWithInitialProperties(defaultModule, initialProperties) {
-        let module = null;
-        for (let i = 0; i < modules.length; i++) {
-            if (modules[i].moduleId === defaultModule) {
-                module = modules[i];
-                break;
-            }
+    function show(moduleId) {
+        if (root.configViewItem && typeof root.configViewItem.close === "function") {
+            root.configViewItem.close();
         }
-
-        if (module) {
-            module.initialProperties = () => {
-                return initialProperties;
-            };
-        }
-        root.open(defaultModule);
+        root.open(moduleId);
     }
 
     /**
-     * Convenience method to open the account editor by navigating to the Accounts module
-     * and passing the account data via initialProperties.
-     *
-     * @param accountData Data for the account to edit, or null for a new account.
+     * Opens the Accounts page with the editor for the account in \a row on
+     * top, or for a new account when \a row is -1.
      */
-    function openAccountEditor(accountData = null) {
-        // The editor always works on a draft, so Cancel can simply throw it
-        // away and a new account has something to bind to from the start.
-        const props = accountData != null ? {
-            isNew: false,
-            profile: ProfileManager.editDraft(accountData)
-        } : {
-            isNew: true,
-            profile: ProfileManager.createDraft()
+    function openAccountEditor(row = -1) {
+        const module = modules.find(module => module.moduleId === "accounts");
+        // The page is created once per window, after this returns, so the
+        // row is handed out a single time and later windows get a plain page.
+        let pending = {
+            editRow: row
         };
-
-        root.openWithInitialProperties("accounts", {
-            accountData: props
-        });
+        module.initialProperties = () => {
+            const properties = pending;
+            pending = {};
+            return properties;
+        };
+        root.show("accounts");
     }
-
 }

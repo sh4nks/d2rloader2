@@ -61,13 +61,13 @@ Kirigami.ApplicationWindow {
             MenuItem {
                 text: KI18n.i18nc("@action:inmenu", "&Open README")
                 icon.name: "help-contents"
-                onTriggered: aboutDialog.show()
+                onTriggered: Qt.openUrlExternally("https://github.com/sh4nks/d2rloader2#readme")
             }
             MenuSeparator {}
             MenuItem {
                 text: KI18n.i18nc("@action:inmenu", "&About...")
                 icon.name: "help-about"
-                onTriggered: aboutDialog.show()
+                onTriggered: Settings.SettingsWindow.show("about")
             }
         }
     }
@@ -94,6 +94,15 @@ Kirigami.ApplicationWindow {
             visible: text.length > 0
         }
 
+        Kirigami.InlineMessage {
+            Layout.fillWidth: true
+            Layout.margins: Kirigami.Units.smallSpacing
+            type: Kirigami.MessageType.Information
+            text: Accounts.ProfileManager.notice
+            visible: text.length > 0
+            showCloseButton: true
+        }
+
         // Fixed Upper Section: Accounts Table
         Accounts.AccountTable {
             id: accountTable
@@ -102,10 +111,7 @@ Kirigami.ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
             onSettingsClicked: Settings.SettingsWindow.open()
-            onAddAccountClicked: {
-                Accounts.ProfileManager.selectedIndex;
-                Settings.SettingsWindow.openAccountEditor();
-            }
+            onAddAccountClicked: Settings.SettingsWindow.openAccountEditor()
             onEditAccountClicked: rowIndex => {
                 Settings.SettingsWindow.openAccountEditor(rowIndex);
             }
@@ -175,10 +181,6 @@ Kirigami.ApplicationWindow {
                 enabled: tabBar.currentIndex === 2
             }
         }
-    }
-
-    AboutDialog {
-        id: aboutDialog
     }
 
     FileDialog {

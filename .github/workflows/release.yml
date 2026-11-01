@@ -59,16 +59,21 @@ jobs:
           install: zip
           # The package list from the README's "Windows" section.
           pacboy: >-
-            gcc:p cmake:p ninja:p qt6-base:p qt6-declarative:p qt6-svg:p
+            gcc:p libgomp:p cmake:p ninja:p qt6-base:p qt6-declarative:p qt6-svg:p
             extra-cmake-modules:p kirigami:p kirigami-addons:p ki18n:p
             knotifications:p kcolorscheme:p kiconthemes:p kcoreaddons:p
             kconfig:p qqc2-desktop-style:p breeze:p breeze-icons:p icoutils:p
       - name: Build zip
         run: packaging/windows/build-zip.sh
+      # Inno Setup is preinstalled on the Windows runner image.
+      - name: Build installer
+        run: packaging/windows/build-installer.sh
       - uses: actions/upload-artifact@v7
         with:
           name: windows
-          path: build-windows/D2RLoader-*-windows-x86_64.zip
+          path: |
+            build-windows/D2RLoader-*-windows-x86_64.zip
+            build-windows/D2RLoader-*-windows-x86_64-setup.exe
           if-no-files-found: error
 
   release:
@@ -87,4 +92,5 @@ jobs:
             *.AppImage
             *.flatpak
             *.zip
+            *.exe
           fail_on_unmatched_files: true

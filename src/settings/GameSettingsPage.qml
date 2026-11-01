@@ -8,6 +8,7 @@ import org.kde.kirigami as Kirigami
 import org.kde.kirigamiaddons.formcard as FormCard
 import org.kde.ki18n
 import com.someblocks.d2rloader.accounts as Accounts
+import com.someblocks.d2rloader.core
 
 FormCard.FormCardPage {
     id: root
@@ -31,16 +32,6 @@ FormCard.FormCardPage {
             value: Accounts.GameSettingsType.Custom
         }
     ]
-
-    function urlToPath(url) {
-        if (!url)
-            return "";
-        let path = url.toString();
-        if (path.startsWith("file://")) {
-            path = path.substring(7);
-        }
-        return decodeURIComponent(path);
-    }
 
     /**
      * Copies the game's current settings of the accounts in the given rows,
@@ -123,7 +114,7 @@ FormCard.FormCardPage {
 
         title: KI18n.i18nc("@title:window", "Select Custom Settings.json")
         nameFilters: ["JSON files (*.json)", "All files (*)"]
-        onAccepted: Accounts.ProfileManager.setData(Accounts.ProfileManager.index(customSettingsDialog.targetRow, 0), root.urlToPath(selectedFile), Accounts.ProfileManager.GameSettingsPathRole)
+        onAccepted: Accounts.ProfileManager.setData(Accounts.ProfileManager.index(customSettingsDialog.targetRow, 0), Paths.toLocalFile(selectedFile), Accounts.ProfileManager.GameSettingsPathRole)
     }
 
     Kirigami.PromptDialog {

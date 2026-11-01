@@ -43,6 +43,7 @@ class ProfileManager : public QAbstractTableModel
     Q_PROPERTY(Profile *selectedProfile READ selectedProfile WRITE selectProfile NOTIFY profileSelected)
     Q_PROPERTY(int selectedIndex READ selectedIndex NOTIFY profileSelected)
     Q_PROPERTY(QString loadError READ loadError NOTIFY profileReady)
+    Q_PROPERTY(QString notice READ notice NOTIFY profileReady)
 
 public:
     enum ProfileRoles {
@@ -78,6 +79,12 @@ public:
      * is set, no change to the accounts is written.
      */
     QString loadError() const;
+
+    /**
+     * What the import of the previous D2RLoader's files did at this start,
+     * empty when there was nothing to import.
+     */
+    QString notice() const;
     bool hasProfiles() const;
     void selectProfile(Profile *profile);
     Q_INVOKABLE Profile *selectedProfile() const;
@@ -86,7 +93,8 @@ public:
     Q_INVOKABLE void removeProfile(Profile *profile);
 
     /**
-     * Removes the account in \a row. Does nothing if the row is out of range.
+     * Removes the account in \a row. Does nothing if the row is out of range
+     * or the game of the account is running.
      */
     Q_INVOKABLE void removeProfileAt(int row);
 
@@ -115,9 +123,11 @@ public:
 
     /**
      * Applies \a draft: appends it when it is new, otherwise copies it over
-     * the account it was taken from. Writes the accounts file either way.
+     * the account it was taken from, in which case the draft stays outstanding
+     * until discard(). Writes the accounts file either way.
+     * Returns why the draft cannot be applied, or an empty string.
      */
-    Q_INVOKABLE void commit(Profile *draft);
+    Q_INVOKABLE QString commit(Profile *draft);
 
     /**
      * Throws \a draft away without touching the stored accounts.
@@ -158,8 +168,18 @@ private:
     QString accountsFilePath() const;
     bool readAccounts();
     bool writeAccounts();
+
+    /**
+     * Loads the accounts file the configuration points at now, in place of
+     * the ones loaded before.
+     */
+    void reload();
     Profile *profileById(int id) const;
-    bool isProfileNameTaken(const QString &name) const;
+
+    /**
+     * Whether an account other than \a except is named \a name.
+     */
+    bool isProfileNameTaken(const QString &name, const Profile *except = nullptr) const;
     QString uniqueProfileName(const QString &base) const;
 
     /**
@@ -170,12 +190,13 @@ private:
     void watch(Profile *profile);
     Profile *m_selected_profile = nullptr;
     QList<Profile *> m_profiles;
-    /* Drafts handed out but neither committed nor discarded yet. Membership is
-       what makes commit()/discard() safe to call more than once. */
+    /* Drafts handed out but neither adopted as new accounts nor discarded yet.
+       Membership is what makes discard() safe to call more than once. */
     QSet<Profile *> m_drafts;
     bool m_ready = false;
     /* Whether the accounts file was read successfully; guards writeAccounts(). */
     bool m_loaded = false;
     QString m_loadError;
+    QString m_notice;
     int m_sessionMaxId = 0;
 };

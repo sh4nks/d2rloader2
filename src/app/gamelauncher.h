@@ -3,7 +3,9 @@
 #include "../accounts/profile.h"
 
 #include <QObject>
+#include <QProcessEnvironment>
 #include <QStringList>
+#include <chrono>
 #include <expected>
 
 /**
@@ -68,4 +70,24 @@ protected:
      * \a arguments with the credentials masked, for logging.
      */
     static QStringList redacted(QStringList arguments);
+
+    /**
+     * Adds the NAME=value lines of the profile's environment variables to
+     * \a environment.
+     */
+    static void addProfileEnvironment(QProcessEnvironment &environment, const Profile *profile);
+
+    /**
+     * Hands the game to the Steam client through its URL handler, with
+     * \a arguments as the game's launch options.
+     */
+    void launchSteamUrl(Profile *profile, const QStringList &arguments);
+
+    /**
+     * The game window shows up a while after the game starts, longer on a
+     * first start that compiles shaders, so renaming it is retried for about
+     * 2 minutes.
+     */
+    static constexpr int RenameAttempts = 60;
+    static constexpr std::chrono::seconds RenameInterval{2};
 };

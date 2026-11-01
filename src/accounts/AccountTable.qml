@@ -101,6 +101,8 @@ Kirigami.Card {
             MenuItem {
                 text: KI18n.i18nc("@action:inmenu", "Delete")
                 icon.name: "edit-delete"
+                // GameManager follows a running game through its account.
+                enabled: contextMenu.currentRowData ? contextMenu.currentRowData.status !== ProfileState.Running && contextMenu.currentRowData.status !== ProfileState.Starting : false
                 onTriggered: deletePrompt.open()
             }
             MenuSeparator {}

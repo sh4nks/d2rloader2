@@ -149,4 +149,11 @@
       <default>true</default>
     </entry>
   </group>
+
+  <group name="Migration">
+    <entry name="legacyConfigImported" type="Bool">
+      <label>Whether the settings and accounts of the previous D2RLoader were imported.</label>
+      <default>false</default>
+    </entry>
+  </group>
 </kcfg>

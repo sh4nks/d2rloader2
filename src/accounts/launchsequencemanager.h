@@ -27,7 +27,7 @@ class LaunchSequenceManager : public QAbstractListModel
      * Why the sequences file could not be loaded, empty if it was. While this
      * is set, no change to the sequences is written.
      */
-    Q_PROPERTY(QString loadError READ loadError CONSTANT)
+    Q_PROPERTY(QString loadError READ loadError NOTIFY loadErrorChanged)
 
 public:
     enum Roles {
@@ -74,6 +74,7 @@ public:
 
 Q_SIGNALS:
     void currentIndexChanged();
+    void loadErrorChanged();
 
 private:
     struct Sequence {
@@ -92,6 +93,12 @@ private:
      */
     QString read();
     bool write();
+
+    /**
+     * Loads the sequences file next to the accounts file the configuration
+     * points at now, in place of the ones loaded before.
+     */
+    void reload();
 
     /**
      * Drops the removed \a profile from every sequence, so a later account
