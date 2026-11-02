@@ -53,6 +53,11 @@ public:
     static void install();
 
     /**
+     * Directory d2rloader.log is written to unless logPath points elsewhere.
+     */
+    static QString defaultDirectory();
+
+    /**
      * Every entry kept so far, oldest first, as {timestamp, level, message}.
      */
     Q_INVOKABLE QVariantList entries() const;

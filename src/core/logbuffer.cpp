@@ -7,6 +7,7 @@
 #include <QDir>
 #include <QLoggingCategory>
 #include <QMetaObject>
+#include <QStandardPaths>
 #include <QStringList>
 #include <QVariantMap>
 
@@ -178,6 +179,17 @@ void LogBuffer::applyLogLevel()
 
     QLoggingCategory::setFilterRules(rule(QStringLiteral("debug"), Level::Debug) + rule(QStringLiteral("info"), Level::Info)
                                      + rule(QStringLiteral("warning"), Level::Warn));
+}
+
+QString LogBuffer::defaultDirectory()
+{
+    // Qt's state location on Windows is a separate AppData/Local/State tree,
+    // while the rest of the data already lives in AppData/Local/d2rloader.
+#if defined(Q_OS_WIN)
+    return QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + QStringLiteral("/d2rloader/logs");
+#else
+    return QStandardPaths::writableLocation(QStandardPaths::GenericStateLocation) + QStringLiteral("/d2rloader/logs");
+#endif
 }
 
 void LogBuffer::applyLogFile()

@@ -38,6 +38,7 @@ kconfig_target_kcfg_file(Core
     SINGLETON
     QML_REGISTRATION
     GENERATE_MOC
+    SOURCE_INCLUDE_FILES logbuffer.h
 )
 
 target_include_directories(Core PUBLIC ${CMAKE_CURRENT_BINARY_DIR})

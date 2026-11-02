@@ -129,7 +129,7 @@
   <group name="Logging">
     <entry name="logPath" type="Path">
       <label>Directory log files are written to.</label>
-      <default code="true">QStandardPaths::writableLocation(QStandardPaths::GenericStateLocation) + QStringLiteral("/d2rloader/logs")</default>
+      <default code="true">LogBuffer::defaultDirectory()</default>
     </entry>
     <entry name="logLevel" type="Enum">
       <label>Lowest severity that is logged.</label>
