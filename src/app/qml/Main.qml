@@ -135,6 +135,7 @@ Kirigami.ApplicationWindow {
         TabBar {
             id: tabBar
             Layout.fillWidth: true
+            visible: D2RLoaderConfig.showInfoPanel
 
             TabButton {
                 implicitHeight: Kirigami.Units.gridUnit * 2
@@ -158,6 +159,7 @@ Kirigami.ApplicationWindow {
         // to size the area by the tallest one and only the current one shows.
         Item {
             Layout.fillWidth: true
+            visible: D2RLoaderConfig.showInfoPanel
             implicitHeight: Math.max(terrorZonesTab.implicitHeight, diabloCloneTab.implicitHeight, applicationLogTab.implicitHeight)
 
             TerrorZones {

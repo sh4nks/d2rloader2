@@ -204,6 +204,18 @@ FormCard.FormCardPage {
                 D2RLoaderConfig.save();
             }
         }
+
+        FormCard.FormDelegateSeparator {}
+
+        FormCard.FormCheckDelegate {
+            text: KI18n.i18nc("@label", "Show Info Panel")
+            description: KI18n.i18nc("@info:label", "Show the Terror Zones, Diablo Clone and Application Log tabs beneath the accounts table.")
+            checked: D2RLoaderConfig.showInfoPanel
+            onToggled: {
+                D2RLoaderConfig.showInfoPanel = checked;
+                D2RLoaderConfig.save();
+            }
+        }
     }
 
     FormCard.FormHeader {

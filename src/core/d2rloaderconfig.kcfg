@@ -24,6 +24,10 @@
       <label>Whether the menu bar of the main window is shown.</label>
       <default>true</default>
     </entry>
+    <entry name="showInfoPanel" type="Bool">
+      <label>Whether the Terror Zones, Diablo Clone and Application Log tabs beneath the accounts table are shown.</label>
+      <default>true</default>
+    </entry>
   </group>
 
   <group name="Paths">
