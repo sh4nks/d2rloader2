@@ -32,6 +32,9 @@ ecm_add_qml_module(d2rloader_static URI com.someblocks.d2rloader
         ${EXTRA_IMPORTS}
 )
 
+# tray icon where the icon theme does not know the app icon
+qt_add_resources(d2rloader_static "tray_icon" PREFIX "/icons" BASE icons FILES icons/64-apps-com.someblocks.d2rloader.png)
+
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_sources(d2rloader_static PRIVATE gamelauncher_linux.h gamelauncher_linux.cpp kwinwindowpositions.h kwinwindowpositions.cpp)
     qt_add_resources(d2rloader_static "kwin_scripts" PREFIX "/kwin" BASE kwin FILES kwin/windowpositions.js)

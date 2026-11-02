@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Window
+import Qt.labs.platform as Platform
 import org.kde.kirigami as Kirigami
 import org.kde.ki18n
 
@@ -19,11 +20,62 @@ Kirigami.ApplicationWindow {
     height: 800
     // title: `${Application.name}`
 
+    onClosing: close => {
+        if (!D2RLoaderConfig.closeToTray) {
+            Qt.quit();
+            return;
+        }
+        close.accepted = false;
+        mainWindow.hide();
+    }
+
+    function toggleHidden() {
+        if (visible) {
+            hide();
+            return;
+        }
+        // a window closed from the taskbar while minimized would come back minimized with show()
+        showNormal();
+        raise();
+        requestActivate();
+    }
+
     Shortcut {
         sequence: "Ctrl+M"
         onActivated: {
             D2RLoaderConfig.showMenuBar = !D2RLoaderConfig.showMenuBar;
             D2RLoaderConfig.save();
+        }
+    }
+
+    Platform.SystemTrayIcon {
+        visible: D2RLoaderConfig.closeToTray
+        icon.name: "com.someblocks.d2rloader"
+        // used where the icon theme does not know the app icon
+        icon.source: "qrc:/icons/64-apps-com.someblocks.d2rloader.png"
+        tooltip: Application.displayName
+        onActivated: reason => {
+            if (reason === Platform.SystemTrayIcon.Trigger) {
+                mainWindow.toggleHidden();
+            }
+        }
+
+        menu: Platform.Menu {
+            Platform.MenuItem {
+                text: mainWindow.visible ? KI18n.i18nc("@action:inmenu", "Hide &Window") : KI18n.i18nc("@action:inmenu", "Show &Window")
+                onTriggered: mainWindow.toggleHidden()
+            }
+            Platform.MenuItem {
+                text: KI18n.i18nc("@action:inmenu", "&Settings")
+                icon.name: "settings-configure"
+                onTriggered: Settings.SettingsWindow.open()
+            }
+            Platform.MenuSeparator {}
+            Platform.MenuItem {
+                text: KI18n.i18nc("@action:inmenu", "&Exit")
+                icon.name: "application-exit"
+                onTriggered: Qt.quit()
+            }
         }
     }
 

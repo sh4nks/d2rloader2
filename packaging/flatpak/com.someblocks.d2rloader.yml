@@ -24,6 +24,8 @@ finish-args:
   - --system-talk-name=org.freedesktop.UDisks2
   # keeps the game windows in place through a KWin script on Plasma
   - --talk-name=org.kde.KWin
+  # the system tray icon is a StatusNotifierItem
+  - --talk-name=org.kde.StatusNotifierWatcher
 
 add-extensions:
   org.freedesktop.Platform.Compat.i386:

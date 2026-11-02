@@ -21,6 +21,9 @@ int main(int argc, char *argv[])
 {
     KIconTheme::initTheme();
     QApplication app(argc, argv);
+    // Closing the settings window while the main one is hidden in the tray
+    // must not quit; Main.qml decides what closing the main window does.
+    QApplication::setQuitOnLastWindowClosed(false);
     KLocalizedString::setApplicationDomain("com.someblocks.d2rloader");
     QApplication::setOrganizationName(QStringLiteral("someblocks"));
     QApplication::setOrganizationDomain(QStringLiteral("someblocks.com"));

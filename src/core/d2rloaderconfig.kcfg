@@ -28,6 +28,10 @@
       <label>Whether the Terror Zones, Diablo Clone and Application Log tabs beneath the accounts table are shown.</label>
       <default>true</default>
     </entry>
+    <entry name="closeToTray" type="Bool">
+      <label>Whether closing the main window hides it in the system tray instead of quitting.</label>
+      <default>false</default>
+    </entry>
   </group>
 
   <group name="Paths">

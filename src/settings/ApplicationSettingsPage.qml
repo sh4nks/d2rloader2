@@ -216,6 +216,18 @@ FormCard.FormCardPage {
                 D2RLoaderConfig.save();
             }
         }
+
+        FormCard.FormDelegateSeparator {}
+
+        FormCard.FormCheckDelegate {
+            text: KI18n.i18nc("@label", "Close to System Tray")
+            description: KI18n.i18nc("@info:label", "Hide the main window in the system tray instead of quitting when it is closed. Click the tray icon to bring it back; Exit in the menu quits.")
+            checked: D2RLoaderConfig.closeToTray
+            onToggled: {
+                D2RLoaderConfig.closeToTray = checked;
+                D2RLoaderConfig.save();
+            }
+        }
     }
 
     FormCard.FormHeader {
