@@ -183,13 +183,9 @@ void LogBuffer::applyLogLevel()
 
 QString LogBuffer::defaultDirectory()
 {
-    // Qt's state location on Windows is a separate AppData/Local/State tree,
-    // while the rest of the data already lives in AppData/Local/d2rloader.
-#if defined(Q_OS_WIN)
+    // Kept next to accounts.json and the wine prefixes rather than in Qt's
+    // state location, so everything d2rloader writes lives in one tree.
     return QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + QStringLiteral("/d2rloader/logs");
-#else
-    return QStandardPaths::writableLocation(QStandardPaths::GenericStateLocation) + QStringLiteral("/d2rloader/logs");
-#endif
 }
 
 void LogBuffer::applyLogFile()
