@@ -16,11 +16,39 @@ import com.someblocks.d2rloader.core
 Kirigami.ApplicationWindow {
     id: mainWindow
     visible: true
-    width: 800
-    height: 800
+    width: D2RLoaderConfig.appSize.width
+    height: D2RLoaderConfig.appSize.height
     // title: `${Application.name}`
 
+    // a resize fires per pixel, so the size is written once the drag has settled
+    onWidthChanged: saveSizeTimer.restart()
+    onHeightChanged: saveSizeTimer.restart()
+
+    Timer {
+        id: saveSizeTimer
+        interval: 500
+        onTriggered: mainWindow.saveSize()
+    }
+
+    function saveSize() {
+        saveSizeTimer.stop();
+        if (visibility !== Window.Windowed) {
+            return;
+        }
+        if (width === D2RLoaderConfig.appSize.width && height === D2RLoaderConfig.appSize.height) {
+            return;
+        }
+        D2RLoaderConfig.appSize = Qt.size(width, height);
+        D2RLoaderConfig.save();
+    }
+
+    function quit() {
+        saveSize();
+        Qt.quit();
+    }
+
     onClosing: close => {
+        saveSize();
         if (!D2RLoaderConfig.closeToTray) {
             Qt.quit();
             return;
@@ -76,7 +104,7 @@ Kirigami.ApplicationWindow {
             Platform.MenuItem {
                 text: KI18n.i18nc("@action:inmenu", "&Exit")
                 icon.name: "application-exit"
-                onTriggered: Qt.quit()
+                onTriggered: mainWindow.quit()
             }
         }
     }
@@ -147,7 +175,7 @@ Kirigami.ApplicationWindow {
             MenuItem {
                 text: KI18n.i18nc("@action:inmenu", "&Exit")
                 icon.name: "application-exit"
-                onTriggered: Qt.quit()
+                onTriggered: mainWindow.quit()
             }
         }
         Menu {

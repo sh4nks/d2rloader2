@@ -10,7 +10,7 @@
   <group name="Window">
     <entry name="appSize" type="Size">
       <label>Size of the main window.</label>
-      <default code="true">QSize(1280, 720)</default>
+      <default code="true">QSize(800, 700)</default>
     </entry>
     <entry name="appPosition" type="Point">
       <label>Position of the main window.</label>
