@@ -488,6 +488,19 @@ void ProfileManager::discard(Profile *draft)
     draft->deleteLater();
 }
 
+bool ProfileManager::hasChanges(Profile *draft) const
+{
+    if (!draft || !m_drafts.contains(draft)) {
+        return false;
+    }
+    const Profile *existing = profileById(draft->id());
+    const Profile blank;
+    QJsonObject original = (existing ? existing : &blank)->toJson();
+    // Left alone by Profile::copyFrom(), so the draft never has it.
+    original.remove(QStringLiteral("windowPosition"));
+    return draft->toJson() != original;
+}
+
 Profile *ProfileManager::profileById(int id) const
 {
     if (id <= 0) {

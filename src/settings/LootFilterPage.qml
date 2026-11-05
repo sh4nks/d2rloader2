@@ -150,6 +150,9 @@ FormCard.FormCardPage {
         property string filterName
         property var importer: null
 
+        // The settings pages cannot see applicationWindow(), which Kirigami would center it in.
+        parent: root.QQC2.Overlay.overlay
+
         title: KI18n.i18nc("@title:window", "Overwrite Loot Filter")
         subtitle: KI18n.i18nc("@info", "The library already has a loot filter named \"%1\". Replace it?", overwritePrompt.filterName)
         standardButtons: Kirigami.Dialog.Cancel
@@ -172,6 +175,9 @@ FormCard.FormCardPage {
 
         property string filterName
         property var accountNames: []
+
+        // The settings pages cannot see applicationWindow(), which Kirigami would center it in.
+        parent: root.QQC2.Overlay.overlay
 
         title: KI18n.i18nc("@title:window", "Remove Loot Filter")
         subtitle: removePrompt.accountNames.length > 0 ? KI18n.i18ncp("@info", "Remove \"%2\" from the library? The account %3 goes back to the game's own loot filters.", "Remove \"%2\" from the library? The accounts %3 go back to the game's own loot filters.", removePrompt.accountNames.length, removePrompt.filterName, removePrompt.accountNames.join(", ")) : KI18n.i18nc("@info", "Remove \"%1\" from the library?", removePrompt.filterName)

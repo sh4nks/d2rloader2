@@ -133,6 +133,12 @@ public:
      * Throws \a draft away without touching the stored accounts.
      */
     Q_INVOKABLE void discard(Profile *draft);
+
+    /**
+     * Whether \a draft differs from the account it was copied from, or from
+     * a blank account when it is new.
+     */
+    Q_INVOKABLE bool hasChanges(Profile *draft) const;
     Q_INVOKABLE void moveUp(int row);
     Q_INVOKABLE void moveDown(int row);
 

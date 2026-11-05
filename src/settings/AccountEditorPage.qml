@@ -33,6 +33,79 @@ FormCard.FormCardPage {
     // is no longer outstanding, so this is a no-op for it.
     Component.onDestruction: Accounts.ProfileManager.discard(root.profile)
 
+    /**
+     * Commits the draft, showing why it could not be when it could not.
+     */
+    function save(): bool {
+        // The name decides whether the draft can be saved, and the field may
+        // not have committed it yet.
+        root.profile.profileName = nameField.text;
+        saveMessage.text = Accounts.ProfileManager.commit(root.profile);
+        return saveMessage.text.length === 0;
+    }
+
+    /**
+     * Called by SettingsWindow when the sidebar switches modules while this
+     * editor is on top. Calls \a leave right away when nothing changed,
+     * otherwise once the prompt was answered with Save or Discard, and
+     * \a stay when it was cancelled or saving failed.
+     */
+    function confirmLeave(leave, stay) {
+        // Takes the focus off a field whose text has not been committed yet.
+        root.forceActiveFocus();
+        if (!Accounts.ProfileManager.hasChanges(root.profile)) {
+            leave();
+            return;
+        }
+        leavePrompt.leave = leave;
+        leavePrompt.stay = stay;
+        leavePrompt.open();
+    }
+
+    Kirigami.PromptDialog {
+        id: leavePrompt
+
+        property var leave
+        property var stay
+        property bool leaving: false
+
+        // Kirigami centers a dialog in applicationWindow().overlay, which the
+        // settings pages cannot see, and otherwise in the page's content
+        // column, whose middle is below the viewport on this long page.
+        parent: root.QQC2.Overlay.overlay
+
+        title: KI18n.i18nc("@title:window", "Unsaved Changes")
+        subtitle: root.isNew ? KI18n.i18nc("@info", "This account has not been created yet. Do you want to create it?") : KI18n.i18nc("@info", "This account has unsaved changes. Do you want to save them?")
+        standardButtons: Kirigami.Dialog.Cancel
+        showCloseButton: false
+
+        customFooterActions: [
+            Kirigami.Action {
+                text: saveButton.text
+                icon.name: saveButton.icon.name
+                onTriggered: {
+                    leavePrompt.leaving = root.save();
+                    leavePrompt.close();
+                }
+            },
+            Kirigami.Action {
+                text: KI18n.i18nc("@action:button", "Discard")
+                icon.name: "edit-delete"
+                onTriggered: {
+                    leavePrompt.leaving = true;
+                    leavePrompt.close();
+                }
+            }
+        ]
+
+        // Cancel, Escape and a click outside all keep the editor.
+        onClosed: {
+            const next = leavePrompt.leaving ? leavePrompt.leave : leavePrompt.stay;
+            leavePrompt.leaving = false;
+            next();
+        }
+    }
+
     function copyCurrentSettings() {
         const error = Accounts.GameSettings.copyCurrent(root.profile, true);
         if (error.length > 0) {
@@ -47,6 +120,9 @@ FormCard.FormCardPage {
 
     Kirigami.PromptDialog {
         id: overwritePrompt
+
+        // The settings pages cannot see applicationWindow(), which Kirigami would center it in.
+        parent: root.QQC2.Overlay.overlay
 
         title: KI18n.i18nc("@title:window", "Overwrite Settings")
         subtitle: KI18n.i18nc("@info", "This account already has its own settings. Replace them with the game's current settings?")
@@ -109,6 +185,9 @@ FormCard.FormCardPage {
         id: lootFilterOverwritePrompt
 
         property string filterName
+
+        // The settings pages cannot see applicationWindow(), which Kirigami would center it in.
+        parent: root.QQC2.Overlay.overlay
 
         title: KI18n.i18nc("@title:window", "Overwrite Loot Filter")
         subtitle: KI18n.i18nc("@info", "The library already has a loot filter named \"%1\". Replace it with the one from the game?", lootFilterOverwritePrompt.filterName)
@@ -580,15 +659,9 @@ FormCard.FormCardPage {
             icon.name: root.isNew ? "list-add" : "document-save"
             highlighted: true
             onClicked: {
-                // The name decides whether the draft can be saved, and the
-                // field may not have committed it yet.
-                root.profile.profileName = nameField.text;
-                const error = Accounts.ProfileManager.commit(root.profile);
-                if (error.length > 0) {
-                    saveMessage.text = error;
-                    return;
+                if (root.save()) {
+                    (root.QQC2.ApplicationWindow.window as Kirigami.ApplicationWindow).pageStack.layers.pop();
                 }
-                (root.QQC2.ApplicationWindow.window as Kirigami.ApplicationWindow).pageStack.layers.pop();
             }
         }
 

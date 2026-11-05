@@ -167,6 +167,9 @@ FormCard.FormCardPage {
         property int row: -1
         property string sequenceName
 
+        // The settings pages cannot see applicationWindow(), which Kirigami would center it in.
+        parent: root.QQC2.Overlay.overlay
+
         title: KI18n.i18nc("@title:window", "Delete Launch Sequence")
         subtitle: KI18n.i18nc("@info", "Delete the launch sequence \"%1\"?", deletePrompt.sequenceName)
         standardButtons: Kirigami.Dialog.Cancel

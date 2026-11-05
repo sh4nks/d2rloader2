@@ -123,6 +123,9 @@ FormCard.FormCardPage {
         property var rows: []
         property var accountNames: []
 
+        // The settings pages cannot see applicationWindow(), which Kirigami would center it in.
+        parent: root.QQC2.Overlay.overlay
+
         title: KI18n.i18nc("@title:window", "Overwrite Settings")
         subtitle: KI18n.i18ncp("@info", "The account \"%2\" already has its own settings. Replace them with the game's current settings?", "These accounts already have their own settings: %2. Replace them with the game's current settings?", overwritePrompt.accountNames.length, overwritePrompt.accountNames.join(", "))
         standardButtons: Kirigami.Dialog.Cancel
@@ -145,6 +148,9 @@ FormCard.FormCardPage {
 
         property string fileName
         property var accountNames: []
+
+        // The settings pages cannot see applicationWindow(), which Kirigami would center it in.
+        parent: root.QQC2.Overlay.overlay
 
         title: KI18n.i18nc("@title:window", "Remove Game Settings")
         subtitle: removePrompt.accountNames.length > 0 ? KI18n.i18ncp("@info", "Remove \"%2\"? The account %3 goes back to the game's own settings.", "Remove \"%2\"? The accounts %3 go back to the game's own settings.", removePrompt.accountNames.length, removePrompt.fileName, removePrompt.accountNames.join(", ")) : KI18n.i18nc("@info", "Remove \"%1\"?", removePrompt.fileName)

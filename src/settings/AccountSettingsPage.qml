@@ -171,6 +171,9 @@ FormCard.FormCardPage {
         property int row: -1
         property string accountName
 
+        // The settings pages cannot see applicationWindow(), which Kirigami would center it in.
+        parent: root.QQC2.Overlay.overlay
+
         title: KI18n.i18nc("@title:window", "Delete Account")
         subtitle: KI18n.i18nc("@info", "Delete the account \"%1\"? This cannot be undone.", deletePrompt.accountName)
         standardButtons: Kirigami.Dialog.Cancel

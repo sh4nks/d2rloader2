@@ -13,14 +13,72 @@ KirigamiSettings.ConfigurationView {
 
     title: KI18n.i18nc("@title:window", "Preferences")
 
+    /**
+     * Set while restoreModule() puts a module page back, so that its
+     * pagePushed does not ask the editor again.
+     */
+    property bool restoringModule: false
+
     // The sidebar replaces the module page underneath pageStack.layers, so an
-    // editor pushed as a layer would keep covering the new page.
+    // editor pushed as a layer would keep covering the new page. PageRow emits
+    // pagePushed from replace() itself, so every switch ends up here.
     onConfigViewItemChanged: {
         const window = root.configViewItem as Kirigami.ApplicationWindow;
         if (!window) {
             return;
         }
-        window.pageStack.currentItemChanged.connect(() => window.pageStack.layers.clear());
+        let shownPage = null;
+        window.pageStack.pagePushed.connect(page => {
+            const previousPage = shownPage;
+            shownPage = page;
+            root.leaveLayers(window, previousPage);
+        });
+    }
+
+    /**
+     * Closes the layers covering a freshly switched module page. The top
+     * layer gets a say through confirmLeave(leave, stay) when it has one:
+     * stay() makes \a previousPage the shown module again.
+     */
+    function leaveLayers(window, previousPage) {
+        const layers = window.pageStack.layers;
+        if (root.restoringModule || layers.depth < 2) {
+            return;
+        }
+        const leave = () => layers.clear();
+        const editor = layers.currentItem;
+        if (typeof editor.confirmLeave !== "function") {
+            leave();
+            return;
+        }
+        editor.confirmLeave(leave, () => root.restoreModule(window, previousPage));
+    }
+
+    function restoreModule(window, page) {
+        root.restoringModule = true;
+        window.pageStack.replace(page);
+        root.restoringModule = false;
+        // ConfigWindow highlights the sidebar entry through the currentIndex
+        // of its own ListView, which only its delegates set.
+        const list = root.findListView(window.globalDrawer.contentItem);
+        if (!list) {
+            return;
+        }
+        const moduleId = Object.keys(window.pageCache).find(id => window.pageCache[id] === page);
+        list.currentIndex = list.model.findIndex(module => module.moduleId === moduleId);
+    }
+
+    function findListView(item) {
+        if (item instanceof ListView) {
+            return item;
+        }
+        for (const child of item.children) {
+            const list = root.findListView(child);
+            if (list) {
+                return list;
+            }
+        }
+        return null;
     }
 
     modules: [
