@@ -781,7 +781,7 @@ void GameInfo::notifyTerrorZones(const QStringList &previousZones, const QString
             m_nextZones.isEmpty() ? current : i18nc("@info the terror zone that is active now, then the one after it", "%1\nNext: %2", current, next);
 
         qCInfo(LOG_GAMEINFO) << "notifying about terror zone" << current;
-        KNotification::event(QStringLiteral("terrorzone"), i18nc("@title:window", "Terror Zone Changed"), text);
+        sendNotification(QStringLiteral("terrorzone"), i18nc("@title:window", "Terror Zone Changed"), text);
         return;
     }
 
@@ -798,7 +798,7 @@ void GameInfo::notifyTerrorZones(const QStringList &previousZones, const QString
                                                     : next;
 
     qCInfo(LOG_GAMEINFO) << "notifying about next terror zone" << next;
-    KNotification::event(QStringLiteral("nextterrorzone"), i18nc("@title:window", "Next Terror Zone Predicted"), text);
+    sendNotification(QStringLiteral("nextterrorzone"), i18nc("@title:window", "Next Terror Zone Predicted"), text);
 }
 
 void GameInfo::notifyDCloneProgress(const QList<DCloneModel::ProgressChange> &changes)
@@ -818,17 +818,62 @@ void GameInfo::notifyDCloneProgress(const QList<DCloneModel::ProgressChange> &ch
 
         qCInfo(LOG_GAMEINFO) << "notifying about Diablo Clone progress" << realm << change.previous << "->" << change.current;
 
-        auto *notification = new KNotification(QStringLiteral("dclone"));
-        notification->setTitle(walking ? i18nc("@title:window", "Diablo Walks the Earth") : i18nc("@title:window", "Diablo Clone Progress"));
-        notification->setText(i18nc("@info realm, game mode, progress out of the maximum",
-                                    "%1 (%2) is at %3/%4.",
-                                    realm,
-                                    dcloneModeName(),
-                                    change.current,
-                                    DCloneModel::MaxProgress));
-        notification->setUrgency(walking ? KNotification::CriticalUrgency : KNotification::NormalUrgency);
-        notification->sendEvent();
+        sendNotification(QStringLiteral("dclone"),
+                         walking ? i18nc("@title:window", "Diablo Walks the Earth") : i18nc("@title:window", "Diablo Clone Progress"),
+                         i18nc("@info realm, game mode, progress out of the maximum",
+                               "%1 (%2) is at %3/%4.",
+                               realm,
+                               dcloneModeName(),
+                               change.current,
+                               DCloneModel::MaxProgress),
+                         walking);
     }
+}
+
+void GameInfo::sendNotification(const QString &eventId, const QString &title, const QString &text, bool critical)
+{
+#ifdef Q_OS_WIN
+    // The MSYS2 KNotifications has no popup backend and crashes on a Popup
+    // event, so the tray icon shows the native toast instead.
+    Q_UNUSED(eventId)
+    Q_EMIT notificationRequested(title, text, critical);
+#else
+    auto *notification = new KNotification(eventId);
+    notification->setTitle(title);
+    notification->setText(text);
+    notification->setUrgency(critical ? KNotification::CriticalUrgency : KNotification::NormalUrgency);
+    notification->sendEvent();
+#endif
+}
+
+void GameInfo::setDebugMode(bool enabled)
+{
+    s_debugMode = enabled;
+}
+
+bool GameInfo::debugMode() const
+{
+    return s_debugMode;
+}
+
+void GameInfo::debugTerrorZoneChange()
+{
+    qCInfo(LOG_GAMEINFO) << "debug: simulating a Terror Zone change";
+    notifyTerrorZones({QStringLiteral("debug")}, m_nextZones);
+}
+
+void GameInfo::debugNextTerrorZone()
+{
+    qCInfo(LOG_GAMEINFO) << "debug: simulating a new Terror Zone prediction";
+    notifyTerrorZones(m_currentZones, {QStringLiteral("debug")});
+}
+
+void GameInfo::debugDCloneProgress(bool walking)
+{
+    qCInfo(LOG_GAMEINFO) << "debug: simulating Diablo Clone progress";
+    const int current = walking ? DCloneModel::MaxProgress : D2RLoaderConfig::self()->dcloneThreshold();
+    const QString region = m_dclone->data(m_dclone->index(0), DCloneModel::RegionRole).toString();
+    notifyDCloneProgress({{region, current - 1, current}});
 }
 
 void GameInfo::setError(const QString &error)

@@ -47,8 +47,10 @@ Type: filesandordirs; Name: "{app}\tls"
 Source: "{#StageDir}\D2RLoader\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\D2RLoader"; Filename: "{app}\d2rloader.exe"
-Name: "{autodesktop}\D2RLoader"; Filename: "{app}\d2rloader.exe"; Tasks: desktopicon
+; The AppUserModelID registers the app's name and icon for toasts and the
+; taskbar; main.cpp sets the same ID on the process when it runs from {app}.
+Name: "{autoprograms}\D2RLoader"; Filename: "{app}\d2rloader.exe"; AppUserModelID: "someblocks.D2RLoader"
+Name: "{autodesktop}\D2RLoader"; Filename: "{app}\d2rloader.exe"; Tasks: desktopicon; AppUserModelID: "someblocks.D2RLoader"
 
 [Run]
 Filename: "{app}\d2rloader.exe"; Description: "{cm:LaunchProgram,D2RLoader}"; Flags: nowait postinstall skipifsilent

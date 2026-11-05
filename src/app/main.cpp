@@ -1,11 +1,13 @@
 #include "../accounts/profilemanager.h"
 #include "../core/logbuffer.h"
 #include "../core/logging.h"
+#include "gameinfo.h"
 #include <KAboutData>
 #include <KIconTheme>
 #include <KLocalizedQmlContext>
 #include <KLocalizedString>
 #include <QApplication>
+#include <QCommandLineParser>
 #include <QGuiApplication>
 #include <QIcon>
 #include <QQmlApplicationEngine>
@@ -16,6 +18,34 @@
 #include <qlogging.h>
 #include <qobject.h>
 #include <qstylefactory.h>
+
+#ifdef Q_OS_WIN
+#include <QDir>
+#include <QSettings>
+#include <shobjidl.h>
+#endif
+
+namespace
+{
+#ifdef Q_OS_WIN
+// The installer puts this AppUserModelID on its Start Menu shortcut, which is
+// what makes Windows show the app's name and icon for the process in toasts
+// and the taskbar. Without such a shortcut, as with the portable zip, Windows
+// would label toasts with the raw ID instead of the executable's description,
+// so only an installed copy takes the ID.
+void setAppUserModelId()
+{
+    const QSettings uninstall(QStringLiteral("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{59BA45B2-25D4-49E8-B8FC-E48986E500AB}_is1"),
+                              QSettings::NativeFormat);
+    const QString installed = QDir::cleanPath(QDir::fromNativeSeparators(uninstall.value(QStringLiteral("InstallLocation")).toString()));
+    if (installed.compare(QDir::cleanPath(QCoreApplication::applicationDirPath()), Qt::CaseInsensitive) != 0) {
+        return;
+    }
+    qCInfo(LOG_APP) << "Running from the installed location, taking its AppUserModelID";
+    SetCurrentProcessExplicitAppUserModelID(L"someblocks.D2RLoader");
+}
+#endif
+}
 
 int main(int argc, char *argv[])
 {
@@ -32,6 +62,9 @@ int main(int argc, char *argv[])
     LogBuffer::install();
 
     qCInfo(LOG_APP) << "D2RLoader started" << APP_VERSION;
+#ifdef Q_OS_WIN
+    setAppUserModelId();
+#endif
 
     QApplication::setStyle(QStringLiteral("breeze"));
     if (qEnvironmentVariableIsEmpty("QT_QUICK_CONTROLS_STYLE")) {
@@ -61,6 +94,14 @@ int main(int argc, char *argv[])
     aboutData.setOrganizationDomain("someblocks.com");
     aboutData.setDesktopFileName(QStringLiteral("com.someblocks.d2rloader"));
     KAboutData::setApplicationData(aboutData);
+
+    QCommandLineParser parser;
+    aboutData.setupCommandLine(&parser);
+    const QCommandLineOption debugOption(QStringLiteral("debug"), i18n("Show a Debug menu with actions that simulate notifications."));
+    parser.addOption(debugOption);
+    parser.process(app);
+    aboutData.processCommandLine(&parser);
+    GameInfo::setDebugMode(parser.isSet(debugOption));
 
     QQmlApplicationEngine engine;
     KLocalization::setupLocalizedContext(&engine);

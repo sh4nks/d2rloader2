@@ -49,7 +49,9 @@ Kirigami.ApplicationWindow {
     }
 
     Platform.SystemTrayIcon {
-        visible: D2RLoaderConfig.closeToTray
+        id: trayIcon
+        // Windows toasts hang off the tray icon, so notifications need it shown too
+        visible: D2RLoaderConfig.closeToTray || (Qt.platform.os === "windows" && (D2RLoaderConfig.tzNotifications || D2RLoaderConfig.dcloneNotifications))
         icon.name: "com.someblocks.d2rloader"
         // used where the icon theme does not know the app icon
         icon.source: "qrc:/icons/64-apps-com.someblocks.d2rloader.png"
@@ -79,7 +81,48 @@ Kirigami.ApplicationWindow {
         }
     }
 
+    Connections {
+        target: GameInfo
+
+        function onNotificationRequested(title: string, text: string, critical: bool) {
+            trayIcon.showMessage(title, text, critical ? Platform.SystemTrayIcon.Warning : Platform.SystemTrayIcon.Information);
+        }
+    }
+
+    Component {
+        id: debugMenu
+
+        Menu {
+            title: "&Debug"
+
+            MenuItem {
+                text: "Simulate Terror Zone change"
+                onTriggered: GameInfo.debugTerrorZoneChange()
+            }
+            MenuItem {
+                text: "Simulate next Terror Zone prediction"
+                onTriggered: GameInfo.debugNextTerrorZone()
+            }
+            MenuItem {
+                text: "Simulate Diablo Clone progress"
+                onTriggered: GameInfo.debugDCloneProgress(false)
+            }
+            MenuItem {
+                text: "Simulate Diablo walking the earth"
+                onTriggered: GameInfo.debugDCloneProgress(true)
+            }
+        }
+    }
+
+    // only with --debug on the command line
+    Component.onCompleted: {
+        if (GameInfo.debugMode) {
+            mainMenuBar.addMenu(debugMenu.createObject(mainMenuBar));
+        }
+    }
+
     menuBar: MenuBar {
+        id: mainMenuBar
         visible: D2RLoaderConfig.showMenuBar
 
         Menu {

@@ -113,6 +113,7 @@ class GameInfo : public QObject
     Q_PROPERTY(QString errorString READ errorString NOTIFY errorStringChanged)
     Q_PROPERTY(DCloneModel *dcloneModel READ dcloneModel CONSTANT)
     Q_PROPERTY(QString dcloneModeName READ dcloneModeName NOTIFY dcloneModeNameChanged)
+    Q_PROPERTY(bool debugMode READ debugMode CONSTANT)
 
 public:
     explicit GameInfo(QObject *parent = nullptr);
@@ -160,12 +161,33 @@ public:
 
     Q_INVOKABLE void refresh();
 
+    /**
+     * Whether the Debug menu is shown. Set from the command line before the
+     * QML engine creates the singleton.
+     */
+    static void setDebugMode(bool enabled);
+    bool debugMode() const;
+
+    /**
+     * Feed the notification code a fake change so that the real logic, the
+     * settings included, runs without waiting for the next rotation.
+     */
+    Q_INVOKABLE void debugTerrorZoneChange();
+    Q_INVOKABLE void debugNextTerrorZone();
+    Q_INVOKABLE void debugDCloneProgress(bool walking);
+
 Q_SIGNALS:
     void terrorZonesChanged();
     void lastUpdatedChanged();
     void loadingChanged();
     void errorStringChanged();
     void dcloneModeNameChanged();
+
+    /**
+     * A desktop notification the window has to show itself. Only emitted on
+     * Windows, where KNotification has no popup backend.
+     */
+    void notificationRequested(const QString &title, const QString &text, bool critical);
 
 private:
     enum class Request {
@@ -207,9 +229,15 @@ private:
      * to or past the configured threshold.
      */
     void notifyDCloneProgress(const QList<DCloneModel::ProgressChange> &changes);
+
+    /**
+     * Posts \a title and \a text as the \a eventId desktop notification.
+     */
+    void sendNotification(const QString &eventId, const QString &title, const QString &text, bool critical = false);
     void setError(const QString &error);
     void finishRequest();
 
+    inline static bool s_debugMode = false;
     QNetworkAccessManager *m_network = nullptr;
     QTimer *m_refreshTimer = nullptr;
     QTimer *m_terrorZoneTimer = nullptr;

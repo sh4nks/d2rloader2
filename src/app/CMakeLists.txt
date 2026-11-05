@@ -76,6 +76,12 @@ target_link_libraries(d2rloader PRIVATE
 file(GLOB D2RLOADER_ICONS ${CMAKE_CURRENT_SOURCE_DIR}/icons/*-apps-com.someblocks.d2rloader.png)
 ecm_add_app_icon(D2RLOADER_ICON ICONS ${D2RLOADER_ICONS})
 target_sources(d2rloader PRIVATE ${D2RLOADER_ICON})
+if(WIN32)
+    # Windows labels toasts, the Task Manager and crash reports with the
+    # FileDescription of the executable.
+    configure_file(d2rloader.rc.in ${CMAKE_CURRENT_BINARY_DIR}/d2rloader.rc @ONLY)
+    target_sources(d2rloader PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/d2rloader.rc)
+endif()
 
 #target_compile_definitions(d2rloader PUBLIC -DHAVE_WINDOWSYSTEM)
 #target_compile_definitions(d2rloader PUBLIC -DHAVE_X11=0)
