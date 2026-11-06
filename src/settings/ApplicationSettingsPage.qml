@@ -16,6 +16,25 @@ FormCard.FormCardPage {
 
     readonly property bool isWindows: Qt.platform.os === "windows"
 
+    // FolderDialog applies currentFolder only on its first show, so a reopen
+    // needs selectedFolder as well.
+    function browseFolderFrom(dialog, path) {
+        const folder = Paths.folderUrl(path);
+        if (folder.toString().length > 0) {
+            dialog.currentFolder = folder;
+            dialog.selectedFolder = folder;
+        }
+        dialog.open();
+    }
+
+    function browseFileFrom(dialog, path) {
+        const folder = Paths.folderUrl(path);
+        if (folder.toString().length > 0) {
+            dialog.currentFolder = folder;
+        }
+        dialog.open();
+    }
+
     FolderDialog {
         id: gamePathDialog
         title: KI18n.i18nc("@title:window", "Select Game Directory")
@@ -30,7 +49,7 @@ FormCard.FormCardPage {
         title: KI18n.i18nc("@title:window", "Select handle.exe")
         nameFilters: [KI18n.i18nc("@item", "Executable files (*.exe)"), KI18n.i18nc("@item", "All files (*)")]
         onAccepted: {
-            D2RLoaderConfig.handlePath = root.urlToPath(selectedFile);
+            D2RLoaderConfig.handlePath = Paths.toLocalFile(selectedFile);
             D2RLoaderConfig.save();
         }
     }
@@ -103,7 +122,7 @@ FormCard.FormCardPage {
                     }
                     QQC2.Button {
                         icon.name: "folder-open"
-                        onClicked: gamePathDialog.open()
+                        onClicked: root.browseFolderFrom(gamePathDialog, D2RLoaderConfig.gamePath)
                         QQC2.ToolTip.visible: hovered
                         QQC2.ToolTip.text: KI18n.i18nc("@info:tooltip", "Browse...")
                     }
@@ -143,7 +162,7 @@ FormCard.FormCardPage {
                     }
                     QQC2.Button {
                         icon.name: "document-open"
-                        onClicked: handlePathDialog.open()
+                        onClicked: root.browseFileFrom(handlePathDialog, D2RLoaderConfig.handlePath)
                         QQC2.ToolTip.visible: hovered
                         QQC2.ToolTip.text: KI18n.i18nc("@info:tooltip", "Browse...")
                     }
@@ -185,7 +204,7 @@ FormCard.FormCardPage {
                     }
                     QQC2.Button {
                         icon.name: "document-open"
-                        onClicked: accountSettingsDialog.open()
+                        onClicked: root.browseFileFrom(accountSettingsDialog, D2RLoaderConfig.profilePath)
                         QQC2.ToolTip.visible: hovered
                         QQC2.ToolTip.text: KI18n.i18nc("@info:tooltip", "Browse...")
                     }
@@ -261,7 +280,7 @@ FormCard.FormCardPage {
                     }
                     QQC2.Button {
                         icon.name: "folder-open"
-                        onClicked: winePrefixDialog.open()
+                        onClicked: root.browseFolderFrom(winePrefixDialog, D2RLoaderConfig.wineprefixPath)
                         QQC2.ToolTip.visible: hovered
                         QQC2.ToolTip.text: KI18n.i18nc("@info:tooltip", "Browse...")
                     }
@@ -297,7 +316,7 @@ FormCard.FormCardPage {
                     }
                     QQC2.Button {
                         icon.name: "folder-open"
-                        onClicked: protonPathDialog.open()
+                        onClicked: root.browseFolderFrom(protonPathDialog, D2RLoaderConfig.protonPath)
                         QQC2.ToolTip.visible: hovered
                         QQC2.ToolTip.text: KI18n.i18nc("@info:tooltip", "Browse...")
                     }
@@ -360,7 +379,7 @@ FormCard.FormCardPage {
                     }
                     QQC2.Button {
                         icon.name: "folder-open"
-                        onClicked: logPathDialog.open()
+                        onClicked: root.browseFolderFrom(logPathDialog, D2RLoaderConfig.logPath)
                         QQC2.ToolTip.visible: hovered
                         QQC2.ToolTip.text: KI18n.i18nc("@info:tooltip", "Browse...")
                     }
@@ -370,7 +389,14 @@ FormCard.FormCardPage {
 
         FormCard.FormDelegateSeparator {}
 
+        FormCard.FormTextDelegate {
+            visible: UpdateChecker.managedExternally
+            text: KI18n.i18nc("@info", "Updates are handled outside D2RLoader.")
+            description: KI18n.i18nc("@info:label", "This copy was installed by Flatpak or a distribution package, which updates it.")
+        }
+
         FormCard.FormCheckDelegate {
+            visible: !UpdateChecker.managedExternally
             text: KI18n.i18nc("@label", "Check for Updates")
             description: KI18n.i18nc("@info:label", "Automatically check for new versions of D2RLoader on startup.")
             checked: D2RLoaderConfig.checkForUpdates
@@ -378,6 +404,31 @@ FormCard.FormCardPage {
                 D2RLoaderConfig.checkForUpdates = checked;
                 D2RLoaderConfig.save();
             }
+        }
+
+        FormCard.FormDelegateSeparator {
+            visible: !UpdateChecker.managedExternally
+        }
+
+        FormCard.FormButtonDelegate {
+            visible: !UpdateChecker.managedExternally
+            enabled: !UpdateChecker.checking
+            text: KI18n.i18nc("@action:button", "Check for Updates Now")
+            description: UpdateChecker.statusText
+            icon.name: "view-refresh"
+            onClicked: UpdateChecker.checkNow()
+        }
+
+        FormCard.FormDelegateSeparator {
+            visible: UpdateChecker.updateAvailable
+        }
+
+        FormCard.FormButtonDelegate {
+            visible: UpdateChecker.updateAvailable
+            text: KI18n.i18nc("@action:button", "Open Release Page")
+            description: KI18n.i18nc("@info:label", "The release notes and the downloads for the new version.")
+            icon.name: "cloud-download"
+            onClicked: Qt.openUrlExternally(UpdateChecker.releaseUrl)
         }
     }
 }

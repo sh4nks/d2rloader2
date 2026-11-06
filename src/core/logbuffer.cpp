@@ -44,7 +44,7 @@ QString levelName(QtMsgType type)
  */
 bool isApplicationCategory(const QString &category)
 {
-    for (const char *allowed : {"d2rloader.app", "d2rloader.profiles", "d2rloader.gameinfo", "d2rloader.game", "d2rloader.qml"}) {
+    for (const char *allowed : {"d2rloader.app", "d2rloader.profiles", "d2rloader.gameinfo", "d2rloader.game", "d2rloader.updates", "d2rloader.qml"}) {
         if (category == QLatin1StringView(allowed)) {
             return true;
         }

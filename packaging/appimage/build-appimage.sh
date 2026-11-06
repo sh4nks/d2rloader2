@@ -43,6 +43,27 @@ cat >"$appdir/apprun-hooks/xdg-data-dirs.sh" <<'EOF'
 export XDG_DATA_DIRS="$APPDIR/usr/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
 EOF
 
+# An apprun-hooks directory makes linuxdeploy write a shell AppRun that execs
+# the AppDir-root AppRun.wrapped symlink, so Qt takes the AppDir root as the
+# application directory and never reads usr/bin/qt.conf. Without it nothing
+# under usr/plugins is found and QGuiApplication aborts on the missing
+# platform plugin, so the paths qt.conf would have set are exported here.
+cat >"$appdir/apprun-hooks/qt-paths.sh" <<'EOF'
+export QT_PLUGIN_PATH="$APPDIR/usr/plugins${QT_PLUGIN_PATH:+:$QT_PLUGIN_PATH}"
+export QML_IMPORT_PATH="$APPDIR/usr/qml${QML_IMPORT_PATH:+:$QML_IMPORT_PATH}"
+export QML2_IMPORT_PATH="$APPDIR/usr/qml${QML2_IMPORT_PATH:+:$QML2_IMPORT_PATH}"
+EOF
+
+# KDEPlasmaPlatformTheme6.so is not bundled, so Qt falls back to its own
+# built-in "kde" theme, which has no file dialog helper and leaves the file and
+# folder dialogs as the plain Qt Quick ones. The portal theme keeps that theme
+# as its base and routes only the dialogs through xdg-desktop-portal, which is
+# the desktop's own file picker. Without a portal the helper comes out null and
+# Qt falls back to the Qt Quick dialog as before.
+cat >"$appdir/apprun-hooks/platform-theme.sh" <<'EOF'
+export QT_QPA_PLATFORMTHEME="${QT_QPA_PLATFORMTHEME:-xdgdesktopportal}"
+EOF
+
 # linuxdeploy-plugin-qt copies every plugin of a module and gives up on one
 # whose optional dependency is not installed (kimageformats' jxr plugin), so it
 # is pointed at a copy of the plugin directory without those.
@@ -72,6 +93,10 @@ export EXTRA_QT_MODULES="svg;waylandcompositor"
 export EXTRA_PLATFORM_PLUGINS="libqwayland.so"
 export LINUXDEPLOY_OUTPUT_VERSION=$version
 export LDAI_OUTPUT="$work/D2RLoader-$version-x86_64.AppImage"
+# Lets AppImageUpdate fetch only the changed blocks of the next release. The
+# glob has to match the asset name the release carries, and the .zsync written
+# next to the AppImage has to be uploaded alongside it.
+export LDAI_UPDATE_INFORMATION="gh-releases-zsync|sh4nks|d2rloader2|latest|D2RLoader-*x86_64.AppImage.zsync"
 
 "$tools/linuxdeploy-x86_64.AppImage" \
     --appdir "$appdir" \
@@ -82,4 +107,10 @@ export LDAI_OUTPUT="$work/D2RLoader-$version-x86_64.AppImage"
     --plugin qt \
     --output appimage
 
+# appimagetool writes the .zsync relative to the working directory instead of
+# next to LDAI_OUTPUT, so it is moved to sit beside the AppImage. Failing here
+# beats a release whose update information points at a missing .zsync.
+mv "$(basename "$LDAI_OUTPUT").zsync" "$LDAI_OUTPUT.zsync"
+
 echo "$LDAI_OUTPUT"
+echo "$LDAI_OUTPUT.zsync"

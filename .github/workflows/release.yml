@@ -6,8 +6,26 @@ on:
       - 'v*'
 
 jobs:
+  # The in-app update check compares the tag of the newest release to the
+  # version this build reports, so a tag that disagrees with CMakeLists.txt
+  # would make every build of it announce an update to itself.
+  version:
+    name: Version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check the tag against the project version
+        run: |
+          project=$(sed -n 's/^set(RELEASE_SERVICE_VERSION_\(MAJOR\|MINOR\|MICRO\) "\([0-9]*\)")$/\2/p' CMakeLists.txt | paste -sd.)
+          tag=${GITHUB_REF_NAME#v}
+          if [ "$project" != "$tag" ]; then
+            echo "CMakeLists.txt says $project but the tag says $tag"
+            exit 1
+          fi
+
   appimage:
     name: AppImage
+    needs: [version]
     runs-on: ubuntu-latest
     container:
       image: archlinux:latest
@@ -25,11 +43,14 @@ jobs:
       - uses: actions/upload-artifact@v7
         with:
           name: appimage
-          path: build-appimage/D2RLoader-*-x86_64.AppImage
+          path: |
+            build-appimage/D2RLoader-*-x86_64.AppImage
+            build-appimage/D2RLoader-*-x86_64.AppImage.zsync
           if-no-files-found: error
 
   flatpak:
     name: Flatpak
+    needs: [version]
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
@@ -46,6 +67,7 @@ jobs:
 
   windows:
     name: Windows
+    needs: [version]
     runs-on: windows-latest
     defaults:
       run:
@@ -90,6 +112,7 @@ jobs:
         with:
           files: |
             *.AppImage
+            *.AppImage.zsync
             *.flatpak
             *.zip
             *.exe

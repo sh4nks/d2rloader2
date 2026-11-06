@@ -17,3 +17,8 @@ Action=Popup
 Name=Diablo Clone progress
 Comment=Diablo Clone progress rose on a watched realm
 Action=Popup
+
+[Event/update]
+Name=Update available
+Comment=A newer release of D2RLoader was published
+Action=Popup

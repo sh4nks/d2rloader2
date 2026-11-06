@@ -79,7 +79,7 @@ Kirigami.ApplicationWindow {
     Platform.SystemTrayIcon {
         id: trayIcon
         // Windows toasts hang off the tray icon, so notifications need it shown too
-        visible: D2RLoaderConfig.closeToTray || (Qt.platform.os === "windows" && (D2RLoaderConfig.tzNotifications || D2RLoaderConfig.dcloneNotifications))
+        visible: D2RLoaderConfig.closeToTray || (Qt.platform.os === "windows" && (D2RLoaderConfig.tzNotifications || D2RLoaderConfig.dcloneNotifications || D2RLoaderConfig.checkForUpdates))
         icon.name: "com.someblocks.d2rloader"
         // used where the icon theme does not know the app icon
         icon.source: "qrc:/icons/64-apps-com.someblocks.d2rloader.png"
@@ -114,6 +114,14 @@ Kirigami.ApplicationWindow {
 
         function onNotificationRequested(title: string, text: string, critical: bool) {
             trayIcon.showMessage(title, text, critical ? Platform.SystemTrayIcon.Warning : Platform.SystemTrayIcon.Information);
+        }
+    }
+
+    Connections {
+        target: UpdateChecker
+
+        function onNotificationRequested(title: string, text: string) {
+            trayIcon.showMessage(title, text, Platform.SystemTrayIcon.Information);
         }
     }
 
@@ -224,6 +232,26 @@ Kirigami.ApplicationWindow {
             text: Accounts.ProfileManager.notice
             visible: text.length > 0
             showCloseButton: true
+        }
+
+        Kirigami.InlineMessage {
+            Layout.fillWidth: true
+            Layout.margins: Kirigami.Units.smallSpacing
+            type: Kirigami.MessageType.Positive
+            text: KI18n.i18nc("@info new version", "D2RLoader %1 is available.", UpdateChecker.latestVersion)
+            visible: UpdateChecker.updateAvailable && !UpdateChecker.dismissed
+            actions: [
+                Kirigami.Action {
+                    text: KI18n.i18nc("@action:button", "Download")
+                    icon.name: "cloud-download"
+                    onTriggered: Qt.openUrlExternally(UpdateChecker.releaseUrl)
+                },
+                Kirigami.Action {
+                    text: KI18n.i18nc("@action:button", "Skip This Version")
+                    icon.name: "dialog-cancel"
+                    onTriggered: UpdateChecker.dismiss()
+                }
+            ]
         }
 
         // Fixed Upper Section: Accounts Table

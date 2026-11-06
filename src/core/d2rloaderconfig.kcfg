@@ -156,6 +156,21 @@
       <label>Whether to check for new releases on startup.</label>
       <default>true</default>
     </entry>
+    <entry name="lastUpdateCheck" type="DateTime">
+      <label>When the last release check reached the server.</label>
+    </entry>
+    <entry name="latestVersion" type="String">
+      <label>Version of the newest release the last check found.</label>
+    </entry>
+    <entry name="latestReleaseUrl" type="String">
+      <label>Release page of the newest release the last check found.</label>
+    </entry>
+    <entry name="updateEtag" type="String">
+      <label>ETag of the last release response, sent so an unchanged one is not transferred again.</label>
+    </entry>
+    <entry name="dismissedVersion" type="String">
+      <label>Version whose update notice was dismissed.</label>
+    </entry>
   </group>
 
   <group name="Migration">
