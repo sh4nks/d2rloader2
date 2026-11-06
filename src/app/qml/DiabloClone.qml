@@ -13,13 +13,6 @@ Kirigami.Card {
     header: CardHeader {
         title: KI18n.i18nc("@title", "Diablo Clone Tracker")
 
-        Label {
-            text: GameInfo.lastUpdated.getTime() > 0 ? KI18n.i18nc("@info", "Last updated: %1", Qt.formatTime(GameInfo.lastUpdated, "hh:mm:ss")) : KI18n.i18nc("@info", "Not fetched yet")
-            font.italic: true
-            color: Kirigami.Theme.textColor
-            opacity: 0.6
-        }
-
         Button {
             text: KI18n.i18nc("@action:button", "Refresh")
             icon.name: "view-refresh"

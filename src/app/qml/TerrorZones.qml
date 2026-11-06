@@ -13,13 +13,6 @@ Kirigami.Card {
     header: CardHeader {
         title: KI18n.i18nc("@title", "Terror Zones")
 
-        Label {
-            text: KI18n.i18nc("@info terror zone data source", "Terror Zone data provided by d2emu.com")
-            font: Kirigami.Theme.smallFont
-            color: Kirigami.Theme.textColor
-            opacity: 0.6
-        }
-
         Button {
             text: KI18n.i18nc("@action:button", "Refresh")
             icon.name: "view-refresh"

@@ -334,6 +334,31 @@ Kirigami.ApplicationWindow {
                 enabled: tabBar.currentIndex === 2
             }
         }
+
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.leftMargin: Kirigami.Units.smallSpacing
+            Layout.rightMargin: Kirigami.Units.smallSpacing
+            Layout.topMargin: Kirigami.Units.smallSpacing
+            Layout.bottomMargin: Kirigami.Units.smallSpacing
+            spacing: Kirigami.Units.largeSpacing
+            visible: D2RLoaderConfig.showInfoPanel
+
+            Label {
+                text: GameInfo.lastUpdated.getTime() > 0 ? KI18n.i18nc("@info", "Last updated: %1", Qt.formatTime(GameInfo.lastUpdated, "hh:mm:ss")) : KI18n.i18nc("@info", "Not fetched yet")
+                font: Kirigami.Theme.smallFont
+                opacity: 0.6
+                elide: Text.ElideRight
+                Layout.fillWidth: true
+            }
+
+            Label {
+                text: KI18n.i18nc("@info game data source", "Terror Zone and Diablo Clone data provided by d2emu.com")
+                font: Kirigami.Theme.smallFont
+                opacity: 0.6
+                elide: Text.ElideRight
+            }
+        }
     }
 
     FileDialog {
