@@ -13,13 +13,14 @@
   <developer id="com.someblocks">
     <name>Peter Justin</name>
   </developer>
-  <url type="homepage">https://github.com/sh4nks/d2rloader</url>
-  <url type="bugtracker">https://github.com/sh4nks/d2rloader/issues</url>
+  <url type="homepage">https://github.com/sh4nks/d2rloader2</url>
+  <url type="bugtracker">https://github.com/sh4nks/d2rloader2/issues</url>
   <provides>
     <binary>d2rloader</binary>
   </provides>
   <content_rating type="oars-1.1"/>
   <releases>
+    <release version="0.3.0" date="2026-11-06"/>
     <release version="0.2.0" date="2026-11-05"/>
     <release version="0.1.0" date="2026-09-11"/>
   </releases>
