@@ -91,6 +91,11 @@ Kirigami.ApplicationWindow {
         }
 
         menu: Platform.Menu {
+            // Plasma's SystemTrayMenu applies this to its QMenu widget, so the
+            // default of true pops the menu open the moment the icon is shown.
+            // The menu itself still reaches the tray over DBus.
+            visible: false
+
             Platform.MenuItem {
                 text: mainWindow.visible ? KI18n.i18nc("@action:inmenu", "Hide &Window") : KI18n.i18nc("@action:inmenu", "Show &Window")
                 onTriggered: mainWindow.toggleHidden()
