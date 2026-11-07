@@ -118,6 +118,53 @@ bool isGameProcess(qint64 pid)
 }
 
 /**
+ * Whether D2R.exe of the profile carrying \a marker is running.
+ */
+bool gameProcessRunning(const QString &marker)
+{
+    const QList<qint64> pids = processIds();
+    for (const qint64 pid : pids) {
+        if (isGameProcess(pid) && environmentValue(pid, ProfileMarker) == marker) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * umu-run logs each step as "INFO: Downloading GE-Proton11-12.tar.gz...".
+ * This picks out the ones that take a while: fetching, extracting and
+ * updating Proton and its runtime. Everything else gives an empty string.
+ */
+QString umuProgress(const QByteArray &line)
+{
+    if (!line.startsWith("INFO: ")) {
+        return {};
+    }
+    const QByteArray message = line.mid(6);
+    for (const char *step : {"Downloading ", "Extracting ", "Updating ", "Setting up ", "Restoring ", "Verifying "}) {
+        if (message.startsWith(step)) {
+            return QString::fromUtf8(message);
+        }
+    }
+    return {};
+}
+
+/**
+ * umu-run logs "INFO: Running 'GE-Proton11-12' using runtime 'steamrt4'"
+ * once Proton and the runtime are in place and it hands over to Proton.
+ */
+bool umuSetupDone(const QByteArray &line)
+{
+    return line.startsWith("INFO: Running '");
+}
+
+/**
+ * How often the log of a starting umu-run is read for progress.
+ */
+const std::chrono::milliseconds SetupPollInterval{500};
+
+/**
  * Maps every process to its children, read from /proc.
  */
 QMultiHash<qint64, qint64> processChildren()
@@ -484,9 +531,69 @@ void LinuxGameLauncher::launchUmu(Profile *profile, const QString &executable, c
     }
 
     qCInfo(LOG_GAME) << "started" << profile->profileName() << "as pid" << pid << "- output goes to" << log;
-    Q_EMIT launched(profile, pid);
-    watch(pid);
-    renameWindow(profile, pid, RenameAttempts);
+    followSetup(profile, pid, log);
+}
+
+void LinuxGameLauncher::followSetup(Profile *profile, qint64 pid, const QString &log)
+{
+    struct Tail {
+        qint64 offset = 0; /* bytes of the log handled so far */
+        QByteArray partial; /* the line the log currently ends in */
+        QByteArray lastLine;
+        QByteArray lastError; /* last "ERROR: ..." line of umu-run itself */
+    };
+    const auto tail = std::make_shared<Tail>();
+
+    auto *timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, [this, timer, tail, profile = QPointer(profile), pid, log] {
+        if (!profile) {
+            timer->deleteLater();
+            return;
+        }
+
+        // umu-run creates the log once it is up, so there may be nothing yet.
+        QFile file(log);
+        if (file.open(QIODevice::ReadOnly) && file.seek(tail->offset)) {
+            const QByteArray chunk = file.readAll();
+            tail->offset += chunk.size();
+            tail->partial += chunk;
+            for (qsizetype end = tail->partial.indexOf('\n'); end >= 0; end = tail->partial.indexOf('\n')) {
+                const QByteArray line = tail->partial.left(end).trimmed();
+                tail->partial.remove(0, end + 1);
+                if (line.isEmpty()) {
+                    continue;
+                }
+                tail->lastLine = line;
+                if (line.startsWith("ERROR: ")) {
+                    tail->lastError = line;
+                }
+                if (const QString step = umuProgress(line); !step.isEmpty()) {
+                    Q_EMIT progress(profile, step);
+                } else if (umuSetupDone(line)) {
+                    Q_EMIT progress(profile, {});
+                }
+            }
+        }
+
+        if (gameProcessRunning(profile->normalizedName())) {
+            timer->deleteLater();
+            qCInfo(LOG_GAME) << "D2R.exe of" << profile->profileName() << "is running";
+            Q_EMIT launched(profile, pid);
+            watch(pid);
+            renameWindow(profile, pid, RenameAttempts);
+            return;
+        }
+
+        // Checked after the log, so the last thing umu-run said is known. Its
+        // own errors beat whatever wine printed last.
+        if (::kill(static_cast<pid_t>(pid), 0) != 0) {
+            timer->deleteLater();
+            const QString reason = QString::fromLocal8Bit(tail->lastError.isEmpty() ? tail->lastLine : tail->lastError);
+            qCWarning(LOG_GAME) << "umu-run" << pid << "exited before the game started:" << reason;
+            Q_EMIT failed(profile, i18nc("@info %1 is the last line umu-run printed", "umu-run exited before the game started: %1", reason));
+        }
+    });
+    timer->start(SetupPollInterval);
 }
 
 void LinuxGameLauncher::fetchTokenTool(Profile *profile, const std::function<void()> &next)
@@ -536,7 +643,25 @@ void LinuxGameLauncher::createPrefix(Profile *profile, const std::function<void(
     process->setProgram(umuRun());
     process->setArguments({QStringLiteral("createprefix")});
     process->setProcessEnvironment(environment(profile));
+    process->setReadChannel(QProcess::StandardError);
 
+    // umu-run may fetch Proton first, and sets up the prefix once that is done.
+    const QString creating = i18nc("@info:status", "Creating the wineprefix...");
+    const auto output = std::make_shared<QByteArray>();
+    connect(process, &QProcess::readyReadStandardError, this, [this, process, profile = QPointer(profile), output, creating] {
+        while (process->canReadLine()) {
+            const QByteArray line = process->readLine().trimmed();
+            *output += line + '\n';
+            if (!profile) {
+                continue;
+            }
+            if (const QString step = umuProgress(line); !step.isEmpty()) {
+                Q_EMIT progress(profile, step);
+            } else if (umuSetupDone(line)) {
+                Q_EMIT progress(profile, creating);
+            }
+        }
+    });
     connect(process, &QProcess::errorOccurred, this, [this, process, profile = QPointer(profile)](QProcess::ProcessError error) {
         if (error != QProcess::FailedToStart) {
             return;
@@ -546,7 +671,7 @@ void LinuxGameLauncher::createPrefix(Profile *profile, const std::function<void(
             Q_EMIT failed(profile, i18nc("@info", "Could not run umu-run: %1", process->errorString()));
         }
     });
-    connect(process, &QProcess::finished, this, [this, process, profile = QPointer(profile), next, version](int exitCode) {
+    connect(process, &QProcess::finished, this, [this, process, profile = QPointer(profile), next, version, output](int exitCode) {
         process->deleteLater();
         if (!profile) {
             return;
@@ -555,7 +680,8 @@ void LinuxGameLauncher::createPrefix(Profile *profile, const std::function<void(
         // umu-run exits with 1 even when the prefix was created, as there is
         // nothing to run.
         if (!QFileInfo::exists(version)) {
-            qCWarning(LOG_GAME) << "umu-run createprefix exited with" << exitCode << QString::fromLocal8Bit(process->readAllStandardError()).trimmed();
+            qCWarning(LOG_GAME) << "umu-run createprefix exited with" << exitCode
+                                << QString::fromLocal8Bit(*output + process->readAllStandardError()).trimmed();
             Q_EMIT failed(profile, i18nc("@info", "Could not create the wineprefix \"%1\".", profile->wineprefix()));
             return;
         }
@@ -565,6 +691,7 @@ void LinuxGameLauncher::createPrefix(Profile *profile, const std::function<void(
     });
 
     qCInfo(LOG_GAME) << "creating the wineprefix" << profile->wineprefix() << "for" << profile->profileName();
+    Q_EMIT progress(profile, creating);
     process->start();
 }
 

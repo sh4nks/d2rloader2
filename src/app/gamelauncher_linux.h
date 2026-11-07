@@ -30,6 +30,14 @@ private:
     void launchUmu(Profile *profile, const QString &executable, const QStringList &arguments);
 
     /**
+     * Follows umu-run started as \a pid through \a log until D2R.exe is
+     * running, reporting the Proton and runtime downloads it does on the way
+     * through progress(). Ends in launched(), or in failed() if umu-run
+     * exits first.
+     */
+    void followSetup(Profile *profile, qint64 pid, const QString &log);
+
+    /**
      * Downloads d2rreg.exe unless it is there already, then calls \a next.
      */
     void fetchTokenTool(Profile *profile, const std::function<void()> &next);

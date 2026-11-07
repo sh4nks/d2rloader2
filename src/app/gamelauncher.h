@@ -51,6 +51,13 @@ Q_SIGNALS:
     void failed(Profile *profile, const QString &error);
     void finished(qint64 pid);
 
+    /**
+     * What the launcher is doing for \a profile while it is starting, for
+     * steps that take a while such as downloading Proton. An empty
+     * \a message means the step is over.
+     */
+    void progress(Profile *profile, const QString &message);
+
 protected:
     using QObject::QObject;
 

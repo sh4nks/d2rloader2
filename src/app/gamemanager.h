@@ -22,6 +22,7 @@ class GameManager : public QObject
     QML_SINGLETON
 
     Q_PROPERTY(bool sequenceRunning READ sequenceRunning NOTIFY sequenceRunningChanged)
+    Q_PROPERTY(QString launchProgress READ launchProgress NOTIFY launchProgressChanged)
 
 public:
     explicit GameManager(QObject *parent = nullptr);
@@ -49,21 +50,32 @@ public:
 
     bool sequenceRunning() const;
 
+    /**
+     * What the launcher is doing for the account that is starting, for steps
+     * that take a while such as downloading Proton. Empty otherwise.
+     */
+    QString launchProgress() const;
+
 Q_SIGNALS:
     void launchFailed(const QString &profileName, const QString &error);
     void sequenceRunningChanged();
+    void launchProgressChanged();
 
 private:
     void onLaunched(Profile *profile, qint64 pid);
     void onFailed(Profile *profile, const QString &error);
     void onFinished(qint64 pid);
+    void onProgress(Profile *profile, const QString &message);
 
     void launchNextInSequence();
     void sequenceStepDone(bool started);
     void setSequenceRunning(bool running);
+    void setLaunchProgress(const QString &progress);
 
     GameLauncher *m_launcher = nullptr;
     QHash<qint64, QPointer<Profile>> m_running; /* game pid -> profile */
+    QString m_launchProgress;
+    QPointer<Profile> m_progressProfile; /* account launchProgress is about */
 
     QList<QPointer<Profile>> m_sequence; /* accounts of the sequence still to start */
     QPointer<Profile> m_sequenceProfile; /* account of the sequence that is starting */

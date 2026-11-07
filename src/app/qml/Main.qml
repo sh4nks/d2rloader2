@@ -242,6 +242,14 @@ Kirigami.ApplicationWindow {
         Kirigami.InlineMessage {
             Layout.fillWidth: true
             Layout.margins: Kirigami.Units.smallSpacing
+            type: Kirigami.MessageType.Information
+            text: GameManager.launchProgress
+            visible: text.length > 0
+        }
+
+        Kirigami.InlineMessage {
+            Layout.fillWidth: true
+            Layout.margins: Kirigami.Units.smallSpacing
             type: Kirigami.MessageType.Positive
             text: KI18n.i18nc("@info new version", "D2RLoader %1 is available.", UpdateChecker.latestVersion)
             visible: UpdateChecker.updateAvailable && !UpdateChecker.dismissed

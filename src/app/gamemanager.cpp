@@ -29,6 +29,7 @@ GameManager::GameManager(QObject *parent)
     connect(m_launcher, &GameLauncher::launched, this, &GameManager::onLaunched);
     connect(m_launcher, &GameLauncher::failed, this, &GameManager::onFailed);
     connect(m_launcher, &GameLauncher::finished, this, &GameManager::onFinished);
+    connect(m_launcher, &GameLauncher::progress, this, &GameManager::onProgress);
 
     // The accounts are loaded before QML creates this singleton.
     m_launcher->adopt(ProfileManager::instance().profiles());
@@ -121,6 +122,11 @@ bool GameManager::sequenceRunning() const
     return m_sequenceRunning;
 }
 
+QString GameManager::launchProgress() const
+{
+    return m_launchProgress;
+}
+
 void GameManager::launchNextInSequence()
 {
     while (!m_sequence.isEmpty()) {
@@ -167,6 +173,7 @@ void GameManager::setSequenceRunning(bool running)
 
 void GameManager::onLaunched(Profile *profile, qint64 pid)
 {
+    onProgress(profile, {});
     if (pid == 0) {
         profile->setStatus(ProfileState::Stopped);
     } else {
@@ -182,6 +189,7 @@ void GameManager::onLaunched(Profile *profile, qint64 pid)
 void GameManager::onFailed(Profile *profile, const QString &error)
 {
     qCWarning(LOG_GAME) << "could not launch" << profile->profileName() << ":" << error;
+    onProgress(profile, {});
     profile->setStatus(ProfileState::Stopped);
     Q_EMIT launchFailed(profile->profileName(), error);
 
@@ -195,5 +203,24 @@ void GameManager::onFinished(qint64 pid)
     const QPointer<Profile> profile = m_running.take(pid);
     if (profile) {
         profile->setStatus(ProfileState::Stopped);
+    }
+}
+
+void GameManager::onProgress(Profile *profile, const QString &message)
+{
+    if (!message.isEmpty()) {
+        m_progressProfile = profile;
+        setLaunchProgress(i18nc("@info:status %1 is the account name, %2 what the launcher is doing", "Starting %1: %2", profile->profileName(), message));
+    } else if (profile == m_progressProfile) {
+        m_progressProfile.clear();
+        setLaunchProgress({});
+    }
+}
+
+void GameManager::setLaunchProgress(const QString &progress)
+{
+    if (m_launchProgress != progress) {
+        m_launchProgress = progress;
+        Q_EMIT launchProgressChanged();
     }
 }
