@@ -10,6 +10,8 @@ import com.someblocks.d2rloader.core
 Kirigami.Card {
     id: root
 
+    Component.onCompleted: (background as Kirigami.ShadowedRectangle).radius = 0
+
     header: CardHeader {
         title: KI18n.i18nc("@title", "Application Log")
 

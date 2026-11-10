@@ -19,6 +19,12 @@ Kirigami.Card {
     required property var modelData
     property bool sequenceRunning: false
 
+    Component.onCompleted: {
+        const corners = (background as Kirigami.ShadowedRectangle).corners;
+        corners.bottomLeftRadius = 0;
+        corners.bottomRightRadius = 0;
+    }
+
     header: Item {
         implicitHeight: headerLayout.implicitHeight + Kirigami.Units.smallSpacing * 2
         RowLayout {
