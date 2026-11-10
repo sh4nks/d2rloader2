@@ -44,8 +44,8 @@ endif()
 if (WIN32)
     target_sources(d2rloader_static PRIVATE gamelauncher_windows.h gamelauncher_windows.cpp)
     # user32 for the game window, advapi32 for the registry, crypt32 for DPAPI,
-    # ntdll for listing the handles of the game
-    target_link_libraries(d2rloader_static PRIVATE user32 advapi32 crypt32 ntdll)
+    # ntdll for listing the handles of the game, dwmapi for its title bar
+    target_link_libraries(d2rloader_static PRIVATE user32 advapi32 crypt32 ntdll dwmapi)
 endif()
 
 target_include_directories(d2rloader_static PRIVATE ${CMAKE_BINARY_DIR})

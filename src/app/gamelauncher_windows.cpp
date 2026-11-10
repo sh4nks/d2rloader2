@@ -8,9 +8,11 @@
 #include <KLocalizedString>
 #include <QDir>
 #include <QFileInfo>
+#include <QGuiApplication>
 #include <QPointer>
 #include <QProcess>
 #include <QProcessEnvironment>
+#include <QStyleHints>
 #include <QTimer>
 #include <QWinEventNotifier>
 
@@ -24,6 +26,7 @@
 // After the Qt headers: windows.h defines macros that clash with them.
 #include <windows.h>
 
+#include <dwmapi.h>
 #include <tlhelp32.h>
 #include <wincrypt.h>
 #include <winternl.h>
@@ -170,6 +173,20 @@ bool isWindowed(HWND window)
 }
 
 /**
+ * Gives \a window a dark title bar while the system uses a dark theme. The
+ * game does not ask for one, and Windows keeps the title bar of such windows
+ * light.
+ */
+void matchTitleBar(HWND window)
+{
+    const BOOL dark = QGuiApplication::styleHints()->colorScheme() == Qt::ColorScheme::Dark;
+    const HRESULT result = DwmSetWindowAttribute(window, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark, sizeof(dark));
+    if (FAILED(result)) {
+        qCWarning(LOG_GAME) << "could not set the title bar theme:" << systemError(static_cast<DWORD>(result));
+    }
+}
+
+/**
  * Where \a window is, or nothing while it is minimized or not in windowed
  * mode, where its position is meaningless.
  */
@@ -238,12 +255,16 @@ std::optional<std::vector<HandleEntry>> processHandles(HANDLE process, QString &
  */
 QString objectType(HANDLE handle)
 {
-    ULONG_PTR buffer[64];
+    // The characters of the name follow the structure.
+    union {
+        PUBLIC_OBJECT_TYPE_INFORMATION info;
+        ULONG_PTR room[64];
+    } buffer;
     ULONG length = 0;
-    if (NtQueryObject(handle, ObjectTypeInformation, buffer, sizeof(buffer), &length) < 0) {
+    if (NtQueryObject(handle, ObjectTypeInformation, &buffer, sizeof(buffer), &length) < 0) {
         return {};
     }
-    return toQString(reinterpret_cast<const PUBLIC_OBJECT_TYPE_INFORMATION *>(buffer)->TypeName);
+    return toQString(buffer.info.TypeName);
 }
 
 /**
@@ -252,12 +273,15 @@ QString objectType(HANDLE handle)
 QString objectName(HANDLE handle)
 {
     // OBJECT_NAME_INFORMATION is a UNICODE_STRING followed by its characters.
-    ULONG_PTR buffer[128];
+    union {
+        UNICODE_STRING name;
+        ULONG_PTR room[128];
+    } buffer;
     ULONG length = 0;
-    if (NtQueryObject(handle, ObjectNameInformationClass, buffer, sizeof(buffer), &length) < 0) {
+    if (NtQueryObject(handle, ObjectNameInformationClass, &buffer, sizeof(buffer), &length) < 0) {
         return {};
     }
-    return toQString(*reinterpret_cast<const UNICODE_STRING *>(buffer));
+    return toQString(buffer.name);
 }
 
 enum class GuardState {
@@ -366,6 +390,13 @@ std::expected<void, QString> writeToken(const Profile *profile)
 WindowsGameLauncher::WindowsGameLauncher(QObject *parent)
     : GameLauncher(parent)
 {
+    connect(QGuiApplication::styleHints(), &QStyleHints::colorSchemeChanged, this, [this] {
+        for (auto it = m_processes.keyBegin(); it != m_processes.keyEnd(); ++it) {
+            for (HWND window : mainWindowsOf(*it)) {
+                matchTitleBar(window);
+            }
+        }
+    });
 }
 
 WindowsGameLauncher::~WindowsGameLauncher()
@@ -514,6 +545,7 @@ void WindowsGameLauncher::adopt(const QList<Profile *> &profiles)
             qCInfo(LOG_GAME) << "found" << profile->profileName() << "still running as pid" << pid;
             Q_EMIT launched(profile, pid);
             watch(pid);
+            matchTitleBar(window);
             if (profile->rememberWindowPosition()) {
                 followWindow(profile, pid, window);
             }
@@ -604,6 +636,7 @@ void WindowsGameLauncher::renameWindow(Profile *profile, qint64 pid, int attempt
     // The window is up, so the game has read its token by now.
     tokenRead(pid);
     for (HWND window : windows) {
+        matchTitleBar(window);
         if (!SetWindowTextW(window, title.toStdWString().c_str())) {
             qCWarning(LOG_GAME) << "could not rename the window of pid" << pid << ":" << lastError();
             return;

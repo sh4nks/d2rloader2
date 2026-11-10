@@ -48,8 +48,9 @@ private:
 
     /**
      * Renames the window of the game started as \a pid to
-     * Profile::windowTitle(), retrying while the window does not exist yet,
-     * then follows it.
+     * Profile::windowTitle() and gives it the title bar of the system's
+     * color scheme, retrying while the window does not exist yet, then
+     * follows it.
      */
     void renameWindow(Profile *profile, qint64 pid, int attemptsLeft);
 
