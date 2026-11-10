@@ -54,3 +54,12 @@ Name: "{autodesktop}\D2RLoader"; Filename: "{app}\d2rloader.exe"; Tasks: desktop
 
 [Run]
 Filename: "{app}\d2rloader.exe"; Description: "{cm:LaunchProgram,D2RLoader}"; Flags: nowait postinstall skipifsilent
+; The update D2RLoader starts itself runs silently, which skips the entry
+; above, and passes /RELAUNCH=1 to come back when the files are replaced.
+Filename: "{app}\d2rloader.exe"; Flags: nowait; Check: RelaunchRequested
+
+[Code]
+function RelaunchRequested: Boolean;
+begin
+  Result := ExpandConstant('{param:RELAUNCH|0}') = '1';
+end;

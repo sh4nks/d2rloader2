@@ -420,6 +420,19 @@ FormCard.FormCardPage {
         }
 
         FormCard.FormDelegateSeparator {
+            visible: installDelegate.visible
+        }
+
+        FormCard.FormButtonDelegate {
+            id: installDelegate
+            visible: UpdateChecker.updateAvailable && UpdateChecker.canInstall
+            text: UpdateChecker.installing ? KI18n.i18nc("@action:button", "Cancel Update") : KI18n.i18nc("@action:button", "Install Update")
+            description: UpdateChecker.installStatus.length > 0 ? UpdateChecker.installStatus : KI18n.i18nc("@info:label", "Downloads the installer, runs it and starts D2RLoader again.")
+            icon.name: UpdateChecker.installing ? "dialog-cancel" : "system-software-update"
+            onClicked: UpdateChecker.installing ? UpdateChecker.cancelInstall() : UpdateChecker.installUpdate()
+        }
+
+        FormCard.FormDelegateSeparator {
             visible: UpdateChecker.updateAvailable
         }
 

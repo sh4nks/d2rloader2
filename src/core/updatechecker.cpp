@@ -1,18 +1,23 @@
 #include "updatechecker.h"
 #include "d2rloaderconfig.h"
 #include "logging.h"
+#include "verifieddownload.h"
 
 #include <KLocalizedString>
 #include <KNotification>
 #include <QCoreApplication>
 #include <QDesktopServices>
+#include <QDir>
 #include <QFile>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLocale>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
+#include <QProcess>
+#include <QSettings>
 #include <QTimer>
 #include <QUrl>
 #include <QVersionNumber>
@@ -64,6 +69,24 @@ bool installedByAnotherUpdater()
     return false;
 #endif
 }
+
+QNetworkRequest releaseRequest()
+{
+    QNetworkRequest request(LatestReleaseUrl);
+    request.setHeader(QNetworkRequest::UserAgentHeader, UserAgent);
+    request.setRawHeader("Accept", "application/vnd.github+json");
+    request.setRawHeader("X-GitHub-Api-Version", "2022-11-28");
+    return request;
+}
+
+/**
+ * Where the downloaded installer is kept. It is still running when it starts
+ * D2RLoader again, so the directory is emptied on the start after that one.
+ */
+QString updateDir()
+{
+    return QDir::temp().filePath(QStringLiteral("D2RLoader-update"));
+}
 }
 
 UpdateChecker::UpdateChecker(QObject *parent)
@@ -74,6 +97,10 @@ UpdateChecker::UpdateChecker(QObject *parent)
     // every later check.
     m_network->setTransferTimeout(QNetworkRequest::DefaultTransferTimeout);
 
+    if (canInstall()) {
+        QDir(updateDir()).removeRecursively();
+    }
+
     if (managedExternally()) {
         qCInfo(LOG_UPDATES) << "Another updater owns this installation, no release check";
         return;
@@ -83,10 +110,74 @@ UpdateChecker::UpdateChecker(QObject *parent)
     QTimer::singleShot(0, this, &UpdateChecker::check);
 }
 
+std::optional<UpdateChecker::Installer> UpdateChecker::windowsInstaller(const QJsonObject &release)
+{
+    const QVersionNumber version = versionOf(release.value(QLatin1String("tag_name")).toString());
+    if (version.isNull()) {
+        return std::nullopt;
+    }
+
+    const QJsonArray assets = release.value(QLatin1String("assets")).toArray();
+    for (const QJsonValue &value : assets) {
+        const QJsonObject asset = value.toObject();
+        if (!asset.value(QLatin1String("name")).toString().endsWith(QLatin1String("-windows-x86_64-setup.exe"))) {
+            continue;
+        }
+
+        const QUrl url(asset.value(QLatin1String("browser_download_url")).toString());
+        if (url.scheme() != QLatin1String("https")) {
+            return std::nullopt;
+        }
+
+        // "sha256:" followed by the 64 hex digits. fromHex() skips what is
+        // not a hex digit, so only the decoded length tells they all were.
+        const QString digest = asset.value(QLatin1String("digest")).toString();
+        const QLatin1String algorithm("sha256:");
+        if (!digest.startsWith(algorithm) || digest.size() != algorithm.size() + 64) {
+            return std::nullopt;
+        }
+        const QByteArray sha256 = QByteArray::fromHex(digest.sliced(algorithm.size()).toLatin1());
+        if (sha256.size() != 32) {
+            return std::nullopt;
+        }
+
+        return Installer{version.toString(), url, sha256};
+    }
+    return std::nullopt;
+}
+
+bool UpdateChecker::runsFromInstalledCopy()
+{
+#ifdef Q_OS_WIN
+    const QSettings uninstall(QStringLiteral("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{59BA45B2-25D4-49E8-B8FC-E48986E500AB}_is1"),
+                              QSettings::NativeFormat);
+    const QString installed = QDir::cleanPath(QDir::fromNativeSeparators(uninstall.value(QStringLiteral("InstallLocation")).toString()));
+    return installed.compare(QDir::cleanPath(QCoreApplication::applicationDirPath()), Qt::CaseInsensitive) == 0;
+#else
+    return false;
+#endif
+}
+
 bool UpdateChecker::managedExternally() const
 {
     static const bool managed = installedByAnotherUpdater();
     return managed;
+}
+
+bool UpdateChecker::canInstall() const
+{
+    static const bool installed = runsFromInstalledCopy();
+    return installed;
+}
+
+bool UpdateChecker::installing() const
+{
+    return m_installing;
+}
+
+QString UpdateChecker::installStatus() const
+{
+    return m_installStatus;
 }
 
 QString UpdateChecker::currentVersion()
@@ -167,10 +258,7 @@ void UpdateChecker::checkNow()
         return;
     }
 
-    QNetworkRequest request(LatestReleaseUrl);
-    request.setHeader(QNetworkRequest::UserAgentHeader, UserAgent);
-    request.setRawHeader("Accept", "application/vnd.github+json");
-    request.setRawHeader("X-GitHub-Api-Version", "2022-11-28");
+    QNetworkRequest request = releaseRequest();
 
     const QString etag = D2RLoaderConfig::self()->updateEtag();
     if (!etag.isEmpty()) {
@@ -184,6 +272,7 @@ void UpdateChecker::checkNow()
     QNetworkReply *reply = m_network->get(request);
     connect(reply, &QNetworkReply::finished, this, [this, reply] {
         handle(reply);
+        Q_EMIT checkFinished();
     });
 }
 
@@ -288,4 +377,124 @@ void UpdateChecker::setChecking(bool checking)
     m_checking = checking;
     Q_EMIT checkingChanged();
     Q_EMIT statusTextChanged();
+}
+
+void UpdateChecker::installUpdate()
+{
+    if (!canInstall() || m_installing) {
+        return;
+    }
+
+    m_installCancelled = false;
+    setInstalling(true);
+    setInstallStatus(i18nc("@info:status", "Looking up the installer..."));
+
+    // The stored result of the check has neither the installer's address nor
+    // its digest, and a 304 would not bring them, so no ETag goes out here.
+    m_installerLookup = m_network->get(releaseRequest());
+    connect(m_installerLookup, &QNetworkReply::finished, this, [this] {
+        download(m_installerLookup);
+    });
+}
+
+void UpdateChecker::cancelInstall()
+{
+    m_installCancelled = true;
+    if (m_installerLookup) {
+        m_installerLookup->abort();
+    }
+    if (m_download) {
+        m_download->cancel();
+    }
+}
+
+void UpdateChecker::download(QNetworkReply *reply)
+{
+    reply->deleteLater();
+    m_installerLookup = nullptr;
+
+    if (reply->error() != QNetworkReply::NoError) {
+        failInstall(i18nc("@info", "Could not look up the installer: %1", reply->errorString()));
+        return;
+    }
+
+    const std::optional<Installer> installer = windowsInstaller(QJsonDocument::fromJson(reply->readAll()).object());
+    if (!installer) {
+        failInstall(i18nc("@info", "The newest release has no installer that can be verified. Download it from the release page instead."));
+        return;
+    }
+    if (versionOf(installer->version) <= versionOf(currentVersion())) {
+        failInstall(i18nc("@info", "The newest release is not newer than this version."));
+        return;
+    }
+
+    QDir dir(updateDir());
+    dir.removeRecursively();
+    dir.mkpath(QStringLiteral("."));
+    const QString target = dir.filePath(QStringLiteral("D2RLoader-%1-windows-x86_64-setup.exe").arg(installer->version));
+    const QString version = installer->version;
+
+    qCInfo(LOG_UPDATES) << "Downloading" << installer->url.toString() << "to" << target;
+    setInstallStatus(i18nc("@info:status version", "Downloading D2RLoader %1...", version));
+
+    m_download = new VerifiedDownload(m_network, installer->url, installer->sha256, target, this);
+    connect(m_download, &VerifiedDownload::progress, this, [this, version](qint64 received, qint64 total) {
+        if (total > 0) {
+            setInstallStatus(i18nc("@info:status version, percent", "Downloading D2RLoader %1... %2%", version, received * 100 / total));
+        }
+    });
+    connect(m_download, &VerifiedDownload::finished, this, [this, target](const QString &error) {
+        m_download->deleteLater();
+        m_download = nullptr;
+        if (!error.isEmpty()) {
+            failInstall(i18nc("@info", "Could not download the installer: %1", error));
+            return;
+        }
+        launch(target);
+    });
+}
+
+void UpdateChecker::launch(const QString &installer)
+{
+    // /SILENT only shows the progress and the errors. RELAUNCH is this
+    // application's own switch: d2rloader.iss starts D2RLoader again for it.
+    const QStringList arguments{QStringLiteral("/SILENT"), QStringLiteral("/NORESTART"), QStringLiteral("/RELAUNCH=1")};
+    if (!QProcess::startDetached(installer, arguments)) {
+        failInstall(i18nc("@info", "Could not start the installer."));
+        return;
+    }
+
+    qCInfo(LOG_UPDATES) << "Started" << installer << "- quitting so it can replace the files";
+    setInstallStatus(i18nc("@info:status", "Installing the update..."));
+    QCoreApplication::quit();
+}
+
+void UpdateChecker::failInstall(const QString &error)
+{
+    if (m_installCancelled) {
+        qCInfo(LOG_UPDATES) << "Update cancelled";
+        setInstallStatus(QString());
+    } else {
+        qCWarning(LOG_UPDATES) << "update failed:" << error;
+        setInstallStatus(error);
+    }
+    setInstalling(false);
+}
+
+void UpdateChecker::setInstalling(bool installing)
+{
+    if (m_installing == installing) {
+        return;
+    }
+    m_installing = installing;
+    Q_EMIT installingChanged();
+}
+
+void UpdateChecker::setInstallStatus(const QString &status)
+{
+    if (m_installStatus == status) {
+        return;
+    }
+    m_installStatus = status;
+    Q_EMIT installStatusChanged();
 }

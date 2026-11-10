@@ -28,6 +28,8 @@ ecm_add_qml_module(Core GENERATE_PLUGIN_SOURCE
 target_sources(Core PRIVATE
     logging.h
     logging.cpp
+    verifieddownload.h
+    verifieddownload.cpp
 )
 
 kconfig_target_kcfg_file(Core

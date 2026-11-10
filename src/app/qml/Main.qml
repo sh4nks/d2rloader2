@@ -47,6 +47,9 @@ Kirigami.ApplicationWindow {
         Qt.quit();
     }
 
+    // set by the Help menu, whose check has no other place to show its result
+    property bool reportUpdateCheck: false
+
     onClosing: close => {
         saveSize();
         if (!D2RLoaderConfig.closeToTray) {
@@ -128,6 +131,13 @@ Kirigami.ApplicationWindow {
         function onNotificationRequested(title: string, text: string) {
             trayIcon.showMessage(title, text, Platform.SystemTrayIcon.Information);
         }
+
+        function onCheckFinished() {
+            if (mainWindow.reportUpdateCheck) {
+                mainWindow.reportUpdateCheck = false;
+                mainWindow.showPassiveNotification(UpdateChecker.statusText);
+            }
+        }
     }
 
     Component {
@@ -201,6 +211,17 @@ Kirigami.ApplicationWindow {
             }
             MenuSeparator {}
             MenuItem {
+                text: KI18n.i18nc("@action:inmenu", "Check for &Updates")
+                icon.name: "view-refresh"
+                visible: !UpdateChecker.managedExternally
+                height: visible ? implicitHeight : 0
+                enabled: !UpdateChecker.checking
+                onTriggered: {
+                    mainWindow.reportUpdateCheck = true;
+                    UpdateChecker.checkNow();
+                }
+            }
+            MenuItem {
                 text: KI18n.i18nc("@action:inmenu", "&About...")
                 icon.name: "help-about"
                 onTriggered: Settings.SettingsWindow.show("about")
@@ -251,17 +272,31 @@ Kirigami.ApplicationWindow {
             Layout.fillWidth: true
             Layout.margins: Kirigami.Units.smallSpacing
             type: Kirigami.MessageType.Positive
-            text: KI18n.i18nc("@info new version", "D2RLoader %1 is available.", UpdateChecker.latestVersion)
+            text: UpdateChecker.installStatus.length > 0 ? UpdateChecker.installStatus : KI18n.i18nc("@info new version", "D2RLoader %1 is available.", UpdateChecker.latestVersion)
             visible: UpdateChecker.updateAvailable && !UpdateChecker.dismissed
             actions: [
                 Kirigami.Action {
+                    text: KI18n.i18nc("@action:button", "Install")
+                    icon.name: "system-software-update"
+                    visible: UpdateChecker.canInstall && !UpdateChecker.installing
+                    onTriggered: UpdateChecker.installUpdate()
+                },
+                Kirigami.Action {
+                    text: KI18n.i18nc("@action:button", "Cancel")
+                    icon.name: "dialog-cancel"
+                    visible: UpdateChecker.installing
+                    onTriggered: UpdateChecker.cancelInstall()
+                },
+                Kirigami.Action {
                     text: KI18n.i18nc("@action:button", "Download")
                     icon.name: "cloud-download"
+                    visible: !UpdateChecker.canInstall
                     onTriggered: Qt.openUrlExternally(UpdateChecker.releaseUrl)
                 },
                 Kirigami.Action {
                     text: KI18n.i18nc("@action:button", "Skip This Version")
                     icon.name: "dialog-cancel"
+                    visible: !UpdateChecker.installing
                     onTriggered: UpdateChecker.dismiss()
                 }
             ]

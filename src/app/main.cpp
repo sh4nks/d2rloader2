@@ -20,8 +20,7 @@
 #include <qstylefactory.h>
 
 #ifdef Q_OS_WIN
-#include <QDir>
-#include <QSettings>
+#include "../core/updatechecker.h"
 #include <shobjidl.h>
 #endif
 
@@ -35,10 +34,7 @@ namespace
 // so only an installed copy takes the ID.
 void setAppUserModelId()
 {
-    const QSettings uninstall(QStringLiteral("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{59BA45B2-25D4-49E8-B8FC-E48986E500AB}_is1"),
-                              QSettings::NativeFormat);
-    const QString installed = QDir::cleanPath(QDir::fromNativeSeparators(uninstall.value(QStringLiteral("InstallLocation")).toString()));
-    if (installed.compare(QDir::cleanPath(QCoreApplication::applicationDirPath()), Qt::CaseInsensitive) != 0) {
+    if (!UpdateChecker::runsFromInstalledCopy()) {
         return;
     }
     qCInfo(LOG_APP) << "Running from the installed location, taking its AppUserModelID";
