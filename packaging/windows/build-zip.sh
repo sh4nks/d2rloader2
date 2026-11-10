@@ -9,10 +9,14 @@ if [[ ${MSYSTEM:-} != UCRT64 ]]; then
     exit 1
 fi
 
+# Only a login shell sets MINGW_PREFIX and puts the MSYS2 tools first. With
+# MSYSTEM merely exported from elsewhere, find would be the one of Windows.
+msys_bin=/ucrt64/bin
+PATH=$msys_bin:/usr/bin:$PATH
+
 root=$(realpath "$(dirname "$0")/../..")
 work=${WORK_DIR:-$root/build-windows}
 app=$work/D2RLoader
-msys_bin=$MINGW_PREFIX/bin
 qt_plugins=$(cygpath -u "$(qmake6 -query QT_INSTALL_PLUGINS)")
 qt_qml=$(cygpath -u "$(qmake6 -query QT_INSTALL_QML)")
 qt_libexecs=$(cygpath -u "$(qmake6 -query QT_HOST_LIBEXECS)")
