@@ -1,6 +1,15 @@
 # Changelog
 
 
+## 0.4.0
+
+Released on Nov 10th, 2026
+
+### Added
+
+- Add an auto updater for Windows
+
+
 ## 0.3.0
 
 Released on Nov 6th, 2026
