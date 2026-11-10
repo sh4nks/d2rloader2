@@ -35,6 +35,11 @@ ecm_add_qml_module(Accounts GENERATE_PLUGIN_SOURCE
         legacyconfig.cpp
 )
 
+if (WIN32)
+    # shell32, ole32 and uuid for SHGetKnownFolderPath(FOLDERID_SavedGames)
+    target_link_libraries(Accounts PRIVATE shell32 ole32 uuid)
+endif()
+
 target_include_directories(Accounts PRIVATE ${CMAKE_BINARY_DIR})
 target_link_libraries(Accounts PRIVATE
     Core

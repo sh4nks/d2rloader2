@@ -1,7 +1,7 @@
 # D2RLoader 2
 
 Note: I'll probably merge this repo into [sh4nks/d2rloader](https://github.com/sh4nks/d2rloader) once
-the upgrade path is implemented. For now consider this a beta where launching the game only works on Linux.
+the upgrade path is implemented.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/sh4nks/d2rloader2/master/packaging/screenshot.png" width="800">
@@ -9,21 +9,23 @@ the upgrade path is implemented. For now consider this a beta where launching th
 
 ## Getting Started
 
-D2RLoader currently only launches the game on Linux (via Wine/[UMU-Launcher](https://github.com/Open-Wine-Components/umu-launcher)).
-The application itself also builds and runs on Windows (see [Building on Windows](#windows)), but launching the game there is still to come.
+D2RLoader supports Windows and Linux (via Wine/[UMU-Launcher](https://github.com/Open-Wine-Components/umu-launcher)).
+
+I have only tested my Linux environment (Arch Linux) so far. So, if you find any issues with yours, please report them so I can get them fixed!
+
+The TZ Info and DClone Info require a working API key from [d2emu.com](https://d2emu.com).
 
 Accounts, Loot Filters, Game Settings and WINEPREFIXES are stored in ``$XDG_CONFIG_DIRS/d2rloader/``.
 Application specific settings are stored in ``$XDG_CONFIG_DIRS/d2rloaderrc``.
+
+On Windows it should be ``%APPDATA%\d2rloader``.
 
 
 ### Upgrading from the previous D2RLoader
 
 The first start imports the configuration of the [previous D2RLoader](https://github.com/sh4nks/d2rloader)
-when its ``settings.json`` is found in ``%APPDATA%\d2rloader`` on Windows or ``~/.config/d2rloader`` on Linux:
-the settings this D2RLoader has no value for yet, the accounts unless it already has an accounts file of its
-own, and the game settings files of the accounts. On Linux both use the same ``accounts.json``, so the previous
-one is kept as ``accounts.json.bak``; the previous D2RLoader cannot read the new format. An ``accounts.json``
-of the previous D2RLoader can also be loaded at any time through _Settings -> Load Account Settings..._.
+when its ``settings.json`` is found in ``%APPDATA%\d2rloader`` on Windows or ``~/.config/d2rloader`` on Linux.
+The old account settings are renamed to accounts.json.bak.
 
 
 ## Linux
@@ -45,10 +47,6 @@ of the previous D2RLoader can also be loaded at any time through _Settings -> Lo
 - Install D2R through the Battle.net app and set its directory in the application settings.
 - Add a profile with one of the configured auth methods below.
 - Have fun!
-
-Several accounts can play at once: the game refuses to start while another instance is running, and
-D2RLoader releases that check in each game after starting it. No administrator rights and no extra
-tools (like handle.exe) are needed for that.
 
 
 ## Auth Methods
@@ -91,8 +89,7 @@ $ cmake --build build/
 
 ### Windows
 
-The Windows build uses the UCRT64 environment of [MSYS2](https://www.msys2.org/), which ships Qt 6 and
-KDE Frameworks 6 as prebuilt packages. Launching the game is not implemented on Windows yet.
+The Windows build uses the UCRT64 environment of [MSYS2](https://www.msys2.org/) (and pacman therefore :-))
 
 Install MSYS2 (for example with ``winget install MSYS2.MSYS2``), open the _MSYS2 UCRT64_ shell and
 install the toolchain and the dependencies:
@@ -119,28 +116,42 @@ $ packaging/appimage/build-appimage.sh
 ```
 
 
-### Building the Windows zip
+### Building the Windows portable
 
-From the MSYS2 UCRT64 shell set up as described under [Windows](#windows), with ``zip`` installed as well
-(``pacman -S --needed zip``). The script builds a release binary, deploys the Qt and KDE Frameworks
-libraries, QML modules, plugins and icons next to it and zips the result into
-``build-windows/D2RLoader-<version>-windows-x86_64.zip``. The zip is portable: extract it anywhere and
-run ``D2RLoader/d2rloader.exe``.
+From the MSYS UCRT64 shell run:
 
 ```bash
 $ packaging/windows/build-zip.sh
+
+# or alternatively
+$ make windows
+```
+
+The portable zip can be found in:
+
+```bash
+build-windows/D2RLoader-<version>-windows-x86_64.zip
 ```
 
 
 ### Building the Windows installer
 
-Needs the zip built first and [Inno Setup](https://jrsoftware.org/isinfo.php) 6 or 7, which the script looks for
-in its default folder unless ``ISCC`` points at ``ISCC.exe``. It packs the staged ``build-windows/D2RLoader``
-folder into ``build-windows/D2RLoader-<version>-windows-x86_64-setup.exe``, a per-user installer that needs
-no administrator rights.
+The installer needs [Inno Setup](https://jrsoftware.org/isinfo.php) to be installed. Also make sure that you
+have it in your path otherwise it won't work.
+
+From the MSYS UCRT64 shell run:
 
 ```bash
 $ packaging/windows/build-installer.sh
+
+# or alternatively
+$ make windows-installer
+```
+
+The installer can be found in:
+
+```bash
+build-windows/D2RLoader-<version>-windows-x86_64-setup.exe
 ```
 
 

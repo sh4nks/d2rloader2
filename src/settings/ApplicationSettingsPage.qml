@@ -45,16 +45,6 @@ FormCard.FormCardPage {
     }
 
     FileDialog {
-        id: handlePathDialog
-        title: KI18n.i18nc("@title:window", "Select handle.exe")
-        nameFilters: [KI18n.i18nc("@item", "Executable files (*.exe)"), KI18n.i18nc("@item", "All files (*)")]
-        onAccepted: {
-            D2RLoaderConfig.handlePath = Paths.toLocalFile(selectedFile);
-            D2RLoaderConfig.save();
-        }
-    }
-
-    FileDialog {
         id: accountSettingsDialog
         title: KI18n.i18nc("@title:window", "Select Account Settings File")
         nameFilters: [KI18n.i18nc("@item", "JSON files (*.json)"), KI18n.i18nc("@item", "All files (*)")]
@@ -125,52 +115,6 @@ FormCard.FormCardPage {
                         onClicked: root.browseFolderFrom(gamePathDialog, D2RLoaderConfig.gamePath)
                         QQC2.ToolTip.visible: hovered
                         QQC2.ToolTip.text: KI18n.i18nc("@info:tooltip", "Browse...")
-                    }
-                }
-            }
-        }
-
-        FormCard.FormDelegateSeparator {
-            visible: root.isWindows
-        }
-
-        FormCard.AbstractFormDelegate {
-            visible: root.isWindows
-
-            contentItem: ColumnLayout {
-                spacing: Kirigami.Units.smallSpacing
-                QQC2.Label {
-                    text: KI18n.i18nc("@label", "Handle.exe Path")
-                }
-                QQC2.Label {
-                    text: KI18n.i18nc("@info:label", "Path to Sysinternals handle.exe, used to kill game mutexes for multi-instance play.")
-                    font: Kirigami.Theme.smallFont
-                    opacity: 0.7
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                }
-                RowLayout {
-                    QQC2.TextField {
-                        id: handlePathField
-                        Layout.fillWidth: true
-                        text: D2RLoaderConfig.handlePath
-                        onEditingFinished: {
-                            D2RLoaderConfig.handlePath = text;
-                            D2RLoaderConfig.save();
-                        }
-                        placeholderText: KI18n.i18nc("@info:placeholder", "Path to handle.exe...")
-                    }
-                    QQC2.Button {
-                        icon.name: "document-open"
-                        onClicked: root.browseFileFrom(handlePathDialog, D2RLoaderConfig.handlePath)
-                        QQC2.ToolTip.visible: hovered
-                        QQC2.ToolTip.text: KI18n.i18nc("@info:tooltip", "Browse...")
-                    }
-                    QQC2.Button {
-                        icon.name: "download"
-                        onClicked: Qt.openUrlExternally("https://download.sysinternals.com/files/Handle.zip")
-                        QQC2.ToolTip.visible: hovered
-                        QQC2.ToolTip.text: KI18n.i18nc("@info:tooltip", "Download from Sysinternals...")
                     }
                 }
             }
@@ -254,7 +198,9 @@ FormCard.FormCardPage {
     }
 
     FormCard.FormCard {
+        // The game runs natively on Windows, without a wineprefix or Proton.
         FormCard.AbstractFormDelegate {
+            visible: !root.isWindows
             contentItem: ColumnLayout {
                 spacing: Kirigami.Units.smallSpacing
                 QQC2.Label {
@@ -288,9 +234,12 @@ FormCard.FormCardPage {
             }
         }
 
-        FormCard.FormDelegateSeparator {}
+        FormCard.FormDelegateSeparator {
+            visible: !root.isWindows
+        }
 
         FormCard.AbstractFormDelegate {
+            visible: !root.isWindows
             contentItem: ColumnLayout {
                 spacing: Kirigami.Units.smallSpacing
                 QQC2.Label {
@@ -324,7 +273,9 @@ FormCard.FormCardPage {
             }
         }
 
-        FormCard.FormDelegateSeparator {}
+        FormCard.FormDelegateSeparator {
+            visible: !root.isWindows
+        }
 
         FormCard.FormComboBoxDelegate {
             text: KI18n.i18nc("@label", "Log Level")

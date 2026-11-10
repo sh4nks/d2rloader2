@@ -21,6 +21,8 @@ FormCard.FormCardPage {
 
     property bool showAdvanced: false
 
+    readonly property bool isWindows: Qt.platform.os === "windows"
+
     // Set once rather than bound, so clearing the field does not collapse it.
     Component.onCompleted: {
         root.showAdvanced = root.profile.environmentVariables.length > 0;
@@ -385,9 +387,13 @@ FormCard.FormCardPage {
             }
         }
 
-        FormCard.FormDelegateSeparator {}
+        // The game runs natively on Windows, without Proton.
+        FormCard.FormDelegateSeparator {
+            visible: !root.isWindows
+        }
 
         FormCard.AbstractFormDelegate {
+            visible: !root.isWindows
             contentItem: ColumnLayout {
                 spacing: Kirigami.Units.smallSpacing
                 QQC2.Label {
@@ -628,8 +634,16 @@ FormCard.FormCardPage {
             // Steam starts the game with its own environment.
             enabled: root.profile.authMethod !== Accounts.AuthMethodModel.Steam
             label: KI18n.i18nc("@label", "Environment Variables")
-            description: enabled ? KI18n.i18nc("@info:label", "One NAME=value per line, set for this account's game on top of the defaults. DRI_PRIME=1 runs it on the other GPU.") : KI18n.i18nc("@info:label", "Steam accounts take their environment from the launch options in Steam.")
-            placeholderText: "DRI_PRIME=1\nDXVK_HUD=fps"
+            description: {
+                if (!enabled) {
+                    return KI18n.i18nc("@info:label", "Steam accounts take their environment from the launch options in Steam.");
+                }
+                if (root.isWindows) {
+                    return KI18n.i18nc("@info:label", "One NAME=value per line, set for this account's game on top of the application's own environment.");
+                }
+                return KI18n.i18nc("@info:label", "One NAME=value per line, set for this account's game on top of the defaults. DRI_PRIME=1 runs it on the other GPU.");
+            }
+            placeholderText: root.isWindows ? "NAME=value" : "DRI_PRIME=1\nDXVK_HUD=fps"
             text: root.profile.environmentVariables
             onEditingFinished: root.profile.environmentVariables = text
             status: Kirigami.MessageType.Warning

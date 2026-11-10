@@ -38,9 +38,6 @@
     <entry name="gamePath" type="Path">
       <label>Directory Diablo II: Resurrected is installed in.</label>
     </entry>
-    <entry name="handlePath" type="Path">
-      <label>Path to Sysinternals handle.exe, used to release the game mutex.</label>
-    </entry>
     <entry name="profilePath" type="Path">
       <label>File the account configuration is stored in.</label>
       <default code="true">QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + QStringLiteral("/d2rloader/accounts.json")</default>

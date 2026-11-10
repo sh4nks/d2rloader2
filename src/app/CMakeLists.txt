@@ -41,6 +41,13 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_link_libraries(d2rloader_static PRIVATE Qt6::DBus)
 endif()
 
+if (WIN32)
+    target_sources(d2rloader_static PRIVATE gamelauncher_windows.h gamelauncher_windows.cpp)
+    # user32 for the game window, advapi32 for the registry, crypt32 for DPAPI,
+    # ntdll for listing the handles of the game
+    target_link_libraries(d2rloader_static PRIVATE user32 advapi32 crypt32 ntdll)
+endif()
+
 target_include_directories(d2rloader_static PRIVATE ${CMAKE_BINARY_DIR})
 target_link_libraries(d2rloader_static PRIVATE d2rloader_staticplugin Accountsplugin Settingsplugin Coreplugin)
 target_link_libraries(d2rloader_static PUBLIC

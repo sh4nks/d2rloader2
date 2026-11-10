@@ -13,12 +13,16 @@
 
 #if defined(Q_OS_LINUX)
 #include "gamelauncher_linux.h"
+#elif defined(Q_OS_WIN)
+#include "gamelauncher_windows.h"
 #endif
 
 GameLauncher *GameLauncher::create(QObject *parent)
 {
 #if defined(Q_OS_LINUX)
     return new LinuxGameLauncher(parent);
+#elif defined(Q_OS_WIN)
+    return new WindowsGameLauncher(parent);
 #else
     Q_UNUSED(parent)
     return nullptr;

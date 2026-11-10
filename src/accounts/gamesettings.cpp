@@ -55,6 +55,23 @@ QString steamPrefix()
     }
     return {};
 }
+
+#if defined(Q_OS_WIN)
+/**
+ * The user's Saved Games folder, which can be moved away from the home
+ * directory, so Windows is asked where it is.
+ */
+QString savedGamesFolder()
+{
+    PWSTR path = nullptr;
+    if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_SavedGames, 0, nullptr, &path))) {
+        const QString folder = QString::fromWCharArray(path);
+        CoTaskMemFree(path);
+        return folder;
+    }
+    return QDir(QStandardPaths::writableLocation(QStandardPaths::HomeLocation)).filePath(QStringLiteral("Saved Games"));
+}
+#endif
 }
 
 GameSettings::GameSettings(QObject *parent)
@@ -78,11 +95,17 @@ QString GameSettings::gamePrefix(const Profile *profile)
 
 QString GameSettings::savedGamesPath(const Profile *profile)
 {
+#if defined(Q_OS_WIN)
+    // The game runs natively, so every account shares the user's own folder.
+    Q_UNUSED(profile)
+    return QDir(savedGamesFolder()).filePath(QStringLiteral("Diablo II Resurrected"));
+#else
     const QString prefix = gamePrefix(profile);
     if (prefix.isEmpty()) {
         return {};
     }
     return QDir(prefix).filePath(QStringLiteral("drive_c/users/steamuser/Saved Games/Diablo II Resurrected"));
+#endif
 }
 
 QString GameSettings::currentSettingsPath(const Profile *profile)

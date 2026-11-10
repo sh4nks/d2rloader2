@@ -38,7 +38,8 @@ public:
 
     /**
      * The folder the game keeps the settings, loot filters and controls of
-     * \a profile in. Empty when Steam cannot be found.
+     * \a profile in. Empty when Steam cannot be found. On Windows the game
+     * runs natively, so this is the user's own Saved Games folder.
      */
     static QString savedGamesPath(const Profile *profile);
 
