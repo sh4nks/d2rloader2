@@ -1,6 +1,13 @@
 # Changelog
 
 
+## 0.5.0
+
+Released on Nov 11th, 2026
+
+Nothing worthy to describe here
+
+
 ## 0.4.0
 
 Released on Nov 10th, 2026
