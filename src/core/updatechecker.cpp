@@ -42,7 +42,7 @@ const QString UserAgent = QStringLiteral("D2RLoader (https://github.com/sh4nks/d
 /**
  * How long a check's result stands before the startup check asks again.
  */
-constexpr std::chrono::hours CheckInterval(24);
+constexpr std::chrono::hours CheckInterval(1);
 
 QVersionNumber versionOf(const QString &tag)
 {
@@ -244,8 +244,13 @@ void UpdateChecker::check()
     }
 
     const QDateTime last = D2RLoaderConfig::self()->lastUpdateCheck();
-    if (last.isValid() && last.secsTo(QDateTime::currentDateTimeUtc()) < std::chrono::seconds(CheckInterval).count()) {
-        qCDebug(LOG_UPDATES) << "Last release check ran at" << last << "- its result still stands";
+    const qint64 interval = std::chrono::seconds(CheckInterval).count();
+    const qint64 elapsed = last.secsTo(QDateTime::currentDateTimeUtc());
+    if (last.isValid() && elapsed < interval) {
+        const QString format = QStringLiteral("yyyy-MM-dd HH:mm:ss");
+        qCDebug(LOG_UPDATES).noquote() << "Skipping the release check, the last one ran at" << last.toLocalTime().toString(format);
+        qCDebug(LOG_UPDATES).noquote() << "Next release check is due at" << last.addSecs(interval).toLocalTime().toString(format) << "- in"
+                                       << (interval - elapsed + 59) / 60 << "minutes";
         return;
     }
 
