@@ -1,6 +1,13 @@
 # Changelog
 
 
+## 0.5.1
+
+Released on Nov 12th, 2026
+
+No changes. 0.5.0 was never published because of a GitHub Actions outage.
+
+
 ## 0.5.0
 
 Released on Nov 11th, 2026
