@@ -706,7 +706,24 @@ void LinuxGameLauncher::runTokenTool(Profile *profile, const std::function<void(
     process->setProgram(umuRun());
     process->setArguments({tokenToolPath(), QStringLiteral("--update-token"), profile->token()});
     process->setProcessEnvironment(env);
+    process->setReadChannel(QProcess::StandardError);
 
+    // umu-run installs pending Proton and runtime updates before d2rreg runs.
+    const auto output = std::make_shared<QByteArray>();
+    connect(process, &QProcess::readyReadStandardError, this, [this, process, profile = QPointer(profile), output] {
+        while (process->canReadLine()) {
+            const QByteArray line = process->readLine().trimmed();
+            *output += line + '\n';
+            if (!profile) {
+                continue;
+            }
+            if (const QString step = umuProgress(line); !step.isEmpty()) {
+                Q_EMIT progress(profile, step);
+            } else if (umuSetupDone(line)) {
+                Q_EMIT progress(profile, {});
+            }
+        }
+    });
     connect(process, &QProcess::errorOccurred, this, [this, process, profile = QPointer(profile)](QProcess::ProcessError error) {
         // Every other error is followed by finished(), which reports it.
         if (error != QProcess::FailedToStart) {
@@ -717,15 +734,14 @@ void LinuxGameLauncher::runTokenTool(Profile *profile, const std::function<void(
             Q_EMIT failed(profile, i18nc("@info", "Could not run d2rreg.exe: %1", process->errorString()));
         }
     });
-    connect(process, &QProcess::finished, this, [this, process, profile = QPointer(profile), next](int exitCode, QProcess::ExitStatus status) {
+    connect(process, &QProcess::finished, this, [this, process, profile = QPointer(profile), next, output](int exitCode, QProcess::ExitStatus status) {
         process->deleteLater();
         if (!profile) {
             return;
         }
 
         if (status != QProcess::NormalExit || exitCode != 0) {
-            const QString output = QString::fromLocal8Bit(process->readAllStandardError()).trimmed();
-            qCWarning(LOG_GAME) << "d2rreg exited with" << exitCode << output;
+            qCWarning(LOG_GAME) << "d2rreg exited with" << exitCode << QString::fromLocal8Bit(*output + process->readAllStandardError()).trimmed();
             Q_EMIT failed(profile, i18nc("@info", "Could not write the token into the wineprefix (d2rreg.exe exited with %1).", exitCode));
             return;
         }
