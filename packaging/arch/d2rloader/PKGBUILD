@@ -1,7 +1,7 @@
 # Maintainer: Peter Justin <peter.justin@outlook.com>
 
 pkgname=d2rloader
-pkgver=0.5.1
+pkgver=0.5.2
 pkgrel=1
 pkgdesc='Launch and manage several Diablo II: Resurrected accounts'
 arch=('x86_64')

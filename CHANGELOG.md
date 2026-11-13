@@ -1,6 +1,16 @@
 # Changelog
 
 
+## 0.5.2
+
+Released on Nov 13th, 2026
+
+### Fixed
+
+- The game window icon was not read from D2R.exe when running from the AppImage.
+- No information about the wait time was shown while umu-run updates its environment (Steam Runtime, Proton).
+
+
 ## 0.5.1
 
 Released on Nov 12th, 2026
