@@ -48,6 +48,20 @@ QString umuRun()
 }
 
 /**
+ * The loader's own environment without what the AppImage runtime adds.
+ * Plasma's task manager reads APPDIR from a window's process and shows the
+ * icon of the desktop file it finds there, which would be the loader's.
+ */
+QProcessEnvironment hostEnvironment()
+{
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    for (const QString &name : {QStringLiteral("APPDIR"), QStringLiteral("APPIMAGE"), QStringLiteral("ARGV0"), QStringLiteral("OWD")}) {
+        env.remove(name);
+    }
+    return env;
+}
+
+/**
  * Every process started for a profile carries its normalized name in this
  * variable, so its game can be told apart and found again after a restart.
  */
@@ -220,7 +234,7 @@ QString wineBinary(qint64 wineserver, const QString &name)
  */
 QProcessEnvironment wineEnvironment(qint64 wineserver)
 {
-    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    QProcessEnvironment env = hostEnvironment();
     for (const QString &name : {QStringLiteral("WINEPREFIX"), QStringLiteral("WINEESYNC"), QStringLiteral("WINEFSYNC")}) {
         env.insert(name, environmentValue(wineserver, name));
     }
@@ -490,9 +504,12 @@ void LinuxGameLauncher::launchSteam(Profile *profile, const QStringList &argumen
         return;
     }
 
-    const QStringList steamArguments = QStringList{QStringLiteral("-applaunch"), GameSettings::SteamAppId} + arguments;
-    qCInfo(LOG_GAME) << "launching" << profile->profileName() << "through Steam:" << steam << steamArguments;
-    if (!QProcess::startDetached(steam, steamArguments)) {
+    QProcess process;
+    process.setProgram(steam);
+    process.setArguments(QStringList{QStringLiteral("-applaunch"), GameSettings::SteamAppId} + arguments);
+    process.setProcessEnvironment(hostEnvironment());
+    qCInfo(LOG_GAME) << "launching" << profile->profileName() << "through Steam:" << steam << process.arguments();
+    if (!process.startDetached()) {
         Q_EMIT failed(profile, i18nc("@info", "Could not start Steam."));
         return;
     }
@@ -916,7 +933,7 @@ QProcessEnvironment LinuxGameLauncher::environment(const Profile *profile) const
         protonPath = DefaultProtonPath;
     }
 
-    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    QProcessEnvironment env = hostEnvironment();
     env.insert(QStringLiteral("__GL_SHADER_DISK_CACHE"), QStringLiteral("1"));
     env.insert(QStringLiteral("__GL_SHADER_DISK_CACHE_PATH"), prefix);
     env.insert(QStringLiteral("STAGING_SHARED_MEMORY"), QStringLiteral("1"));
