@@ -12,6 +12,7 @@
 class QJsonObject;
 class QNetworkAccessManager;
 class QNetworkReply;
+class QProcess;
 class VerifiedDownload;
 
 /**
@@ -23,8 +24,11 @@ class VerifiedDownload;
  * way to update.
  *
  * A copy the Windows installer put in place can also install the release:
- * installUpdate() downloads the release's installer, runs it and quits. Every
- * other copy only gets the notice and the link to the release page.
+ * installUpdate() downloads the release's installer, runs it and quits. So
+ * can an AppImage where appimageupdatetool is installed: installUpdate() has
+ * it fetch the blocks of the release that differ into the AppImage, then
+ * starts that again and quits. Every other copy only gets the notice and the
+ * link to the release page.
  *
  * The result is kept in the configuration, so the notice is right from the
  * first frame after a restart, and the response's ETag goes back out with the
@@ -114,9 +118,11 @@ public:
     Q_INVOKABLE void dismiss();
 
     /**
-     * Downloads the installer of the newest release, checks it against the
-     * digest GitHub reports for it, starts it and quits, so it can replace
-     * the files. The installer starts D2RLoader again when it is done.
+     * On Windows, downloads the installer of the newest release, checks it
+     * against the digest GitHub reports for it, starts it and quits, so it
+     * can replace the files. The installer starts D2RLoader again when it is
+     * done. In an AppImage, runs appimageupdatetool on it and starts the
+     * updated AppImage once the tool is done.
      */
     Q_INVOKABLE void installUpdate();
     Q_INVOKABLE void cancelInstall();
@@ -147,6 +153,7 @@ private:
     void setChecking(bool checking);
     void download(QNetworkReply *reply);
     void launch(const QString &installer);
+    void updateAppImage();
     void failInstall(const QString &error);
     void setInstalling(bool installing);
     void setInstallStatus(const QString &status);
@@ -156,6 +163,8 @@ private:
     bool m_checking = false;
     QNetworkReply *m_installerLookup = nullptr;
     VerifiedDownload *m_download = nullptr;
+    QProcess *m_updater = nullptr;
+    QString m_updaterOutput;
     QString m_installStatus;
     bool m_installing = false;
     bool m_installCancelled = false;

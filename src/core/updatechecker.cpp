@@ -17,7 +17,9 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QProcess>
+#include <QRegularExpression>
 #include <QSettings>
+#include <QStandardPaths>
 #include <QTimer>
 #include <QUrl>
 #include <QVersionNumber>
@@ -70,6 +72,43 @@ bool installedByAnotherUpdater()
 #endif
 }
 
+/**
+ * The command line tool of AppImageUpdate, which fetches the blocks of the
+ * next release that differ from this AppImage. It is distributed as an
+ * AppImage itself, so the name it is published under is looked up too, on
+ * PATH and in ~/Applications, where AppImageLauncher keeps AppImages. Empty
+ * outside an AppImage.
+ */
+QString appImageUpdateTool()
+{
+    if (!qEnvironmentVariableIsSet("APPIMAGE")) {
+        return QString();
+    }
+    QStringList paths = qEnvironmentVariable("PATH").split(QDir::listSeparator(), Qt::SkipEmptyParts);
+    paths << QDir::home().filePath(QStringLiteral("Applications"));
+    for (const QString &name : {QStringLiteral("appimageupdatetool"), QStringLiteral("appimageupdatetool-x86_64.AppImage")}) {
+        const QString tool = QStandardPaths::findExecutable(name, paths);
+        if (!tool.isEmpty()) {
+            return tool;
+        }
+    }
+    return QString();
+}
+
+/**
+ * The last two lines appimageupdatetool printed, without the escape sequence
+ * and the carriage returns its progress line is redrawn with. The tool ends
+ * a failure with a verdict like "Update failed!" and the reason is the status
+ * line before it.
+ */
+QString updaterFailure(QString output)
+{
+    output.remove(QStringLiteral("\x1b[2K"));
+    static const QRegularExpression lineBreak(QStringLiteral("[\r\n]"));
+    const QStringList lines = output.split(lineBreak, Qt::SkipEmptyParts);
+    return lines.mid(lines.size() - 2).join(QLatin1Char(' ')).simplified();
+}
+
 QNetworkRequest releaseRequest()
 {
     QNetworkRequest request(LatestReleaseUrl);
@@ -97,9 +136,11 @@ UpdateChecker::UpdateChecker(QObject *parent)
     // every later check.
     m_network->setTransferTimeout(QNetworkRequest::DefaultTransferTimeout);
 
+#ifdef Q_OS_WIN
     if (canInstall()) {
         QDir(updateDir()).removeRecursively();
     }
+#endif
 
     if (managedExternally()) {
         qCInfo(LOG_UPDATES) << "Another updater owns this installation, no release check";
@@ -149,8 +190,9 @@ std::optional<UpdateChecker::Installer> UpdateChecker::windowsInstaller(const QJ
 bool UpdateChecker::runsFromInstalledCopy()
 {
 #ifdef Q_OS_WIN
-    const QSettings uninstall(QStringLiteral("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{59BA45B2-25D4-49E8-B8FC-E48986E500AB}_is1"),
-                              QSettings::NativeFormat);
+    const QSettings uninstall(
+        QStringLiteral("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{59BA45B2-25D4-49E8-B8FC-E48986E500AB}_is1"),
+        QSettings::NativeFormat);
     const QString installed = QDir::cleanPath(QDir::fromNativeSeparators(uninstall.value(QStringLiteral("InstallLocation")).toString()));
     return installed.compare(QDir::cleanPath(QCoreApplication::applicationDirPath()), Qt::CaseInsensitive) == 0;
 #else
@@ -166,7 +208,11 @@ bool UpdateChecker::managedExternally() const
 
 bool UpdateChecker::canInstall() const
 {
+#ifdef Q_OS_LINUX
+    static const bool installed = !appImageUpdateTool().isEmpty();
+#else
     static const bool installed = runsFromInstalledCopy();
+#endif
     return installed;
 }
 
@@ -355,11 +401,16 @@ void UpdateChecker::notify(const QString &version)
     notification->setTitle(title);
     notification->setText(text);
 
-    const QUrl url(releaseUrl());
-    KNotificationAction *download = notification->addAction(i18nc("@action:button", "Download"));
-    connect(download, &KNotificationAction::activated, this, [url] {
-        QDesktopServices::openUrl(url);
-    });
+    if (canInstall()) {
+        KNotificationAction *install = notification->addAction(i18nc("@action:button", "Install"));
+        connect(install, &KNotificationAction::activated, this, &UpdateChecker::installUpdate);
+    } else {
+        const QUrl url(releaseUrl());
+        KNotificationAction *download = notification->addAction(i18nc("@action:button", "Download"));
+        connect(download, &KNotificationAction::activated, this, [url] {
+            QDesktopServices::openUrl(url);
+        });
+    }
 
     notification->sendEvent();
 #endif
@@ -392,6 +443,10 @@ void UpdateChecker::installUpdate()
 
     m_installCancelled = false;
     setInstalling(true);
+
+#ifdef Q_OS_LINUX
+    updateAppImage();
+#else
     setInstallStatus(i18nc("@info:status", "Looking up the installer..."));
 
     // The stored result of the check has neither the installer's address nor
@@ -400,6 +455,7 @@ void UpdateChecker::installUpdate()
     connect(m_installerLookup, &QNetworkReply::finished, this, [this] {
         download(m_installerLookup);
     });
+#endif
 }
 
 void UpdateChecker::cancelInstall()
@@ -410,6 +466,9 @@ void UpdateChecker::cancelInstall()
     }
     if (m_download) {
         m_download->cancel();
+    }
+    if (m_updater) {
+        m_updater->kill();
     }
 }
 
@@ -472,6 +531,67 @@ void UpdateChecker::launch(const QString &installer)
     qCInfo(LOG_UPDATES) << "Started" << installer << "- quitting so it can replace the files";
     setInstallStatus(i18nc("@info:status", "Installing the update..."));
     QCoreApplication::quit();
+}
+
+void UpdateChecker::updateAppImage()
+{
+    const QString appImage = qEnvironmentVariable("APPIMAGE");
+    const QString tool = appImageUpdateTool();
+    const QString version = latestVersion();
+
+    qCInfo(LOG_UPDATES) << "Updating" << appImage << "with" << tool;
+    setInstallStatus(i18nc("@info:status version", "Downloading D2RLoader %1...", version));
+
+    m_updaterOutput.clear();
+    m_updater = new QProcess(this);
+    m_updater->setProgram(tool);
+    // --overwrite renames the finished file over the AppImage, which keeps
+    // running from the old one until it quits. --remove-old drops the .zs-old
+    // backup that would otherwise be left next to it.
+    m_updater->setArguments({QStringLiteral("--overwrite"), QStringLiteral("--remove-old"), appImage});
+    m_updater->setProcessChannelMode(QProcess::MergedChannels);
+
+    connect(m_updater, &QProcess::readyRead, this, [this, version] {
+        const QString output = QString::fromUtf8(m_updater->readAll());
+        m_updaterOutput += output;
+
+        static const QRegularExpression progress(QStringLiteral("(\\d+)(?:\\.\\d+)?% done"));
+        QRegularExpressionMatch last;
+        for (QRegularExpressionMatchIterator it = progress.globalMatch(output); it.hasNext();) {
+            last = it.next();
+        }
+        if (last.hasMatch()) {
+            setInstallStatus(i18nc("@info:status version, percent", "Downloading D2RLoader %1... %2%", version, last.captured(1).toInt()));
+        }
+    });
+    connect(m_updater, &QProcess::errorOccurred, this, [this, tool](QProcess::ProcessError error) {
+        if (error != QProcess::FailedToStart) {
+            return;
+        }
+        m_updater->deleteLater();
+        m_updater = nullptr;
+        failInstall(i18nc("@info path", "Could not start %1.", tool));
+    });
+    connect(m_updater, &QProcess::finished, this, [this, appImage, version](int exitCode, QProcess::ExitStatus status) {
+        m_updater->deleteLater();
+        m_updater = nullptr;
+        if (status != QProcess::NormalExit || exitCode != 0) {
+            if (!m_installCancelled) {
+                qCWarning(LOG_UPDATES).noquote().nospace() << "appimageupdatetool exited with " << exitCode << " and printed:\n" << m_updaterOutput;
+            }
+            QFile::remove(appImage + QStringLiteral(".part"));
+            failInstall(i18nc("@info", "Could not update the AppImage: %1", updaterFailure(m_updaterOutput)));
+            return;
+        }
+
+        qCInfo(LOG_UPDATES) << "Updated" << appImage << "- starting it again and quitting";
+        if (!QProcess::startDetached(appImage, {})) {
+            failInstall(i18nc("@info version", "D2RLoader %1 is installed, but could not be started. Start it yourself.", version));
+            return;
+        }
+        QCoreApplication::quit();
+    });
+    m_updater->start();
 }
 
 void UpdateChecker::failInstall(const QString &error)
