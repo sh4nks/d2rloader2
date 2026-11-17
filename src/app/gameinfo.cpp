@@ -229,6 +229,15 @@ QStringList compactLevels(const QStringList &levels)
 }
 
 /**
+ * During an event every level is terrorized at once, while a regular zone
+ * spans a dozen levels at most.
+ */
+bool coversAllZones(const QJsonArray &ids)
+{
+    return ids.count() > diabloLevels().count() / 2;
+}
+
+/**
  * The realms the Diablo Clone table lists, in display order. Return of the
  * Warlock exists for every region except China.
  */
@@ -711,13 +720,16 @@ void GameInfo::handle(QNetworkReply *reply, Request request)
 void GameInfo::applyTerrorZones(const QJsonObject &tz)
 {
     const auto names = [](const QJsonArray &ids) {
+        if (coversAllZones(ids)) {
+            return QStringList{i18nc("@info every terror zone is active at once", "All zones")};
+        }
         QStringList result;
         result.reserve(ids.count());
         for (const QJsonValue &id : ids) {
             // Ids arrive as strings, but tolerate numbers too.
             result.append(levelName(id.isString() ? id.toString() : QString::number(id.toInt())));
         }
-        return result;
+        return compactLevels(result);
     };
     const auto strings = [&tz](const QString &key) {
         const QJsonArray values = tz[key].toArray();
@@ -742,13 +754,15 @@ void GameInfo::applyTerrorZones(const QJsonObject &tz)
     m_nextImmunities = immunityCodes(tz[QStringLiteral("next_immunities")].toArray());
     m_currentBossPacks = integers(QStringLiteral("current_num_boss_packs"));
     m_nextBossPacks = integers(QStringLiteral("next_num_boss_packs"));
-    m_currentSuperUniques = strings(QStringLiteral("current_superuniques"));
-    m_nextSuperUniques = strings(QStringLiteral("next_superuniques"));
+    const QJsonArray currentIds = tz[QStringLiteral("current")].toArray();
+    const QJsonArray nextIds = tz[QStringLiteral("next")].toArray();
+    m_currentSuperUniques = coversAllZones(currentIds) ? QStringList() : strings(QStringLiteral("current_superuniques"));
+    m_nextSuperUniques = coversAllZones(nextIds) ? QStringList() : strings(QStringLiteral("next_superuniques"));
 
     const QStringList previousZones = m_currentZones;
     const QStringList previousNextZones = m_nextZones;
-    m_currentZones = compactLevels(names(tz[QStringLiteral("current")].toArray()));
-    m_nextZones = compactLevels(names(tz[QStringLiteral("next")].toArray()));
+    m_currentZones = names(currentIds);
+    m_nextZones = names(nextIds);
 
     const qint64 nextTerror = tz[QStringLiteral("next_terror_time_utc")].toInteger();
     m_nextTerrorTime = nextTerror > 0 ? QDateTime::fromSecsSinceEpoch(nextTerror) : QDateTime();

@@ -190,6 +190,23 @@ Kirigami.Card {
                     elide: Text.ElideRight
                 }
             }
+
+            // Covers the style's own filler above the scroll bar.
+            Rectangle {
+                parent: horizontalHeader
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                anchors.right: parent.right
+                width: tableView.scrollBarWidth
+                visible: width > 0
+                color: Kirigami.Theme.alternateBackgroundColor
+
+                Kirigami.Separator {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                }
+            }
         }
 
         TableView {
@@ -212,27 +229,27 @@ Kirigami.Card {
                 return column === ProfileColumn.AuthMethod || column === ProfileColumn.Region || column === ProfileColumn.Actions;
             }
 
-            /**
-             * The cell under the given point, in this view's coordinates.
-             */
-            function cellAt(point: point): point {
-                return tableView.cellAtPosition(tableView.mapToItem(tableView.contentItem, point), true);
-            }
-
             // Cells live in their own components and cannot reach the view, so
             // the hovered cell is tracked here for all of them at once.
+            // Handlers declared in the view sit on its contentItem, so their
+            // points are already in the coordinates cellAtPosition() expects.
             HoverHandler {
                 id: rowHoverHandler
                 onPointChanged: {
-                    tableView.hoveredRow = tableView.cellAt(rowHoverHandler.point.position).y;
+                    tableView.hoveredRow = tableView.cellAtPosition(rowHoverHandler.point.position, true).y;
                 }
                 onHoveredChanged: if (!rowHoverHandler.hovered) {
                     tableView.hoveredRow = -1;
                 }
             }
 
+            ScrollBar.vertical: ScrollBar {
+                id: verticalScrollBar
+            }
+
             readonly property real statusColumnWidth: Kirigami.Units.gridUnit * 2
             readonly property real actionsColumnWidth: Kirigami.Units.gridUnit * 7
+            readonly property real scrollBarWidth: verticalScrollBar.visible ? verticalScrollBar.width : 0
 
             columnWidthProvider: function (column) {
                 if (column === ProfileColumn.Status) {
@@ -242,9 +259,10 @@ Kirigami.Card {
                     return tableView.actionsColumnWidth;
                 }
                 // The remaining columns share whatever is left over.
-                return (tableView.width - tableView.statusColumnWidth - tableView.actionsColumnWidth) / (ProfileColumn.Count - 2);
+                return (tableView.width - tableView.scrollBarWidth - tableView.statusColumnWidth - tableView.actionsColumnWidth) / (ProfileColumn.Count - 2);
             }
             onWidthChanged: tableView.forceLayout()
+            onScrollBarWidthChanged: tableView.forceLayout()
 
             TapHandler {
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -265,7 +283,7 @@ Kirigami.Card {
                         return;
                     }
 
-                    const cell = tableView.cellAt(eventPoint.position);
+                    const cell = tableView.cellAtPosition(eventPoint.position, true);
                     if (cell.y === -1 || tableView.columnHasControl(cell.x)) {
                         return;
                     }

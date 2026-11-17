@@ -34,6 +34,12 @@ Rectangle {
 
     property list<string> superUniques
 
+    /**
+     * How tall the zone's name and details may grow before they scroll. Leaves
+     * a regular zone unscrolled even when its lines wrap in a narrow window.
+     */
+    property real maximumDetailsHeight: Kirigami.Units.gridUnit * 10
+
     readonly property var immunityKinds: ({
             "f": {
                 name: KI18n.i18nc("@info monster immunity", "Fire"),
@@ -102,97 +108,108 @@ Rectangle {
             color: Kirigami.Theme.textColor
         }
 
-        ColumnLayout {
-            spacing: Kirigami.Units.smallSpacing
+        ScrollView {
+            id: scroller
+
+            contentWidth: availableWidth
+            clip: true
             Layout.fillWidth: true
+            Layout.preferredHeight: Math.min(details.implicitHeight, root.maximumDetailsHeight)
 
-            Label {
-                id: zoneLabel
-                font.pointSize: 12
-                font.weight: Font.Medium
-                color: Kirigami.Theme.textColor
-                wrapMode: Text.Wrap
-                Layout.fillWidth: true
-            }
+            ColumnLayout {
+                id: details
 
-            GridLayout {
-                columns: 2
-                columnSpacing: Kirigami.Units.largeSpacing
-                rowSpacing: Kirigami.Units.smallSpacing
-                visible: root.immunities.length > 0 || root.bossPacks.length > 0 || root.superUniques.length > 0
-                Layout.fillWidth: true
+                width: scroller.availableWidth
+                spacing: Kirigami.Units.smallSpacing
 
                 Label {
-                    text: KI18n.i18nc("@label", "Immunities:")
-                    font: Kirigami.Theme.smallFont
-                    opacity: 0.7
-                    visible: root.immunities.length > 0
+                    id: zoneLabel
+                    font.pointSize: 12
+                    font.weight: Font.Medium
+                    color: Kirigami.Theme.textColor
+                    wrapMode: Text.Wrap
+                    Layout.fillWidth: true
                 }
 
-                Flow {
-                    spacing: Kirigami.Units.smallSpacing
-                    visible: root.immunities.length > 0
+                GridLayout {
+                    columns: 2
+                    columnSpacing: Kirigami.Units.largeSpacing
+                    rowSpacing: Kirigami.Units.smallSpacing
+                    visible: root.immunities.length > 0 || root.bossPacks.length > 0 || root.superUniques.length > 0
                     Layout.fillWidth: true
 
-                    Repeater {
-                        model: root.immunities
+                    Label {
+                        text: KI18n.i18nc("@label", "Immunities:")
+                        font: Kirigami.Theme.smallFont
+                        opacity: 0.7
+                        visible: root.immunities.length > 0
+                    }
 
-                        delegate: Rectangle {
-                            id: chip
+                    Flow {
+                        spacing: Kirigami.Units.smallSpacing
+                        visible: root.immunities.length > 0
+                        Layout.fillWidth: true
 
-                            required property string modelData
-                            readonly property var kind: root.immunityKinds[modelData]
-                            readonly property color tint: kind ? kind.color : Kirigami.Theme.disabledTextColor
+                        Repeater {
+                            model: root.immunities
 
-                            implicitWidth: chipLabel.implicitWidth + Kirigami.Units.largeSpacing * 2
-                            implicitHeight: chipLabel.implicitHeight + Kirigami.Units.smallSpacing
-                            radius: height / 2
-                            color: Qt.rgba(tint.r, tint.g, tint.b, 0.2)
-                            border.color: Qt.rgba(tint.r, tint.g, tint.b, 0.7)
-                            border.width: 1
+                            delegate: Rectangle {
+                                id: chip
 
-                            Label {
-                                id: chipLabel
-                                anchors.centerIn: parent
-                                text: chip.kind ? chip.kind.name : chip.modelData
-                                font: Kirigami.Theme.smallFont
-                                color: Kirigami.Theme.textColor
+                                required property string modelData
+                                readonly property var kind: root.immunityKinds[modelData]
+                                readonly property color tint: kind ? kind.color : Kirigami.Theme.disabledTextColor
+
+                                implicitWidth: chipLabel.implicitWidth + Kirigami.Units.largeSpacing * 2
+                                implicitHeight: chipLabel.implicitHeight + Kirigami.Units.smallSpacing
+                                radius: height / 2
+                                color: Qt.rgba(tint.r, tint.g, tint.b, 0.2)
+                                border.color: Qt.rgba(tint.r, tint.g, tint.b, 0.7)
+                                border.width: 1
+
+                                Label {
+                                    id: chipLabel
+                                    anchors.centerIn: parent
+                                    text: chip.kind ? chip.kind.name : chip.modelData
+                                    font: Kirigami.Theme.smallFont
+                                    color: Kirigami.Theme.textColor
+                                }
                             }
                         }
                     }
-                }
 
-                Label {
-                    text: KI18n.i18nc("@label", "Boss packs:")
-                    font: Kirigami.Theme.smallFont
-                    opacity: 0.7
-                    visible: root.bossPacks.length > 0
-                }
-
-                Label {
-                    text: {
-                        if (root.bossPacks.length < 2 || root.bossPacks[0] === root.bossPacks[1])
-                            return String(root.bossPacks[0] ?? "");
-                        return KI18n.i18nc("@info smallest and largest number of boss packs", "%1-%2", root.bossPacks[0], root.bossPacks[1]);
+                    Label {
+                        text: KI18n.i18nc("@label", "Boss packs:")
+                        font: Kirigami.Theme.smallFont
+                        opacity: 0.7
+                        visible: root.bossPacks.length > 0
                     }
-                    font: Kirigami.Theme.smallFont
-                    visible: root.bossPacks.length > 0
-                    Layout.fillWidth: true
-                }
 
-                Label {
-                    text: KI18n.i18nc("@label", "Superuniques:")
-                    font: Kirigami.Theme.smallFont
-                    opacity: 0.7
-                    visible: root.superUniques.length > 0
-                }
+                    Label {
+                        text: {
+                            if (root.bossPacks.length < 2 || root.bossPacks[0] === root.bossPacks[1])
+                                return String(root.bossPacks[0] ?? "");
+                            return KI18n.i18nc("@info smallest and largest number of boss packs", "%1-%2", root.bossPacks[0], root.bossPacks[1]);
+                        }
+                        font: Kirigami.Theme.smallFont
+                        visible: root.bossPacks.length > 0
+                        Layout.fillWidth: true
+                    }
 
-                Label {
-                    text: root.superUniques.join(", ")
-                    font: Kirigami.Theme.smallFont
-                    wrapMode: Text.Wrap
-                    visible: root.superUniques.length > 0
-                    Layout.fillWidth: true
+                    Label {
+                        text: KI18n.i18nc("@label", "Superuniques:")
+                        font: Kirigami.Theme.smallFont
+                        opacity: 0.7
+                        visible: root.superUniques.length > 0
+                    }
+
+                    Label {
+                        text: root.superUniques.join(", ")
+                        font: Kirigami.Theme.smallFont
+                        wrapMode: Text.Wrap
+                        visible: root.superUniques.length > 0
+                        Layout.fillWidth: true
+                    }
                 }
             }
         }
