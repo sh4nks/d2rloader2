@@ -1,6 +1,23 @@
 # Changelog
 
 
+## 0.6.0
+
+Released on Nov 18th, 2026
+
+### Added
+
+- The AppImage can update itself now with the provided .zsync file
+
+### Changed
+
+- Improve the main window UI by making it more compact
+
+### Fixed
+
+- In case there are more Terror Zones to display, we now show a scrollbar
+
+
 ## 0.5.2
 
 Released on Nov 13th, 2026
