@@ -10,6 +10,7 @@ ecm_add_qml_module(Accounts GENERATE_PLUGIN_SOURCE
         CellDelegateComboBox.qml
         CellDelegateLabel.qml
         CellDelegateStatus.qml
+        LaunchSequenceButton.qml
     DEPENDENCIES
         QtQuick
         com.someblocks.d2rloader.core

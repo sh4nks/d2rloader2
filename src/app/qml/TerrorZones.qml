@@ -5,23 +5,13 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import org.kde.kirigami as Kirigami
 import org.kde.ki18n
-import com.someblocks.d2rloader.core
 
 Kirigami.Card {
     id: root
 
     Component.onCompleted: (background as Kirigami.ShadowedRectangle).radius = 0
 
-    header: CardHeader {
-        title: KI18n.i18nc("@title", "Terror Zones")
-
-        Button {
-            text: KI18n.i18nc("@action:button", "Refresh")
-            icon.name: "view-refresh"
-            enabled: !GameInfo.loading
-            onClicked: GameInfo.refresh()
-        }
-    }
+    header: null
     contentItem: ColumnLayout {
         spacing: Kirigami.Units.largeSpacing
         Layout.margins: Kirigami.Units.smallSpacing

@@ -25,63 +25,7 @@ Kirigami.Card {
         corners.bottomRightRadius = 0;
     }
 
-    header: Item {
-        implicitHeight: headerLayout.implicitHeight + Kirigami.Units.smallSpacing * 2
-        RowLayout {
-            id: headerLayout
-            anchors.fill: parent
-            anchors.leftMargin: Kirigami.Units.smallSpacing * 2
-            anchors.rightMargin: Kirigami.Units.smallSpacing * 2
-            anchors.topMargin: Kirigami.Units.smallSpacing * 2
-
-            Kirigami.Heading {
-                text: KI18n.i18nc("@title", "Accounts")
-                level: 2
-                Layout.alignment: Qt.AlignVCenter
-            }
-
-            Item {
-                Layout.fillWidth: true
-            }
-
-            ComboBox {
-                id: launchSequenceSelector
-                model: LaunchSequenceManager
-                textRole: "name"
-                enabled: !root.sequenceRunning && count > 0
-                displayText: count > 0 ? currentText : KI18n.i18nc("@item:incombobox", "No Launch Sequences")
-                Layout.preferredWidth: Kirigami.Units.gridUnit * 10
-                onActivated: index => LaunchSequenceManager.currentIndex = index
-
-                // Picking an entry overwrites currentIndex, which would break a
-                // plain binding.
-                Binding {
-                    target: launchSequenceSelector
-                    property: "currentIndex"
-                    value: LaunchSequenceManager.currentIndex
-                }
-            }
-
-            Button {
-                text: root.sequenceRunning ? KI18n.i18nc("@action:button", "Cancel Sequence") : KI18n.i18nc("@action:button", "Launch Sequence")
-                icon.name: root.sequenceRunning ? "media-playback-stop" : "media-playback-start"
-                enabled: root.sequenceRunning || launchSequenceSelector.currentIndex >= 0
-                onClicked: {
-                    if (root.sequenceRunning) {
-                        root.cancelSequenceClicked();
-                    } else {
-                        root.launchSequenceClicked(launchSequenceSelector.currentIndex);
-                    }
-                }
-            }
-
-            Button {
-                icon.name: "settings-configure"
-                onClicked: root.settingsClicked()
-            }
-        }
-    }
-
+    header: null
     contentItem: ColumnLayout {
         spacing: 0
 
@@ -168,6 +112,12 @@ Kirigami.Card {
                 // Text columns are left aligned and share the cells' wider padding.
                 readonly property bool isTextColumn: headerDelegate.column === ProfileColumn.Name || headerDelegate.column === ProfileColumn.GameParameters
 
+                // The settings button stands in for the title of the status
+                // column, and the launch sequence button for that of the
+                // actions column once there is a sequence to launch.
+                readonly property bool showsSettingsButton: headerDelegate.column === ProfileColumn.Status
+                readonly property bool showsLaunchButton: headerDelegate.column === ProfileColumn.Actions && (root.sequenceRunning || LaunchSequenceManager.currentIndex >= 0)
+
                 implicitWidth: tableView.columnWidthProvider(headerDelegate.column)
                 implicitHeight: Kirigami.Units.gridUnit * 2
                 color: Kirigami.Theme.alternateBackgroundColor
@@ -183,11 +133,33 @@ Kirigami.Card {
                     anchors.leftMargin: headerDelegate.isTextColumn ? Kirigami.Units.gridUnit : Kirigami.Units.smallSpacing
                     anchors.rightMargin: headerDelegate.isTextColumn ? Kirigami.Units.gridUnit : Kirigami.Units.smallSpacing
                     text: headerDelegate.display
+                    visible: !headerDelegate.showsSettingsButton && !headerDelegate.showsLaunchButton
                     font.bold: true
                     color: Kirigami.Theme.textColor
                     horizontalAlignment: headerDelegate.isTextColumn ? Text.AlignLeft : Text.AlignHCenter
                     verticalAlignment: Text.AlignVCenter
                     elide: Text.ElideRight
+                }
+
+                Loader {
+                    anchors.centerIn: parent
+                    active: headerDelegate.showsSettingsButton
+                    sourceComponent: ToolButton {
+                        icon.name: "settings-configure"
+                        icon.width: Kirigami.Units.iconSizes.small
+                        icon.height: Kirigami.Units.iconSizes.small
+                        onClicked: root.settingsClicked()
+                    }
+                }
+
+                Loader {
+                    anchors.centerIn: parent
+                    active: headerDelegate.showsLaunchButton
+                    sourceComponent: LaunchSequenceButton {
+                        sequenceRunning: root.sequenceRunning
+                        onLaunchClicked: index => root.launchSequenceClicked(index)
+                        onCancelClicked: root.cancelSequenceClicked()
+                    }
                 }
             }
 

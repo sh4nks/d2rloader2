@@ -12,15 +12,7 @@ Kirigami.Card {
 
     Component.onCompleted: (background as Kirigami.ShadowedRectangle).radius = 0
 
-    header: CardHeader {
-        title: KI18n.i18nc("@title", "Application Log")
-
-        Button {
-            text: KI18n.i18nc("@action:button", "Clear Logs")
-            icon.name: "edit-clear-list"
-            onClicked: LogBuffer.clear()
-        }
-    }
+    header: null
     contentItem: ColumnLayout {
         spacing: 0
 

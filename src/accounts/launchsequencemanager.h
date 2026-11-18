@@ -19,9 +19,14 @@ class LaunchSequenceManager : public QAbstractListModel
     QML_ELEMENT
 
     /**
-     * The sequence selected in the accounts header, or -1 when there is none.
+     * The sequence selected in the accounts table, or -1 when there is none.
      */
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged)
+
+    /**
+     * The name of the selected sequence, empty when there is none.
+     */
+    Q_PROPERTY(QString currentName READ currentName NOTIFY currentNameChanged)
 
     /**
      * Why the sequences file could not be loaded, empty if it was. While this
@@ -53,6 +58,7 @@ public:
 
     int currentIndex() const;
     void setCurrentIndex(int row);
+    QString currentName() const;
     QString loadError() const;
 
     /**
@@ -74,6 +80,7 @@ public:
 
 Q_SIGNALS:
     void currentIndexChanged();
+    void currentNameChanged();
     void loadErrorChanged();
 
 private:

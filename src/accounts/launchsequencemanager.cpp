@@ -19,6 +19,8 @@ constexpr int SequencesFileVersion = 1;
 LaunchSequenceManager::LaunchSequenceManager(QObject *parent)
     : QAbstractListModel(parent)
 {
+    connect(this, &LaunchSequenceManager::currentIndexChanged, this, &LaunchSequenceManager::currentNameChanged);
+    connect(this, &LaunchSequenceManager::dataChanged, this, &LaunchSequenceManager::currentNameChanged);
     reload();
     connect(D2RLoaderConfig::self(), &D2RLoaderConfig::profilePathChanged, this, &LaunchSequenceManager::reload);
     connect(&ProfileManager::instance(), &ProfileManager::profileRemoved, this, &LaunchSequenceManager::forgetProfile);
@@ -115,6 +117,11 @@ void LaunchSequenceManager::setCurrentIndex(int row)
     D2RLoaderConfig::self()->setSelectedSequence(m_sequences.at(row).id);
     D2RLoaderConfig::self()->save();
     Q_EMIT currentIndexChanged();
+}
+
+QString LaunchSequenceManager::currentName() const
+{
+    return name(currentIndex());
 }
 
 QString LaunchSequenceManager::loadError() const

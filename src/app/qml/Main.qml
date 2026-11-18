@@ -330,26 +330,48 @@ Kirigami.ApplicationWindow {
             }
         }
 
-        // TabBar beneath the accounts table
-        TabBar {
-            id: tabBar
+        // TabBar beneath the accounts table, with the current tab's action
+        // at the trailing edge
+        RowLayout {
             Layout.fillWidth: true
+            Layout.rightMargin: Kirigami.Units.smallSpacing * 2
+            spacing: Kirigami.Units.smallSpacing
             visible: D2RLoaderConfig.showInfoPanel
 
-            TabButton {
-                implicitHeight: Kirigami.Units.gridUnit * 2
-                text: KI18n.i18nc("@title:tab", "Terror Zones")
-                icon.name: "view-calendar-day"
+            TabBar {
+                id: tabBar
+                Layout.fillWidth: true
+
+                TabButton {
+                    implicitHeight: Kirigami.Units.gridUnit * 2
+                    text: KI18n.i18nc("@title:tab", "Terror Zones")
+                    icon.name: "view-calendar-day"
+                }
+                TabButton {
+                    implicitHeight: Kirigami.Units.gridUnit * 2
+                    text: KI18n.i18nc("@title:tab", "Diablo Clone")
+                    icon.name: "view-media-artist"
+                }
+                TabButton {
+                    implicitHeight: Kirigami.Units.gridUnit * 2
+                    text: KI18n.i18nc("@title:tab", "Application Log")
+                    icon.name: "utilities-log-viewer"
+                }
             }
-            TabButton {
-                implicitHeight: Kirigami.Units.gridUnit * 2
-                text: KI18n.i18nc("@title:tab", "Diablo Clone")
-                icon.name: "view-media-artist"
+
+            ToolButton {
+                text: KI18n.i18nc("@action:button", "Refresh")
+                icon.name: "view-refresh"
+                visible: tabBar.currentIndex !== 2
+                enabled: !GameInfo.loading
+                onClicked: GameInfo.refresh()
             }
-            TabButton {
-                implicitHeight: Kirigami.Units.gridUnit * 2
-                text: KI18n.i18nc("@title:tab", "Application Log")
-                icon.name: "utilities-log-viewer"
+
+            ToolButton {
+                text: KI18n.i18nc("@action:button", "Clear Logs")
+                icon.name: "edit-clear-list"
+                visible: tabBar.currentIndex === 2
+                onClicked: LogBuffer.clear()
             }
         }
 
