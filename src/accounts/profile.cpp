@@ -22,6 +22,19 @@ QString enumToKey(Enum value)
     return key ? QString::fromLatin1(key) : QString();
 }
 
+/**
+ * The token out of the address the Battle.net login redirects to, such as
+ * "http://localhost:0/?ST=US-...&flowTrackingId=...". Anything else is taken
+ * to be the token itself.
+ */
+QString tokenFromLoginUrl(const QString &input)
+{
+    static const QRegularExpression parameter(QStringLiteral("(?:^|[?&])ST=([^&#\\s]+)"));
+    const QString trimmed = input.trimmed();
+    const QRegularExpressionMatch match = parameter.match(trimmed);
+    return match.hasMatch() ? match.captured(1) : trimmed;
+}
+
 template<typename Enum>
 Enum enumFromKey(const QJsonValue &value, Enum fallback)
 {
@@ -170,8 +183,10 @@ QString Profile::token() const
 
 void Profile::setToken(const QString &token)
 {
-    if (m_token != token) {
-        m_token = token;
+    const QString extracted = tokenFromLoginUrl(token);
+    // A field bound to the token still shows the pasted URL when its token is the stored one.
+    if (m_token != extracted || extracted != token) {
+        m_token = extracted;
         Q_EMIT tokenChanged();
     }
 }

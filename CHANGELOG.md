@@ -1,6 +1,13 @@
 # Changelog
 
 
+## Unreleased
+
+### Added
+
+- The token field of an account accepts the whole Battle.net login URL and takes the token out of it
+
+
 ## 0.6.0
 
 Released on Nov 18th, 2026

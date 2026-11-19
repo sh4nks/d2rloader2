@@ -75,7 +75,8 @@ This method works with Multi-Factor Authentication!
     - Your URL will look something like this:
     http://localhost:0/?ST=US-c099c810-2b2c-42b6-8bd0-ae6735d54510&flowTrackingId=37f670de-7831-4b32-9cb5-2a219e9eea4a
 
-    - Copy the part from ``US-c099c810-2b2c-42b6-8bd0-ae6735d54510&`` and paste it in your Account settings
+    - Copy the whole URL and paste it in your Account settings. D2RLoader takes the token
+      (``US-c099c810-2b2c-42b6-8bd0-ae6735d54510``) out of it.
 
     For Firefox you have to open the console (F12) and go to _Storage_ -> _Cookies_ and copy the **value** from the ``gs.id`` cookie
 

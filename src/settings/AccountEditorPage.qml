@@ -284,10 +284,10 @@ FormCard.FormCardPage {
         FormCard.FormTextFieldDelegate {
             id: tokenField
             label: KI18n.i18nc("@label", "Authentication Token")
-            description: KI18n.i18nc("@info:label", "The Battle.net login token.")
+            description: KI18n.i18nc("@info:label", "The Battle.net login token, or the address of the page the login redirected to.")
             visible: root.profile.authMethod === Accounts.AuthMethodModel.Token
             text: root.profile.token
-            placeholderText: KI18n.i18nc("@info:placeholder", "Enter your login token...")
+            placeholderText: KI18n.i18nc("@info:placeholder", "Enter your login token or paste the login URL...")
             onEditingFinished: root.profile.token = text
         }
 
