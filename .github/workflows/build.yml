@@ -37,7 +37,7 @@ jobs:
         with:
           msystem: UCRT64
           update: true
-          # The package list from the README's "Windows" section.
+          # The package list from the "Windows" section of BUILD.md.
           pacboy: >-
             gcc:p libgomp:p cmake:p ninja:p qt6-base:p qt6-declarative:p qt6-svg:p
             extra-cmake-modules:p kirigami:p kirigami-addons:p ki18n:p

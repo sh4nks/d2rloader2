@@ -8,6 +8,7 @@
 
 #include <KLocalizedString>
 #include <QRandomGenerator>
+#include <algorithm>
 
 GameManager::GameManager(QObject *parent)
     : QObject(parent)
@@ -86,19 +87,66 @@ void GameManager::startSequence(int row)
     }
 
     const LaunchSequenceManager &sequences = LaunchSequenceManager::instance();
+    startProfiles(sequences.name(row), sequences.profiles(row));
+}
+
+void GameManager::startByName(const QStringList &accounts, const QStringList &sequences)
+{
+    QList<Profile *> profiles;
+    const QList<Profile *> all = ProfileManager::instance().profiles();
+    for (const QString &name : accounts) {
+        const auto match = std::ranges::find_if(all, [&name](const Profile *profile) {
+            return profile->profileName().compare(name, Qt::CaseInsensitive) == 0;
+        });
+        if (match == all.cend()) {
+            qCWarning(LOG_GAME) << "no account is named" << name;
+            Q_EMIT launchFailed(name, i18nc("@info", "There is no account with this name."));
+        } else if (!profiles.contains(*match)) {
+            profiles.append(*match);
+        }
+    }
+
+    const LaunchSequenceManager &manager = LaunchSequenceManager::instance();
+    for (const QString &name : sequences) {
+        int row = 0;
+        while (row < manager.rowCount() && manager.name(row).compare(name, Qt::CaseInsensitive) != 0) {
+            ++row;
+        }
+        if (row == manager.rowCount()) {
+            qCWarning(LOG_GAME) << "no launch sequence is named" << name;
+            Q_EMIT launchFailed(name, i18nc("@info", "There is no launch sequence with this name."));
+            continue;
+        }
+        for (Profile *profile : manager.profiles(row)) {
+            if (!profiles.contains(profile)) {
+                profiles.append(profile);
+            }
+        }
+    }
+
+    startProfiles(QStringLiteral("command line"), profiles);
+}
+
+void GameManager::startProfiles(const QString &name, const QList<Profile *> &profiles)
+{
     if (!m_launcher) {
-        Q_EMIT launchFailed(sequences.name(row), i18nc("@info", "Launching the game is not supported on this platform yet."));
+        Q_EMIT launchFailed(name, i18nc("@info", "Launching the game is not supported on this platform yet."));
         return;
     }
 
-    const QList<Profile *> profiles = sequences.profiles(row);
     if (profiles.isEmpty()) {
         return;
     }
 
-    qCInfo(LOG_GAME) << "starting the launch sequence" << sequences.name(row) << "with" << profiles.count() << "accounts";
+    qCInfo(LOG_GAME) << "starting the launch sequence" << name << "with" << profiles.count() << "accounts";
     for (Profile *profile : profiles) {
-        m_sequence.append(profile);
+        if (!m_sequence.contains(profile)) {
+            m_sequence.append(profile);
+        }
+    }
+    // A sequence that is running goes on with the accounts added to it.
+    if (m_sequenceRunning) {
+        return;
     }
     setSequenceRunning(true);
     launchNextInSequence();

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds D2RLoader and packs it with everything it needs at runtime into a
 # portable zip. Run it from the MSYS2 UCRT64 shell with the packages listed in
-# the README's "Windows" section and zip installed.
+# the "Windows" section of BUILD.md and zip installed.
 set -euo pipefail
 
 if [[ ${MSYSTEM:-} != UCRT64 ]]; then

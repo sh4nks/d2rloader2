@@ -6,6 +6,9 @@
 ### Added
 
 - The token field of an account accepts the whole Battle.net login URL and takes the token out of it
+- Accounts and launch sequences can be started from the command line with `--launch` and `--sequence`,
+  and `--minimized` starts D2RLoader hidden in the system tray or minimized. A D2RLoader that is
+  running already takes over the launch.
 
 
 ## 0.6.0

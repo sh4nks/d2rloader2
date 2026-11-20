@@ -15,7 +15,11 @@ import com.someblocks.d2rloader.core
 
 Kirigami.ApplicationWindow {
     id: mainWindow
-    visible: true
+
+    // set by --minimized on the command line
+    property bool startMinimized: false
+
+    visible: !startMinimized
     width: D2RLoaderConfig.appSize.width
     height: D2RLoaderConfig.appSize.height
     // title: `${Application.name}`
@@ -165,10 +169,13 @@ Kirigami.ApplicationWindow {
         }
     }
 
-    // only with --debug on the command line
     Component.onCompleted: {
+        // only with --debug on the command line
         if (GameInfo.debugMode) {
             mainMenuBar.addMenu(debugMenu.createObject(mainMenuBar));
+        }
+        if (startMinimized && !(trayIcon.visible && trayIcon.available)) {
+            showMinimized();
         }
     }
 

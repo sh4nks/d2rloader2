@@ -43,6 +43,14 @@ public:
     Q_INVOKABLE void startSequence(int row);
 
     /**
+     * Starts the accounts named \a accounts, then those of the launch
+     * sequences named \a sequences, one after another like a launch sequence.
+     * Names are matched without regard to case. While a launch sequence is
+     * running, the accounts are started after its own.
+     */
+    void startByName(const QStringList &accounts, const QStringList &sequences);
+
+    /**
      * Stops starting further accounts of the running sequence. An account that
      * is starting already is left to finish.
      */
@@ -67,6 +75,7 @@ private:
     void onFinished(qint64 pid);
     void onProgress(Profile *profile, const QString &message);
 
+    void startProfiles(const QString &name, const QList<Profile *> &profiles);
     void launchNextInSequence();
     void sequenceStepDone(bool started);
     void setSequenceRunning(bool running);
