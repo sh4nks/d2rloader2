@@ -9,6 +9,7 @@
 - Accounts and launch sequences can be started from the command line with `--launch` and `--sequence`,
   and `--minimized` starts D2RLoader hidden in the system tray or minimized. A D2RLoader that is
   running already takes over the launch.
+- Launch sequences can start all their accounts at once with the new _Launch in Parallel_ setting (Linux only)
 
 
 ## 0.6.0

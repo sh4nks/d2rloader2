@@ -37,8 +37,9 @@ public:
 
     /**
      * Starts the accounts of the launch sequence in \a row one after another,
-     * waiting for each to be launched plus the configured delay. Accounts that
-     * are already running are skipped.
+     * waiting for each to be launched plus the configured delay, or all at
+     * once if the sequences are set to start in parallel. Accounts that are
+     * already running are skipped.
      */
     Q_INVOKABLE void startSequence(int row);
 

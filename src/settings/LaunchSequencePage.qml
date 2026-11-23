@@ -123,7 +123,26 @@ FormCard.FormCardPage {
     }
 
     FormCard.FormCard {
+        // On Windows the games share one registry and settings folder, so
+        // they cannot start at the same time.
+        FormCard.FormCheckDelegate {
+            id: parallelDelegate
+            visible: Qt.platform.os === "linux"
+            text: KI18n.i18nc("@label", "Launch in Parallel")
+            description: KI18n.i18nc("@info:label", "Starts all accounts of a sequence at once instead of one after another.")
+            checked: D2RLoaderConfig.sequenceParallel
+            onToggled: {
+                D2RLoaderConfig.sequenceParallel = checked;
+                D2RLoaderConfig.save();
+            }
+        }
+
+        FormCard.FormDelegateSeparator {
+            visible: parallelDelegate.visible
+        }
+
         FormCard.FormSpinBoxDelegate {
+            enabled: !D2RLoaderConfig.sequenceParallel
             label: KI18n.i18nc("@label", "Launch Delay")
             description: KI18n.i18nc("@info:label", "Seconds to wait after an account has started before starting the next one.")
             from: 1
@@ -139,6 +158,7 @@ FormCard.FormCardPage {
         FormCard.FormDelegateSeparator {}
 
         FormCard.FormCheckDelegate {
+            enabled: !D2RLoaderConfig.sequenceParallel
             text: KI18n.i18nc("@label", "Stop Sequence on Failure")
             description: KI18n.i18nc("@info:label", "Prevents further accounts from launching if one fails to start.")
             checked: D2RLoaderConfig.sequenceStopOnFailure
@@ -151,6 +171,7 @@ FormCard.FormCardPage {
         FormCard.FormDelegateSeparator {}
 
         FormCard.FormCheckDelegate {
+            enabled: !D2RLoaderConfig.sequenceParallel
             text: KI18n.i18nc("@label", "Randomize Delay")
             description: KI18n.i18nc("@info:label", "Adds up to half the launch delay at random.")
             checked: D2RLoaderConfig.sequenceRandomizeDelay

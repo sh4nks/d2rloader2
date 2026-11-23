@@ -138,6 +138,14 @@ void GameManager::startProfiles(const QString &name, const QList<Profile *> &pro
         return;
     }
 
+    if (D2RLoaderConfig::self()->sequenceParallel()) {
+        qCInfo(LOG_GAME) << "starting the" << profiles.count() << "accounts of the launch sequence" << name << "at once";
+        for (Profile *profile : profiles) {
+            start(profile);
+        }
+        return;
+    }
+
     qCInfo(LOG_GAME) << "starting the launch sequence" << name << "with" << profiles.count() << "accounts";
     for (Profile *profile : profiles) {
         if (!m_sequence.contains(profile)) {

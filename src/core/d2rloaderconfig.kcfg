@@ -125,6 +125,10 @@
       <label>Whether up to half the delay is added at random between the accounts of a launch sequence.</label>
       <default>false</default>
     </entry>
+    <entry name="sequenceParallel" type="Bool">
+      <label>Whether the accounts of a launch sequence are started all at once instead of one after another. Only offered on Linux.</label>
+      <default>false</default>
+    </entry>
   </group>
 
   <group name="Logging">

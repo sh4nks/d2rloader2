@@ -126,7 +126,8 @@ $ d2rloader --minimized --sequence "MF Team"   # the same but minimized
 ```
 
 - Names are matched without regard to case. Several accounts are started one after another with the
-  delay of the launch sequence settings, and accounts that are running already are skipped.
+  delay of the launch sequence settings, or all at once when _Launch in Parallel_ is enabled there (Linux only).
+  Accounts that are running already are skipped.
 - ``--minimized`` hides the window in the system tray when _Close to System Tray_ is enabled, and minimizes it otherwise.
 - When D2RLoader is running already, ``--launch`` and ``--sequence`` are passed on to it and no second window opens.
   The accounts are started after those of a launch sequence that is still running.
