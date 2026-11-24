@@ -62,6 +62,13 @@ private:
     void renameWindow(Profile *profile, qint64 pid, int attemptsLeft);
 
     /**
+     * Clicks into the game window of \a profile with d2rreg.exe every
+     * few seconds, \a clicksLeft times or until the window is gone, which
+     * skips the intro videos and the title screen.
+     */
+    void skipIntro(Profile *profile, int clicksLeft);
+
+    /**
      * Moves the game window of \a profile to its saved position with
      * d2rreg.exe, then follows it. On Plasma the KWin script does this.
      */

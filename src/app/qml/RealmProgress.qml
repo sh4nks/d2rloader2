@@ -1,11 +1,13 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import org.kde.kirigami as Kirigami
 
 /**
- * One row of the Diablo Clone table: a realm and how far its ladder and
- * non-ladder variant have progressed.
+ * One row of the Diablo Clone table: a realm and how far it has progressed
+ * in each of the game modes shown.
  */
 RowLayout {
     id: root
@@ -18,9 +20,9 @@ RowLayout {
     property alias regionName: regionLabel.text
 
     /**
-     * How far Diablo Clone has progressed on this realm.
+     * How far Diablo Clone has progressed on this realm, one value per mode.
      */
-    property int progress: 0
+    property var progresses: []
 
     /**
      * Highest progress the API reports.
@@ -36,9 +38,16 @@ RowLayout {
         Layout.preferredWidth: root.labelWidth
     }
 
-    RealmProgressBar {
-        progress: root.progress
-        maxProgress: root.maxProgress
-        Layout.fillWidth: true
+    Repeater {
+        model: root.progresses
+
+        delegate: RealmProgressBar {
+            required property int modelData
+
+            progress: modelData
+            maxProgress: root.maxProgress
+            Layout.fillWidth: true
+            Layout.preferredWidth: 1
+        }
     }
 }

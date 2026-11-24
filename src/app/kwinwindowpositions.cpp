@@ -39,18 +39,6 @@ QDBusMessage scriptingCall(const QString &method, const QVariantList &arguments)
     message.setArguments(arguments);
     return message;
 }
-
-Profile *profileWithWindowTitle(const QString &title)
-{
-    const QList<Profile *> profiles = ProfileManager::instance().profiles();
-    for (Profile *profile : profiles) {
-        // Steam's game window keeps the game's own title.
-        if (profile->authMethod() != AuthMethodModel::Steam && profile->windowTitle() == title) {
-            return profile;
-        }
-    }
-    return nullptr;
-}
 }
 
 bool KWinWindowPositions::isSupported()
@@ -137,7 +125,7 @@ bool KWinWindowPositions::handleMessage(const QDBusMessage &message, const QDBus
         return false;
     }
 
-    Profile *profile = profileWithWindowTitle(arguments.constFirst().toString());
+    Profile *profile = ProfileManager::profileForWindowTitle(ProfileManager::instance().profiles(), arguments.constFirst().toString());
     const bool remembered = profile && profile->rememberWindowPosition();
 
     if (message.member() == QLatin1String("windowPosition") && arguments.size() == 1) {

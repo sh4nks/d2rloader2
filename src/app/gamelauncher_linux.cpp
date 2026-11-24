@@ -34,7 +34,7 @@ const QString DefaultProtonPath = QStringLiteral("UMU-Latest");
  * window and keeps it in place. The version is part of the file name, so a
  * new version is downloaded next to the old one.
  */
-const QString TokenToolVersion = QStringLiteral("v0.0.4");
+const QString TokenToolVersion = QStringLiteral("v0.0.5");
 const QUrl TokenToolUrl(QStringLiteral("https://github.com/sh4nks/d2rreg/releases/download/%1/d2rreg.exe").arg(TokenToolVersion));
 
 QString tokenToolPath()
@@ -172,6 +172,15 @@ bool umuSetupDone(const QByteArray &line)
 {
     return line.startsWith("INFO: Running '");
 }
+
+/**
+ * A click skips the intro video that is playing, and another one the title
+ * screen that waits for a key. The videos start a moment after the window
+ * shows up, later while shaders compile, so the clicks go on for half a
+ * minute.
+ */
+const int SkipIntroClicks = 15;
+const std::chrono::seconds SkipIntroInterval{2};
 
 /**
  * How often the log of a starting umu-run is read for progress.
@@ -812,6 +821,9 @@ void LinuxGameLauncher::renameWindow(Profile *profile, qint64 pid, int attemptsL
         process->deleteLater();
         if (status == QProcess::NormalExit && exitCode == 0) {
             qCInfo(LOG_GAME) << "renamed the window of pid" << pid << "to" << title;
+            if (profile && D2RLoaderConfig::self()->skipIntro()) {
+                skipIntro(profile, SkipIntroClicks);
+            }
             // On Plasma the KWin script takes over once the window carries its title.
             if (profile && !m_kwinWindowPositions && profile->rememberWindowPosition()) {
                 restoreWindowPosition(profile);
@@ -820,6 +832,41 @@ void LinuxGameLauncher::renameWindow(Profile *profile, qint64 pid, int attemptsL
         }
         // d2rreg exits with 1 until the window exists.
         retry();
+    });
+
+    process->start();
+}
+
+void LinuxGameLauncher::skipIntro(Profile *profile, int clicksLeft)
+{
+    // Without the wineserver, wine would set up a prefix of its own.
+    const qint64 wineserver = wineserverProcess(profile->normalizedName());
+    if (clicksLeft <= 0 || wineEnvironment(wineserver).value(QStringLiteral("WINEPREFIX")).isEmpty()) {
+        return;
+    }
+
+    // The corner of the window, where a click that comes after the intro
+    // finds nothing to press.
+    const QStringList arguments{QStringLiteral("--click-window"), profile->windowTitle(), QStringLiteral("1"), QStringLiteral("1")};
+    QProcess *process = tokenToolProcess(wineserver, arguments, this);
+
+    connect(process, &QProcess::errorOccurred, this, [process](QProcess::ProcessError error) {
+        if (error == QProcess::FailedToStart) {
+            qCWarning(LOG_GAME) << "could not run d2rreg to skip the intro:" << process->errorString();
+            process->deleteLater();
+        }
+    });
+    connect(process, &QProcess::finished, this, [this, process, profile = QPointer(profile), clicksLeft](int exitCode, QProcess::ExitStatus status) {
+        process->deleteLater();
+        // d2rreg exits with 1 once the window is gone.
+        if (!profile || status != QProcess::NormalExit || exitCode != 0) {
+            return;
+        }
+        QTimer::singleShot(SkipIntroInterval, this, [this, profile, clicksLeft] {
+            if (profile) {
+                skipIntro(profile, clicksLeft - 1);
+            }
+        });
     });
 
     process->start();

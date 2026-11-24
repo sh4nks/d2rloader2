@@ -198,6 +198,39 @@ FormCard.FormCardPage {
     }
 
     FormCard.FormCard {
+        FormCard.FormTextFieldDelegate {
+            id: windowTitleField
+            label: KI18n.i18nc("@label", "Window Title")
+            description: KI18n.i18nc("@info:label", "The title given to every game window when its game starts. {name} is the account name, {region} the region (EU, US, KR) and {server} the server address. An account can have a title of its own.")
+            text: D2RLoaderConfig.windowTitleTemplate
+            placeholderText: D2RLoaderConfig.defaultWindowTitleTemplateValue
+            onEditingFinished: {
+                D2RLoaderConfig.windowTitleTemplate = text.trim().length > 0 ? text : D2RLoaderConfig.defaultWindowTitleTemplateValue;
+                D2RLoaderConfig.save();
+                text = D2RLoaderConfig.windowTitleTemplate;
+            }
+            status: Kirigami.MessageType.Warning
+            statusMessage: text.includes("{name}") ? "" : KI18n.i18nc("@info", "Window titles have to be unique among running games. Without {name} they are the same, and a number is appended.")
+        }
+
+        FormCard.FormDelegateSeparator {}
+
+        // The click is sent by d2rreg from inside the wineprefix of the game.
+        FormCard.FormCheckDelegate {
+            visible: Qt.platform.os === "linux"
+            text: KI18n.i18nc("@label", "Skip Intro")
+            description: KI18n.i18nc("@info:label", "Clicks into every game window while its game starts to skip the intro videos. The mouse pointer is left alone.")
+            checked: D2RLoaderConfig.skipIntro
+            onToggled: {
+                D2RLoaderConfig.skipIntro = checked;
+                D2RLoaderConfig.save();
+            }
+        }
+
+        FormCard.FormDelegateSeparator {
+            visible: Qt.platform.os === "linux"
+        }
+
         // The game runs natively on Windows, without a wineprefix or Proton.
         FormCard.AbstractFormDelegate {
             visible: !root.isWindows

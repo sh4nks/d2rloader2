@@ -243,26 +243,33 @@ bool coversAllZones(const QJsonArray &ids)
  */
 struct RealmSpec {
     const char *regionCode;
-    bool hardcore;
     bool rotw;
 };
 
 constexpr RealmSpec RealmSpecs[] = {
-    {"eu", false, false},
-    {"eu", true, false},
-    {"us", false, false},
-    {"us", true, false},
-    {"kr", false, false},
-    {"kr", true, false},
-    {"cn", false, false},
-    {"cn", true, false},
-    {"eu", false, true},
-    {"eu", true, true},
-    {"us", false, true},
-    {"us", true, true},
-    {"kr", false, true},
-    {"kr", true, true},
+    {"eu", false},
+    {"us", false},
+    {"kr", false},
+    {"cn", false},
+    {"eu", true},
+    {"us", true},
+    {"kr", true},
 };
+
+QString modeName(int mode)
+{
+    switch (mode) {
+    case D2RLoaderConfig::EnumDcloneMode::Softcore:
+        return i18nc("@title Diablo Clone game mode", "Softcore");
+    case D2RLoaderConfig::EnumDcloneMode::Hardcore:
+        return i18nc("@title Diablo Clone game mode", "Hardcore");
+    case D2RLoaderConfig::EnumDcloneMode::SoftcoreLadder:
+        return i18nc("@title Diablo Clone game mode", "Softcore Ladder");
+    case D2RLoaderConfig::EnumDcloneMode::HardcoreLadder:
+        return i18nc("@title Diablo Clone game mode", "Hardcore Ladder");
+    }
+    return QString();
+}
 
 /**
  * The immunity codes the API reports, folded to one code each: it sometimes
@@ -312,7 +319,7 @@ DCloneModel::DCloneModel(QObject *parent)
     : QAbstractListModel(parent)
 {
     for (const RealmSpec &spec : RealmSpecs) {
-        m_realms.append(Realm{QString::fromLatin1(spec.regionCode), spec.hardcore, spec.rotw, 0, 0});
+        m_realms.append(Realm{QString::fromLatin1(spec.regionCode), spec.rotw, {}});
     }
     rebuildRows();
 }
@@ -332,8 +339,13 @@ QVariant DCloneModel::data(const QModelIndex &index, int role) const
     switch (role) {
     case RegionRole:
         return regionName(realm.regionCode);
-    case ProgressRole:
-        return m_ladder ? realm.ladder : realm.nonLadder;
+    case ProgressesRole: {
+        QVariantList values;
+        for (int mode : m_modes) {
+            values.append(realm.progress[mode]);
+        }
+        return values;
+    }
     }
     return QVariant();
 }
@@ -342,7 +354,7 @@ QHash<int, QByteArray> DCloneModel::roleNames() const
 {
     static const QHash<int, QByteArray> roles{
         {RegionRole, "region"},
-        {ProgressRole, "progress"},
+        {ProgressesRole, "progresses"},
     };
     return roles;
 }
@@ -359,8 +371,7 @@ QList<DCloneModel::ProgressChange> DCloneModel::update(const QJsonObject &dclone
     const QList<Realm> before = m_realms;
 
     for (Realm &realm : m_realms) {
-        realm.ladder = 0;
-        realm.nonLadder = 0;
+        realm.progress.fill(0);
     }
 
     for (auto it = dclone.constBegin(); it != dclone.constEnd(); ++it) {
@@ -383,10 +394,13 @@ QList<DCloneModel::ProgressChange> DCloneModel::update(const QJsonObject &dclone
             continue;
         }
 
-        const int status = it.value().toObject()[QStringLiteral("status")].toInt();
+        // Matches the order of the dcloneMode choices.
+        const int mode = (ladder ? 2 : 0) + (hardcore ? 1 : 0);
+        // The API counts from 0, which d2emu.com itself shows as 1/6.
+        const int status = it.value().toObject()[QStringLiteral("status")].toInt() + 1;
         for (Realm &realm : m_realms) {
-            if (realm.regionCode == regionCode && realm.hardcore == hardcore && realm.rotw == rotw) {
-                (ladder ? realm.ladder : realm.nonLadder) = status;
+            if (realm.regionCode == regionCode && realm.rotw == rotw) {
+                realm.progress[mode] = status;
                 break;
             }
         }
@@ -398,10 +412,12 @@ QList<DCloneModel::ProgressChange> DCloneModel::update(const QJsonObject &dclone
 
     QList<ProgressChange> changes;
     for (int row : std::as_const(m_rows)) {
-        const int previous = m_ladder ? before.at(row).ladder : before.at(row).nonLadder;
-        const int current = m_ladder ? m_realms.at(row).ladder : m_realms.at(row).nonLadder;
-        if (previous != current) {
-            changes.append(ProgressChange{regionName(m_realms.at(row).regionCode), previous, current});
+        for (int mode : std::as_const(m_modes)) {
+            const int previous = before.at(row).progress[mode];
+            const int current = m_realms.at(row).progress[mode];
+            if (previous != current) {
+                changes.append(ProgressChange{regionName(m_realms.at(row).regionCode), mode, previous, current});
+            }
         }
     }
     return changes;
@@ -418,23 +434,13 @@ void DCloneModel::setRotw(bool rotw)
     endResetModel();
 }
 
-void DCloneModel::setMode(bool hardcore, bool ladder)
+void DCloneModel::setModes(const QList<int> &modes)
 {
-    if (m_hardcore == hardcore && m_ladder == ladder) {
+    if (m_modes == modes) {
         return;
     }
-
-    // The ladder flag only picks which value each row reports, but the
-    // hardcore flag changes which rows exist at all.
-    const bool rowsChange = m_hardcore != hardcore;
-    m_hardcore = hardcore;
-    m_ladder = ladder;
-
-    if (rowsChange) {
-        beginResetModel();
-        rebuildRows();
-        endResetModel();
-    } else if (!m_rows.isEmpty()) {
+    m_modes = modes;
+    if (!m_rows.isEmpty()) {
         Q_EMIT dataChanged(index(0), index(m_rows.count() - 1));
     }
 }
@@ -443,8 +449,7 @@ void DCloneModel::rebuildRows()
 {
     m_rows.clear();
     for (int i = 0; i < m_realms.count(); ++i) {
-        const Realm &realm = m_realms.at(i);
-        if (realm.rotw == m_rotw && realm.hardcore == m_hardcore) {
+        if (m_realms.at(i).rotw == m_rotw) {
             m_rows.append(i);
         }
     }
@@ -474,6 +479,7 @@ GameInfo::GameInfo(QObject *parent)
 
     applyDCloneMode();
     connect(D2RLoaderConfig::self(), &D2RLoaderConfig::dcloneModeChanged, this, &GameInfo::applyDCloneMode);
+    connect(D2RLoaderConfig::self(), &D2RLoaderConfig::dcloneExtraModesChanged, this, &GameInfo::applyDCloneMode);
 
     connect(m_refreshTimer, &QTimer::timeout, this, &GameInfo::refresh);
     connect(D2RLoaderConfig::self(), &D2RLoaderConfig::autoRefreshChanged, this, &GameInfo::applyRefreshSchedule);
@@ -488,28 +494,32 @@ GameInfo::GameInfo(QObject *parent)
     }
 }
 
-QString GameInfo::dcloneModeName() const
+QStringList GameInfo::dcloneModeNames() const
 {
-    switch (D2RLoaderConfig::self()->dcloneMode()) {
-    case D2RLoaderConfig::EnumDcloneMode::Softcore:
-        return i18nc("@title Diablo Clone game mode", "Softcore");
-    case D2RLoaderConfig::EnumDcloneMode::Hardcore:
-        return i18nc("@title Diablo Clone game mode", "Hardcore");
-    case D2RLoaderConfig::EnumDcloneMode::SoftcoreLadder:
-        return i18nc("@title Diablo Clone game mode", "Softcore Ladder");
-    case D2RLoaderConfig::EnumDcloneMode::HardcoreLadder:
-        return i18nc("@title Diablo Clone game mode", "Hardcore Ladder");
+    QStringList names;
+    const QList<int> modes = dcloneModes();
+    for (int mode : modes) {
+        names.append(modeName(mode));
     }
-    return QString();
+    return names;
+}
+
+QList<int> GameInfo::dcloneModes() const
+{
+    QList<int> modes{D2RLoaderConfig::self()->dcloneMode()};
+    const QList<int> extraModes = D2RLoaderConfig::self()->dcloneExtraModes();
+    for (int mode : extraModes) {
+        if (mode >= 0 && mode < DCloneModel::ModeCount && !modes.contains(mode)) {
+            modes.append(mode);
+        }
+    }
+    return modes;
 }
 
 void GameInfo::applyDCloneMode()
 {
-    const int mode = D2RLoaderConfig::self()->dcloneMode();
-    const bool hardcore = mode == D2RLoaderConfig::EnumDcloneMode::Hardcore || mode == D2RLoaderConfig::EnumDcloneMode::HardcoreLadder;
-    const bool ladder = mode == D2RLoaderConfig::EnumDcloneMode::SoftcoreLadder || mode == D2RLoaderConfig::EnumDcloneMode::HardcoreLadder;
-    m_dclone->setMode(hardcore, ladder);
-    Q_EMIT dcloneModeNameChanged();
+    m_dclone->setModes(dcloneModes());
+    Q_EMIT dcloneModeNamesChanged();
 }
 
 void GameInfo::applyRefreshSchedule()
@@ -828,7 +838,7 @@ void GameInfo::notifyDCloneProgress(const QList<DCloneModel::ProgressChange> &ch
         }
 
         const bool walking = change.current == DCloneModel::MaxProgress;
-        const QString realm = D2RLoaderConfig::self()->rotw() ? i18nc("@info a Return of the Warlock realm", "%1 (RotW)", change.region) : change.region;
+        const QString realm = D2RLoaderConfig::self()->rotw() ? i18nc("@info a Reign of the Warlock realm", "%1 (RotW)", change.region) : change.region;
 
         qCInfo(LOG_GAMEINFO) << "notifying about Diablo Clone progress" << realm << change.previous << "->" << change.current;
 
@@ -837,7 +847,7 @@ void GameInfo::notifyDCloneProgress(const QList<DCloneModel::ProgressChange> &ch
                          i18nc("@info realm, game mode, progress out of the maximum",
                                "%1 (%2) is at %3/%4.",
                                realm,
-                               dcloneModeName(),
+                               modeName(change.mode),
                                change.current,
                                DCloneModel::MaxProgress),
                          walking);
@@ -887,7 +897,7 @@ void GameInfo::debugDCloneProgress(bool walking)
     qCInfo(LOG_GAMEINFO) << "debug: simulating Diablo Clone progress";
     const int current = walking ? DCloneModel::MaxProgress : D2RLoaderConfig::self()->dcloneThreshold();
     const QString region = m_dclone->data(m_dclone->index(0), DCloneModel::RegionRole).toString();
-    notifyDCloneProgress({{region, current - 1, current}});
+    notifyDCloneProgress({{region, D2RLoaderConfig::self()->dcloneMode(), current - 1, current}});
 }
 
 void GameInfo::setError(const QString &error)

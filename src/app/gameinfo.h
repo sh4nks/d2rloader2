@@ -6,6 +6,8 @@
 #include <QStringList>
 #include <qqmlintegration.h>
 
+#include <array>
+
 class QNetworkAccessManager;
 class QNetworkReply;
 class QTimer;
@@ -23,14 +25,19 @@ class DCloneModel : public QAbstractListModel
 public:
     enum Roles {
         RegionRole = Qt::UserRole + 1,
-        ProgressRole,
+        ProgressesRole,
     };
     Q_ENUM(Roles)
 
     /**
-     * Highest progress d2emu.com reports, used to render the values as "n/6".
+     * Highest progress a realm can reach, used to render the values as "n/6".
      */
     static constexpr int MaxProgress = 6;
+
+    /**
+     * Number of game modes, which are the values of the dcloneMode setting.
+     */
+    static constexpr int ModeCount = 4;
 
     explicit DCloneModel(QObject *parent = nullptr);
 
@@ -40,10 +47,11 @@ public:
 
     /**
      * A realm whose progress changed in the last update(). Only the realms
-     * the model currently lists are reported, in the mode it lists them in.
+     * the model currently lists are reported, in the modes it lists them in.
      */
     struct ProgressChange {
         QString region;
+        int mode = 0;
         int previous = 0;
         int current = 0;
     };
@@ -56,33 +64,30 @@ public:
     QList<ProgressChange> update(const QJsonObject &dclone);
 
     /**
-     * Whether to list the Return of the Warlock realms rather than the
+     * Whether to list the Reign of the Warlock realms rather than the
      * regular ones.
      */
     void setRotw(bool rotw);
 
     /**
-     * Restricts the listing to one game mode: only realms matching
-     * \a hardcore are listed, and each reports its \a ladder progress.
+     * The game modes every realm reports its progress in, as dcloneMode
+     * values in display order.
      */
-    void setMode(bool hardcore, bool ladder);
+    void setModes(const QList<int> &modes);
 
 private:
     struct Realm {
         QString regionCode; /* eu, us, kr, cn */
-        bool hardcore = false;
         bool rotw = false;
-        int ladder = 0;
-        int nonLadder = 0;
+        std::array<int, ModeCount> progress{}; /* indexed by dcloneMode value */
     };
 
     void rebuildRows();
 
     QList<Realm> m_realms;
-    QList<int> m_rows; /* indices into m_realms, filtered by m_rotw and m_hardcore */
+    QList<int> m_rows; /* indices into m_realms, filtered by m_rotw */
+    QList<int> m_modes;
     bool m_rotw = false;
-    bool m_hardcore = false;
-    bool m_ladder = true;
 };
 
 /**
@@ -112,7 +117,7 @@ class GameInfo : public QObject
     Q_PROPERTY(bool loading READ loading NOTIFY loadingChanged)
     Q_PROPERTY(QString errorString READ errorString NOTIFY errorStringChanged)
     Q_PROPERTY(DCloneModel *dcloneModel READ dcloneModel CONSTANT)
-    Q_PROPERTY(QString dcloneModeName READ dcloneModeName NOTIFY dcloneModeNameChanged)
+    Q_PROPERTY(QStringList dcloneModeNames READ dcloneModeNames NOTIFY dcloneModeNamesChanged)
     Q_PROPERTY(bool debugMode READ debugMode CONSTANT)
 
 public:
@@ -149,9 +154,9 @@ public:
     DCloneModel *dcloneModel() const;
 
     /**
-     * Human readable name of the currently selected Diablo Clone mode.
+     * Human readable names of the Diablo Clone modes shown, in column order.
      */
-    QString dcloneModeName() const;
+    QStringList dcloneModeNames() const;
 
     /**
      * Maps a terror zone level id to its name, as the API reports ids rather
@@ -181,7 +186,7 @@ Q_SIGNALS:
     void lastUpdatedChanged();
     void loadingChanged();
     void errorStringChanged();
-    void dcloneModeNameChanged();
+    void dcloneModeNamesChanged();
 
     /**
      * A desktop notification the window has to show itself. Only emitted on
@@ -210,7 +215,12 @@ private:
     void scheduleTerrorZoneRefresh();
 
     /**
-     * Pushes the configured mode onto the Diablo Clone model.
+     * The preferred Diablo Clone mode followed by the extra ones configured.
+     */
+    QList<int> dcloneModes() const;
+
+    /**
+     * Pushes the configured modes onto the Diablo Clone model.
      */
     void applyDCloneMode();
 

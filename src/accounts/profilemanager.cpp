@@ -12,6 +12,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSaveFile>
+#include <algorithm>
 
 namespace
 {
@@ -197,6 +198,35 @@ bool ProfileManager::isProfileNameTaken(const QString &name, const Profile *exce
         }
     }
     return false;
+}
+
+void ProfileManager::claimWindowTitle(Profile *profile)
+{
+    const auto isTaken = [this, profile](const QString &title) {
+        return std::ranges::any_of(m_profiles, [profile, &title](const Profile *other) {
+            return other != profile && other->isWindowTitleClaimed() && other->windowTitle() == title;
+        });
+    };
+
+    const QString base = profile->expandedWindowTitle();
+    QString title = base;
+    for (int number = 2; isTaken(title); ++number) {
+        title = QStringLiteral("%1 (%2)").arg(base).arg(number);
+    }
+    profile->setWindowTitle(title);
+}
+
+Profile *ProfileManager::profileForWindowTitle(const QList<Profile *> &profiles, const QString &title)
+{
+    for (const bool claimed : {true, false}) {
+        for (Profile *profile : profiles) {
+            // Steam's game window keeps the game's own title.
+            if (profile->authMethod() != AuthMethodModel::Steam && profile->isWindowTitleClaimed() == claimed && profile->windowTitle() == title) {
+                return profile;
+            }
+        }
+    }
+    return nullptr;
 }
 
 QString ProfileManager::uniqueProfileName(const QString &base) const
@@ -496,8 +526,9 @@ bool ProfileManager::hasChanges(Profile *draft) const
     const Profile *existing = profileById(draft->id());
     const Profile blank;
     QJsonObject original = (existing ? existing : &blank)->toJson();
-    // Left alone by Profile::copyFrom(), so the draft never has it.
+    // Left alone by Profile::copyFrom(), so the draft never has them.
     original.remove(QStringLiteral("windowPosition"));
+    original.remove(QStringLiteral("windowTitle"));
     return draft->toJson() != original;
 }
 
@@ -523,6 +554,7 @@ void ProfileManager::watch(Profile *profile)
         }
     });
     connect(profile, &Profile::windowPositionChanged, this, &ProfileManager::writeAccounts);
+    connect(profile, &Profile::windowTitleChanged, this, &ProfileManager::writeAccounts);
 }
 
 int ProfileManager::calculateNextId()
@@ -668,6 +700,8 @@ QString ProfileManager::importAccounts(const QUrl &url, bool replace)
     }
     for (Profile *profile : std::as_const(imported)) {
         profile->setId(calculateNextId());
+        // The title belongs to a game that ran where the file was written.
+        profile->setWindowTitle({});
     }
 
     QList<Profile *> removed;

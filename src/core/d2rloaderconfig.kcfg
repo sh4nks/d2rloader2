@@ -52,6 +52,17 @@
     </entry>
   </group>
 
+  <group name="Game">
+    <entry name="windowTitleTemplate" type="String">
+      <label>Title given to the game windows. {name} is the account name, {region} the region (EU, US, KR) and {server} the server address.</label>
+      <default>{name} ({server})</default>
+    </entry>
+    <entry name="skipIntro" type="Bool">
+      <label>Whether the intro videos are skipped by clicking into the game window once it shows up. Only offered on Linux.</label>
+      <default>false</default>
+    </entry>
+  </group>
+
   <group name="D2Emu">
     <entry name="d2emuUser" type="String">
       <label>D2Emu.com account username.</label>
@@ -83,8 +94,12 @@
       </choices>
       <default>SoftcoreLadder</default>
     </entry>
+    <entry name="dcloneExtraModes" type="IntList">
+      <label>Diablo Clone modes shown next to dcloneMode, as dcloneMode values.</label>
+      <default></default>
+    </entry>
     <entry name="rotw" type="Bool">
-      <label>Show Return of the Warlock realms instead of the regular ones.</label>
+      <label>Show Reign of the Warlock realms instead of the regular ones.</label>
       <default>true</default>
     </entry>
   </group>

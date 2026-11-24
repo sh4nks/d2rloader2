@@ -33,7 +33,14 @@ GameManager::GameManager(QObject *parent)
     connect(m_launcher, &GameLauncher::progress, this, &GameManager::onProgress);
 
     // The accounts are loaded before QML creates this singleton.
-    m_launcher->adopt(ProfileManager::instance().profiles());
+    const QList<Profile *> profiles = ProfileManager::instance().profiles();
+    m_launcher->adopt(profiles);
+    // A game that ended left its window title behind, as the window may still
+    // be asked about while it closes. One started by an older loader has none
+    // to keep yet.
+    for (Profile *profile : profiles) {
+        profile->setWindowTitle(profile->status() == ProfileState::Running ? profile->windowTitle() : QString());
+    }
 }
 
 void GameManager::start(Profile *profile)
@@ -48,6 +55,7 @@ void GameManager::start(Profile *profile)
     }
 
     profile->setStatus(ProfileState::Starting);
+    ProfileManager::instance().claimWindowTitle(profile);
     m_launcher->launch(profile);
 }
 
@@ -232,6 +240,7 @@ void GameManager::onLaunched(Profile *profile, qint64 pid)
     onProgress(profile, {});
     if (pid == 0) {
         profile->setStatus(ProfileState::Stopped);
+        profile->setWindowTitle({});
     } else {
         m_running.insert(pid, profile);
         profile->setStatus(ProfileState::Running);
@@ -247,6 +256,7 @@ void GameManager::onFailed(Profile *profile, const QString &error)
     qCWarning(LOG_GAME) << "could not launch" << profile->profileName() << ":" << error;
     onProgress(profile, {});
     profile->setStatus(ProfileState::Stopped);
+    profile->setWindowTitle({});
     Q_EMIT launchFailed(profile->profileName(), error);
 
     if (profile == m_sequenceProfile) {

@@ -32,7 +32,7 @@ Kirigami.Card {
             }
 
             CheckBox {
-                text: KI18n.i18nc("@option:check a set of alternative realms", "Return of the Warlock")
+                text: KI18n.i18nc("@option:check a set of alternative realms", "Reign of the Warlock")
                 checked: D2RLoaderConfig.rotw
                 onToggled: {
                     D2RLoaderConfig.rotw = checked;
@@ -53,12 +53,20 @@ Kirigami.Card {
                 color: Kirigami.Theme.textColor
                 Layout.preferredWidth: Kirigami.Units.gridUnit * 5
             }
-            Label {
-                text: GameInfo.dcloneModeName
-                font.bold: true
-                opacity: 0.7
-                color: Kirigami.Theme.textColor
-                Layout.fillWidth: true
+            Repeater {
+                model: GameInfo.dcloneModeNames
+
+                delegate: Label {
+                    required property string modelData
+
+                    text: modelData
+                    font.bold: true
+                    opacity: 0.7
+                    color: Kirigami.Theme.textColor
+                    elide: Text.ElideRight
+                    Layout.fillWidth: true
+                    Layout.preferredWidth: 1
+                }
             }
         }
 
@@ -69,7 +77,7 @@ Kirigami.Card {
                 required property var model
 
                 regionName: model.region
-                progress: model.progress
+                progresses: model.progresses
             }
         }
 

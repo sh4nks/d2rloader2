@@ -104,6 +104,20 @@ public:
     Q_INVOKABLE void cloneProfile(int row);
     QList<Profile *> profiles() const;
 
+    /**
+     * Gives \a profile the window title its game is started with: its
+     * expanded template, numbered when another account was started with
+     * that title.
+     */
+    void claimWindowTitle(Profile *profile);
+
+    /**
+     * The account out of \a profiles whose game window is titled \a title,
+     * nullptr if there is none. An account started with the title comes
+     * before one whose template merely expands to it.
+     */
+    static Profile *profileForWindowTitle(const QList<Profile *> &profiles, const QString &title);
+
     Q_INVOKABLE int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     Q_INVOKABLE int columnCount(const QModelIndex &parent = QModelIndex()) const override;
     Q_INVOKABLE QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;

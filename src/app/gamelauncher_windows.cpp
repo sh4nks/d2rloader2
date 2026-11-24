@@ -2,6 +2,7 @@
 #include "../accounts/gamesettings.h"
 #include "../accounts/lootfilters.h"
 #include "../accounts/profile.h"
+#include "../accounts/profilemanager.h"
 #include "../core/logging.h"
 #include "d2rloaderconfig.h"
 
@@ -537,19 +538,16 @@ void WindowsGameLauncher::adopt(const QList<Profile *> &profiles)
         if (!games.contains(pid) || m_processes.contains(pid)) {
             return;
         }
-        const QString title = windowTitle(window);
-        for (Profile *profile : profiles) {
-            if (title != profile->windowTitle()) {
-                continue;
-            }
-            qCInfo(LOG_GAME) << "found" << profile->profileName() << "still running as pid" << pid;
-            Q_EMIT launched(profile, pid);
-            watch(pid);
-            matchTitleBar(window);
-            if (profile->rememberWindowPosition()) {
-                followWindow(profile, pid, window);
-            }
-            break;
+        Profile *profile = ProfileManager::profileForWindowTitle(profiles, windowTitle(window));
+        if (!profile) {
+            return;
+        }
+        qCInfo(LOG_GAME) << "found" << profile->profileName() << "still running as pid" << pid;
+        Q_EMIT launched(profile, pid);
+        watch(pid);
+        matchTitleBar(window);
+        if (profile->rememberWindowPosition()) {
+            followWindow(profile, pid, window);
         }
     });
 }

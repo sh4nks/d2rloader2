@@ -126,12 +126,33 @@ FormCard.FormCardPage {
         FormCard.FormComboBoxDelegate {
             id: modeField
             text: KI18n.i18nc("@label", "Preferred Mode")
-            description: KI18n.i18nc("@info:label", "Which realms the Diablo Clone tab lists, and the mode to prioritize for notifications.")
+            description: KI18n.i18nc("@info:label", "The mode the Diablo Clone tab lists first.")
             model: [KI18n.i18nc("@item", "Softcore"), KI18n.i18nc("@item", "Hardcore"), KI18n.i18nc("@item", "Softcore Ladder"), KI18n.i18nc("@item", "Hardcore Ladder")]
             currentIndex: D2RLoaderConfig.dcloneMode
             onActivated: {
                 D2RLoaderConfig.dcloneMode = currentIndex;
                 D2RLoaderConfig.save();
+            }
+        }
+
+        Repeater {
+            model: modeField.model
+
+            delegate: FormCard.FormCheckDelegate {
+                required property int index
+                required property string modelData
+
+                visible: index !== D2RLoaderConfig.dcloneMode
+                text: KI18n.i18nc("@option:check %1 is a game mode", "Also show %1", modelData)
+                checked: D2RLoaderConfig.dcloneExtraModes.includes(index)
+                onToggled: {
+                    const modes = Array.from(D2RLoaderConfig.dcloneExtraModes).filter(mode => mode !== index);
+                    if (checked) {
+                        modes.push(index);
+                    }
+                    D2RLoaderConfig.dcloneExtraModes = modes;
+                    D2RLoaderConfig.save();
+                }
             }
         }
     }

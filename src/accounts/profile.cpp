@@ -79,10 +79,69 @@ QString Profile::wineprefix() const
     return QDir(D2RLoaderConfig::self()->wineprefixPath()).filePath(normalizedName());
 }
 
+QString Profile::windowTitleTemplate() const
+{
+    return m_windowTitleTemplate;
+}
+
+void Profile::setWindowTitleTemplate(const QString &windowTitleTemplate)
+{
+    if (m_windowTitleTemplate != windowTitleTemplate) {
+        m_windowTitleTemplate = windowTitleTemplate;
+        Q_EMIT windowTitleTemplateChanged();
+    }
+}
+
+QString Profile::expandedWindowTitle() const
+{
+    static const QRegularExpression placeholder(QStringLiteral(R"(\{(name|region|server)\})"));
+
+    const QString server = RegionModel::server(m_region);
+    const auto expand = [this, &server](const QString &pattern) {
+        QString title;
+        qsizetype copied = 0;
+        // One pass, so that a name containing a placeholder is not expanded again.
+        for (const QRegularExpressionMatch &match : placeholder.globalMatch(pattern)) {
+            title += QStringView(pattern).mid(copied, match.capturedStart() - copied);
+            copied = match.capturedEnd();
+            const QStringView key = match.capturedView(1);
+            if (key == QLatin1String("name")) {
+                title += m_profileName.isEmpty() ? m_email : m_profileName;
+            } else if (key == QLatin1String("region")) {
+                title += server.section(u'.', 0, 0).toUpper();
+            } else {
+                title += server;
+            }
+        }
+        title += QStringView(pattern).mid(copied);
+        return title.trimmed();
+    };
+
+    for (const QString &pattern : {m_windowTitleTemplate, D2RLoaderConfig::self()->windowTitleTemplate()}) {
+        if (const QString title = expand(pattern); !title.isEmpty()) {
+            return title;
+        }
+    }
+    // A window without a title cannot be found again.
+    return expand(D2RLoaderConfig::self()->defaultWindowTitleTemplateValue());
+}
+
 QString Profile::windowTitle() const
 {
-    const QString name = m_profileName.isEmpty() ? m_email : m_profileName;
-    return QStringLiteral("%1 (%2)").arg(name, RegionModel::server(m_region));
+    return m_windowTitle.isEmpty() ? expandedWindowTitle() : m_windowTitle;
+}
+
+bool Profile::isWindowTitleClaimed() const
+{
+    return !m_windowTitle.isEmpty();
+}
+
+void Profile::setWindowTitle(const QString &windowTitle)
+{
+    if (m_windowTitle != windowTitle) {
+        m_windowTitle = windowTitle;
+        Q_EMIT windowTitleChanged();
+    }
 }
 
 int Profile::id() const
@@ -329,6 +388,7 @@ void Profile::copyFrom(const Profile *other)
     setEnvironmentVariables(other->environmentVariables());
     setLootFilter(other->lootFilter());
     setRememberWindowPosition(other->rememberWindowPosition());
+    setWindowTitleTemplate(other->windowTitleTemplate());
 }
 
 QJsonObject Profile::toJson() const
@@ -350,7 +410,11 @@ QJsonObject Profile::toJson() const
         {QStringLiteral("environmentVariables"), m_environmentVariables},
         {QStringLiteral("lootFilter"), m_lootFilter},
         {QStringLiteral("rememberWindowPosition"), m_rememberWindowPosition},
+        {QStringLiteral("windowTitleTemplate"), m_windowTitleTemplate},
     };
+    if (!m_windowTitle.isEmpty()) {
+        json[QStringLiteral("windowTitle")] = m_windowTitle;
+    }
     if (m_windowPosition) {
         json[QStringLiteral("windowPosition")] = QJsonObject{{QStringLiteral("x"), m_windowPosition->x()}, {QStringLiteral("y"), m_windowPosition->y()}};
     }
@@ -375,6 +439,8 @@ Profile *Profile::fromJson(const QJsonObject &json, QObject *parent)
     profile->setEnvironmentVariables(json[QStringLiteral("environmentVariables")].toString());
     profile->setLootFilter(json[QStringLiteral("lootFilter")].toString());
     profile->setRememberWindowPosition(json[QStringLiteral("rememberWindowPosition")].toBool(true));
+    profile->setWindowTitleTemplate(json[QStringLiteral("windowTitleTemplate")].toString());
+    profile->setWindowTitle(json[QStringLiteral("windowTitle")].toString());
     if (const QJsonValue position = json[QStringLiteral("windowPosition")]; position.isObject()) {
         profile->setWindowPosition(QPoint(position[QStringLiteral("x")].toInt(), position[QStringLiteral("y")].toInt()));
     }

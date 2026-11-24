@@ -63,6 +63,7 @@ class Profile : public QObject
     Q_PROPERTY(QString environmentVariables READ environmentVariables WRITE setEnvironmentVariables NOTIFY environmentVariablesChanged)
     Q_PROPERTY(QString lootFilter READ lootFilter WRITE setLootFilter NOTIFY lootFilterChanged)
     Q_PROPERTY(bool rememberWindowPosition READ rememberWindowPosition WRITE setRememberWindowPosition NOTIFY rememberWindowPositionChanged)
+    Q_PROPERTY(QString windowTitleTemplate READ windowTitleTemplate WRITE setWindowTitleTemplate NOTIFY windowTitleTemplateChanged)
 
 public:
     explicit Profile(QObject *parent = nullptr);
@@ -134,10 +135,30 @@ public:
     void setWindowPosition(const QPoint &windowPosition);
 
     /**
-     * The title the game window of this account is renamed to, in the format
-     * of the original D2RLoader: "Account (server address)".
+     * The window title template of this account, empty to use the one from
+     * the application settings.
+     */
+    QString windowTitleTemplate() const;
+    void setWindowTitleTemplate(const QString &windowTitleTemplate);
+
+    /**
+     * The template of this account with {name}, {region} and {server} filled
+     * in. The default template gives the title of the original D2RLoader:
+     * "Account (server address)".
+     */
+    Q_INVOKABLE QString expandedWindowTitle() const;
+
+    /**
+     * The title of the game window of this account: the one its game was
+     * last started with, expandedWindowTitle() while there is none.
      */
     QString windowTitle() const;
+    void setWindowTitle(const QString &windowTitle);
+
+    /**
+     * Whether windowTitle() is one a game was started with.
+     */
+    bool isWindowTitleClaimed() const;
 
     /**
      * The profile name reduced to lowercase ASCII words joined by "-",
@@ -155,8 +176,9 @@ public:
 
     /**
      * Copies every persisted field, including the id, from \a other.
-     * The runtime status and the window position are left alone: both come
-     * from the running game, which an editor's draft must not overwrite.
+     * The runtime status, the window position and the window title are left
+     * alone: they come from the running game, which an editor's draft must
+     * not overwrite.
      */
     void copyFrom(const Profile *other);
 
@@ -180,6 +202,8 @@ Q_SIGNALS:
     void lootFilterChanged();
     void rememberWindowPositionChanged();
     void windowPositionChanged();
+    void windowTitleTemplateChanged();
+    void windowTitleChanged();
 
 private:
     int m_id = 0; /* 0 means "not stored yet", see ProfileManager::commit() */
@@ -199,4 +223,6 @@ private:
     QString m_lootFilter;
     bool m_rememberWindowPosition = true;
     std::optional<QPoint> m_windowPosition;
+    QString m_windowTitleTemplate;
+    QString m_windowTitle;
 };

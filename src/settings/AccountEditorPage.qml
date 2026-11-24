@@ -554,6 +554,32 @@ FormCard.FormCardPage {
     }
 
     FormCard.FormCard {
+        FormCard.FormTextFieldDelegate {
+            id: windowTitleField
+
+            readonly property string title: {
+                // The title also follows the name and the region, which the
+                // call cannot report as dependencies.
+                root.profile.profileName;
+                root.profile.region;
+                root.profile.windowTitleTemplate;
+                D2RLoaderConfig.windowTitleTemplate;
+                return root.profile.expandedWindowTitle();
+            }
+
+            // Steam's game window keeps the game's own title.
+            enabled: root.profile.authMethod !== Accounts.AuthMethodModel.Steam
+            label: KI18n.i18nc("@label", "Window Title")
+            description: enabled ? KI18n.i18nc("@info:label %1 is a window title", "This account's game window is titled \"%1\". Leave empty to use the title from the application settings. {name} is the account name, {region} the region (EU, US, KR) and {server} the server address.", windowTitleField.title) : KI18n.i18nc("@info:label", "Steam accounts keep the game's own window title.")
+            text: root.profile.windowTitleTemplate
+            placeholderText: D2RLoaderConfig.windowTitleTemplate
+            onEditingFinished: root.profile.windowTitleTemplate = text
+            status: Kirigami.MessageType.Warning
+            statusMessage: text.trim().length > 0 ? KI18n.i18nc("@info", "Window titles have to be unique among running games. If two would be the same, a number is appended.") : ""
+        }
+
+        FormCard.FormDelegateSeparator {}
+
         FormCard.FormSwitchDelegate {
             // Steam's game window keeps the game's own title, so it cannot be told apart.
             enabled: root.profile.authMethod !== Accounts.AuthMethodModel.Steam
