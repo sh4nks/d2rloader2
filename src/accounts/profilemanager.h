@@ -106,8 +106,8 @@ public:
 
     /**
      * Gives \a profile the window title its game is started with: its
-     * expanded template, numbered when another account was started with
-     * that title.
+     * expanded template, numbered when the game of another account runs
+     * with that title.
      */
     void claimWindowTitle(Profile *profile);
 

@@ -2,6 +2,7 @@
 
 #include "gamelauncher.h"
 
+#include <QDeadlineTimer>
 #include <QProcessEnvironment>
 #include <QSet>
 #include <functional>
@@ -63,10 +64,10 @@ private:
 
     /**
      * Clicks into the game window of \a profile with d2rreg.exe every
-     * few seconds, \a clicksLeft times or until the window is gone, which
+     * few seconds, until \a deadline or until the window is gone, which
      * skips the intro videos and the title screen.
      */
-    void skipIntro(Profile *profile, int clicksLeft);
+    void skipIntro(Profile *profile, QDeadlineTimer deadline);
 
     /**
      * Moves the game window of \a profile to its saved position with

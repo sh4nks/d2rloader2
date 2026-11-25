@@ -506,12 +506,17 @@ QStringList GameInfo::dcloneModeNames() const
 
 QList<int> GameInfo::dcloneModes() const
 {
-    QList<int> modes{D2RLoaderConfig::self()->dcloneMode()};
-    const QList<int> extraModes = D2RLoaderConfig::self()->dcloneExtraModes();
-    for (int mode : extraModes) {
+    // A configuration file can hold any number, which would index past the
+    // progress of a realm.
+    QList<int> modes;
+    const QList<int> configured = QList<int>{D2RLoaderConfig::self()->dcloneMode()} + D2RLoaderConfig::self()->dcloneExtraModes();
+    for (int mode : configured) {
         if (mode >= 0 && mode < DCloneModel::ModeCount && !modes.contains(mode)) {
             modes.append(mode);
         }
+    }
+    if (modes.isEmpty()) {
+        modes.append(D2RLoaderConfig::self()->defaultDcloneModeValue());
     }
     return modes;
 }
@@ -897,7 +902,7 @@ void GameInfo::debugDCloneProgress(bool walking)
     qCInfo(LOG_GAMEINFO) << "debug: simulating Diablo Clone progress";
     const int current = walking ? DCloneModel::MaxProgress : D2RLoaderConfig::self()->dcloneThreshold();
     const QString region = m_dclone->data(m_dclone->index(0), DCloneModel::RegionRole).toString();
-    notifyDCloneProgress({{region, D2RLoaderConfig::self()->dcloneMode(), current - 1, current}});
+    notifyDCloneProgress({{region, dcloneModes().constFirst(), current - 1, current}});
 }
 
 void GameInfo::setError(const QString &error)

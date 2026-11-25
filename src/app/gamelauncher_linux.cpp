@@ -175,11 +175,11 @@ bool umuSetupDone(const QByteArray &line)
 
 /**
  * A click skips the intro video that is playing, and another one the title
- * screen that waits for a key. The videos start a moment after the window
- * shows up, later while shaders compile, so the clicks go on for half a
- * minute.
+ * screen that waits for a key, which is passed about 10 seconds after the
+ * window shows up. The clicks stop soon after that, as later ones would land
+ * in the lobby or in a game.
  */
-const int SkipIntroClicks = 15;
+const std::chrono::seconds SkipIntroDuration{20};
 const std::chrono::seconds SkipIntroInterval{2};
 
 /**
@@ -822,7 +822,7 @@ void LinuxGameLauncher::renameWindow(Profile *profile, qint64 pid, int attemptsL
         if (status == QProcess::NormalExit && exitCode == 0) {
             qCInfo(LOG_GAME) << "renamed the window of pid" << pid << "to" << title;
             if (profile && D2RLoaderConfig::self()->skipIntro()) {
-                skipIntro(profile, SkipIntroClicks);
+                skipIntro(profile, QDeadlineTimer(SkipIntroDuration));
             }
             // On Plasma the KWin script takes over once the window carries its title.
             if (profile && !m_kwinWindowPositions && profile->rememberWindowPosition()) {
@@ -837,11 +837,11 @@ void LinuxGameLauncher::renameWindow(Profile *profile, qint64 pid, int attemptsL
     process->start();
 }
 
-void LinuxGameLauncher::skipIntro(Profile *profile, int clicksLeft)
+void LinuxGameLauncher::skipIntro(Profile *profile, QDeadlineTimer deadline)
 {
     // Without the wineserver, wine would set up a prefix of its own.
     const qint64 wineserver = wineserverProcess(profile->normalizedName());
-    if (clicksLeft <= 0 || wineEnvironment(wineserver).value(QStringLiteral("WINEPREFIX")).isEmpty()) {
+    if (deadline.hasExpired() || wineEnvironment(wineserver).value(QStringLiteral("WINEPREFIX")).isEmpty()) {
         return;
     }
 
@@ -856,15 +856,15 @@ void LinuxGameLauncher::skipIntro(Profile *profile, int clicksLeft)
             process->deleteLater();
         }
     });
-    connect(process, &QProcess::finished, this, [this, process, profile = QPointer(profile), clicksLeft](int exitCode, QProcess::ExitStatus status) {
+    connect(process, &QProcess::finished, this, [this, process, profile = QPointer(profile), deadline](int exitCode, QProcess::ExitStatus status) {
         process->deleteLater();
         // d2rreg exits with 1 once the window is gone.
         if (!profile || status != QProcess::NormalExit || exitCode != 0) {
             return;
         }
-        QTimer::singleShot(SkipIntroInterval, this, [this, profile, clicksLeft] {
+        QTimer::singleShot(SkipIntroInterval, this, [this, profile, deadline] {
             if (profile) {
-                skipIntro(profile, clicksLeft - 1);
+                skipIntro(profile, deadline);
             }
         });
     });

@@ -202,15 +202,21 @@ bool ProfileManager::isProfileNameTaken(const QString &name, const Profile *exce
 
 void ProfileManager::claimWindowTitle(Profile *profile)
 {
-    const auto isTaken = [this, profile](const QString &title) {
-        return std::ranges::any_of(m_profiles, [profile, &title](const Profile *other) {
+    const auto holder = [this, profile](const QString &title) {
+        const auto match = std::ranges::find_if(m_profiles, [profile, &title](const Profile *other) {
             return other != profile && other->isWindowTitleClaimed() && other->windowTitle() == title;
         });
+        return match == m_profiles.end() ? nullptr : *match;
     };
 
     const QString base = profile->expandedWindowTitle();
     QString title = base;
-    for (int number = 2; isTaken(title); ++number) {
+    for (int number = 2; Profile *other = holder(title); ++number) {
+        // A game that ended keeps its title only until another one wants it.
+        if (other->status() != ProfileState::Running && other->status() != ProfileState::Starting) {
+            other->setWindowTitle({});
+            break;
+        }
         title = QStringLiteral("%1 (%2)").arg(base).arg(number);
     }
     profile->setWindowTitle(title);

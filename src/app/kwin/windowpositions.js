@@ -5,16 +5,19 @@ const service = "com.someblocks.d2rloader";
 const path = "/WindowPositions";
 const iface = "com.someblocks.d2rloader.WindowPositions";
 const gameTitle = "Diablo II: Resurrected";
+// wine names the class of an X11 window after its program.
+const gameProgram = "d2r.exe";
 
-// Windows that showed up with the game's own title, which is all that tells
-// them apart once they are renamed.
+// Windows that showed up as the game, by its own title or by its program. A
+// window renamed before it showed up only has the program left.
 const games = new Set();
 // Windows that were open already may be games an earlier script saw start.
 const openBefore = new Set();
 
-// Fullscreen windows sit where their screen is, which is not worth keeping.
+// Fullscreen and maximized windows sit where their screen is, which is not
+// worth keeping.
 function isWindowed(window) {
-    return window.normalWindow && !window.fullScreen;
+    return window.normalWindow && !window.fullScreen && !window.maximizeMode;
 }
 
 function isOnScreen(rect) {
@@ -28,7 +31,7 @@ function isOnScreen(rect) {
 function restore(window) {
     const id = window.internalId.toString();
     // KWin numbers windows that share a caption: "Diablo II: Resurrected <2>".
-    if (window.caption.startsWith(gameTitle)) {
+    if (window.caption.startsWith(gameTitle) || window.resourceName.toLowerCase() === gameProgram) {
         games.add(id);
     }
     if (!games.has(id) || !isWindowed(window)) {
