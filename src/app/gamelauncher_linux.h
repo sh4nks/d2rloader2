@@ -3,6 +3,7 @@
 #include "gamelauncher.h"
 
 #include <QDeadlineTimer>
+#include <QPoint>
 #include <QProcessEnvironment>
 #include <QSet>
 #include <functional>
@@ -63,11 +64,20 @@ private:
     void renameWindow(Profile *profile, qint64 pid, int attemptsLeft);
 
     /**
-     * Clicks into the game window of \a profile with d2rreg.exe every
-     * few seconds, until \a deadline or until the window is gone, which
-     * skips the intro videos and the title screen.
+     * Clicks into the game window of \a profile every few seconds until
+     * \a deadline, which skips the intro videos and the title screen. The
+     * click is sent to the X11 window of the game from outside its
+     * wineprefix, and KWin gives the focus back that the window takes for it.
+     * A game without an X11 window is clicked from inside its wineprefix.
      */
     void skipIntro(Profile *profile, QDeadlineTimer deadline);
+
+    /**
+     * Clicks at \a position inside the game window of \a profile with
+     * d2rreg.exe, which posts the click to the window without giving it the
+     * focus.
+     */
+    void clickInsideWine(Profile *profile, QPoint position);
 
     /**
      * Moves the game window of \a profile to its saved position with

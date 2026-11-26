@@ -1,6 +1,7 @@
 #include "kwinwindowpositions.h"
 #include "../accounts/profile.h"
 #include "../accounts/profilemanager.h"
+#include "../core/desktopsession.h"
 #include "../core/logging.h"
 
 #include <QDBusConnection>
@@ -25,6 +26,12 @@ const QString ScriptInterface = QStringLiteral("org.kde.kwin.Script");
 const QString PluginName = QStringLiteral("d2rloader-window-positions");
 
 /**
+ * KWin asks a window it activates to take the input focus. wine may get to
+ * that only after the focus was handed back, and takes it once more then.
+ */
+const std::chrono::milliseconds LateFocusGrace{250};
+
+/**
  * KWin reads the script from disk, so it goes where the host sees it at the
  * same path, from inside the Flatpak too.
  */
@@ -43,7 +50,7 @@ QDBusMessage scriptingCall(const QString &method, const QVariantList &arguments)
 
 bool KWinWindowPositions::isSupported()
 {
-    return qEnvironmentVariable("XDG_CURRENT_DESKTOP").split(u':').contains(QStringLiteral("KDE"));
+    return DesktopSession::isPlasma();
 }
 
 KWinWindowPositions::KWinWindowPositions(QObject *parent)
@@ -64,6 +71,11 @@ KWinWindowPositions::~KWinWindowPositions()
     if (m_scriptLoaded) {
         QDBusConnection::sessionBus().call(scriptingCall(QStringLiteral("unloadScript"), {PluginName}));
     }
+}
+
+void KWinWindowPositions::expectFocusSteal(const QString &title, QDeadlineTimer deadline)
+{
+    m_expectedFocusSteals.insert(title, deadline);
 }
 
 void KWinWindowPositions::loadScript()
@@ -113,6 +125,10 @@ QString KWinWindowPositions::introspect(const QString &path) const
     <arg name="x" type="i" direction="in"/>
     <arg name="y" type="i" direction="in"/>
   </method>
+  <method name="tookFocusForSkipIntro">
+    <arg name="title" type="s" direction="in"/>
+    <arg name="expected" type="b" direction="out"/>
+  </method>
 </interface>
 )")
         .arg(Interface);
@@ -125,7 +141,21 @@ bool KWinWindowPositions::handleMessage(const QDBusMessage &message, const QDBus
         return false;
     }
 
-    Profile *profile = ProfileManager::profileForWindowTitle(ProfileManager::instance().profiles(), arguments.constFirst().toString());
+    const QString title = arguments.constFirst().toString();
+
+    // A click only accounts for the activations right after it, so the user
+    // can still give the focus to a game that is starting.
+    if (message.member() == QLatin1String("tookFocusForSkipIntro") && arguments.size() == 1) {
+        const auto steal = m_expectedFocusSteals.find(title);
+        const bool expected = steal != m_expectedFocusSteals.end() && !steal->hasExpired();
+        if (expected) {
+            *steal = std::min(*steal, QDeadlineTimer(LateFocusGrace));
+        }
+        connection.send(message.createReply(QVariantList{expected}));
+        return true;
+    }
+
+    Profile *profile = ProfileManager::profileForWindowTitle(ProfileManager::instance().profiles(), title);
     const bool remembered = profile && profile->rememberWindowPosition();
 
     if (message.member() == QLatin1String("windowPosition") && arguments.size() == 1) {

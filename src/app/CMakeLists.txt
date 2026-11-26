@@ -36,9 +36,16 @@ ecm_add_qml_module(d2rloader_static URI com.someblocks.d2rloader
 qt_add_resources(d2rloader_static "tray_icon" PREFIX "/icons" BASE icons FILES icons/64-apps-com.someblocks.d2rloader.png)
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    target_sources(d2rloader_static PRIVATE gamelauncher_linux.h gamelauncher_linux.cpp kwinwindowpositions.h kwinwindowpositions.cpp)
+    target_sources(d2rloader_static PRIVATE
+        gamelauncher_linux.h
+        gamelauncher_linux.cpp
+        kwinwindowpositions.h
+        kwinwindowpositions.cpp
+        x11window.h
+        x11window.cpp
+    )
     qt_add_resources(d2rloader_static "kwin_scripts" PREFIX "/kwin" BASE kwin FILES kwin/windowpositions.js)
-    target_link_libraries(d2rloader_static PRIVATE Qt6::DBus)
+    target_link_libraries(d2rloader_static PRIVATE Qt6::DBus XCB::XCB)
 endif()
 
 if (WIN32)

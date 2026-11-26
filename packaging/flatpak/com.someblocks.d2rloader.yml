@@ -8,7 +8,8 @@ finish-args:
   - --share=ipc
   - --share=network
   - --socket=wayland
-  - --socket=fallback-x11
+  # the game windows are X11 windows, which Skip Intro clicks into from outside wine
+  - --socket=x11
   - --socket=pulseaudio
   - --device=all
   # pressure-vessel runs the game in a subsandbox

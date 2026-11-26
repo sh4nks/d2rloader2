@@ -67,6 +67,8 @@ find_package(Qt6 REQUIRED COMPONENTS
 # keeps the game windows in place through a KWin script on Plasma
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
     find_package(Qt6 REQUIRED COMPONENTS DBus)
+    # clicks into the X11 windows of the games
+    find_package(XCB REQUIRED COMPONENTS XCB)
 endif()
 
 if (QT_KNOWN_POLICY_QTP0004)

@@ -19,6 +19,7 @@ depends=(
   kirigami
   kirigami-addons
   knotifications
+  libxcb
   qqc2-desktop-style
   qt6-base
   qt6-declarative

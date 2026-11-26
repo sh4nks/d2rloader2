@@ -10,7 +10,7 @@
   and `--minimized` starts D2RLoader hidden in the system tray or minimized. A D2RLoader that is
   running already takes over the launch.
 - Launch sequences can start all their accounts at once with the new _Launch in Parallel_ setting (Linux only)
-- linux only: Skip intro and login screen
+- Skip intro and login screen (KDE Plasma only)
 
 
 ## 0.6.0

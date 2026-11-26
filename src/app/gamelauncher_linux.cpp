@@ -5,6 +5,7 @@
 #include "../core/logging.h"
 #include "d2rloaderconfig.h"
 #include "kwinwindowpositions.h"
+#include "x11window.h"
 
 #include <KLocalizedString>
 #include <QDir>
@@ -181,6 +182,12 @@ bool umuSetupDone(const QByteArray &line)
  */
 const std::chrono::seconds SkipIntroDuration{20};
 const std::chrono::seconds SkipIntroInterval{2};
+
+/**
+ * Near the corner of the window, where a click that comes after the intro
+ * finds nothing to press. The game ignores a click on the corner itself.
+ */
+const QPoint SkipIntroPosition{8, 8};
 
 /**
  * How often the log of a starting umu-run is read for progress.
@@ -821,7 +828,8 @@ void LinuxGameLauncher::renameWindow(Profile *profile, qint64 pid, int attemptsL
         process->deleteLater();
         if (status == QProcess::NormalExit && exitCode == 0) {
             qCInfo(LOG_GAME) << "renamed the window of pid" << pid << "to" << title;
-            if (profile && D2RLoaderConfig::self()->skipIntro()) {
+            // Only on Plasma, where KWin gives the focus back that a click takes.
+            if (profile && m_kwinWindowPositions && D2RLoaderConfig::self()->skipIntro()) {
                 skipIntro(profile, QDeadlineTimer(SkipIntroDuration));
             }
             // On Plasma the KWin script takes over once the window carries its title.
@@ -839,15 +847,40 @@ void LinuxGameLauncher::renameWindow(Profile *profile, qint64 pid, int attemptsL
 
 void LinuxGameLauncher::skipIntro(Profile *profile, QDeadlineTimer deadline)
 {
-    // Without the wineserver, wine would set up a prefix of its own.
-    const qint64 wineserver = wineserverProcess(profile->normalizedName());
-    if (deadline.hasExpired() || wineEnvironment(wineserver).value(QStringLiteral("WINEPREFIX")).isEmpty()) {
+    if (deadline.hasExpired()) {
         return;
     }
 
-    // The corner of the window, where a click that comes after the intro
-    // finds nothing to press.
-    const QStringList arguments{QStringLiteral("--click-window"), profile->windowTitle(), QStringLiteral("1"), QStringLiteral("1")};
+    const QString title = profile->windowTitle();
+    switch (X11Window::click(title, SkipIntroPosition)) {
+    case X11Window::Click::SentToInactiveWindow:
+        m_kwinWindowPositions->expectFocusSteal(title, QDeadlineTimer(SkipIntroInterval));
+        break;
+    case X11Window::Click::SentToActiveWindow:
+        break;
+    case X11Window::Click::NotSent:
+        // A game on the Wayland driver of wine has no X11 window.
+        clickInsideWine(profile, SkipIntroPosition);
+        break;
+    }
+
+    QTimer::singleShot(SkipIntroInterval, this, [this, profile = QPointer(profile), deadline] {
+        if (profile) {
+            skipIntro(profile, deadline);
+        }
+    });
+}
+
+void LinuxGameLauncher::clickInsideWine(Profile *profile, QPoint position)
+{
+    // Without the wineserver, wine would set up a prefix of its own.
+    const qint64 wineserver = wineserverProcess(profile->normalizedName());
+    if (wineEnvironment(wineserver).value(QStringLiteral("WINEPREFIX")).isEmpty()) {
+        return;
+    }
+
+    const QString title = profile->windowTitle();
+    const QStringList arguments{QStringLiteral("--click-window"), title, QString::number(position.x()), QString::number(position.y())};
     QProcess *process = tokenToolProcess(wineserver, arguments, this);
 
     connect(process, &QProcess::errorOccurred, this, [process](QProcess::ProcessError error) {
@@ -856,19 +889,9 @@ void LinuxGameLauncher::skipIntro(Profile *profile, QDeadlineTimer deadline)
             process->deleteLater();
         }
     });
-    connect(process, &QProcess::finished, this, [this, process, profile = QPointer(profile), deadline](int exitCode, QProcess::ExitStatus status) {
-        process->deleteLater();
-        // d2rreg exits with 1 once the window is gone.
-        if (!profile || status != QProcess::NormalExit || exitCode != 0) {
-            return;
-        }
-        QTimer::singleShot(SkipIntroInterval, this, [this, profile, deadline] {
-            if (profile) {
-                skipIntro(profile, deadline);
-            }
-        });
-    });
+    connect(process, &QProcess::finished, process, &QProcess::deleteLater);
 
+    qCDebug(LOG_GAME) << "clicking into the window" << title << "with d2rreg";
     process->start();
 }
 

@@ -215,12 +215,16 @@ FormCard.FormCardPage {
 
         FormCard.FormDelegateSeparator {}
 
-        // The click is sent by d2rreg from inside the wineprefix of the game.
+        // The click is sent to the X11 window of the game, and a KWin script
+        // gives the focus back that the window takes for it. A game on the
+        // Wayland driver of wine has no X11 window, and d2rreg clicks into it
+        // from inside its wineprefix.
         FormCard.FormCheckDelegate {
             visible: Qt.platform.os === "linux"
+            enabled: DesktopSession.isPlasma
             text: KI18n.i18nc("@label", "Skip Intro")
-            description: KI18n.i18nc("@info:label", "Clicks into every game window while its game starts to skip the intro videos. The mouse pointer is left alone.")
-            checked: D2RLoaderConfig.skipIntro
+            description: KI18n.i18nc("@info:label", "Clicks into every game window while its game starts to skip the intro videos. The mouse pointer is left alone. Only on KDE Plasma.")
+            checked: enabled && D2RLoaderConfig.skipIntro
             onToggled: {
                 D2RLoaderConfig.skipIntro = checked;
                 D2RLoaderConfig.save();

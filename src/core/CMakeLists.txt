@@ -21,6 +21,7 @@ ecm_add_qml_module(Core GENERATE_PLUGIN_SOURCE
         logbuffer.h
         logbuffer.cpp
         paths.h
+        desktopsession.h
         updatechecker.h
         updatechecker.cpp
 )

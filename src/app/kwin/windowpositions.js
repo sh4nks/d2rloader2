@@ -1,6 +1,7 @@
 // Keeps the game windows of D2RLoader accounts where they were when their
 // game last closed. D2RLoader renames every game window to a title of its
-// own and answers for those titles over D-Bus.
+// own and answers for those titles over D-Bus. Also gives the focus back
+// that a game window takes when D2RLoader clicks into it to skip the intro.
 const service = "com.someblocks.d2rloader";
 const path = "/WindowPositions";
 const iface = "com.someblocks.d2rloader.WindowPositions";
@@ -67,6 +68,34 @@ function save(window) {
 function track(window) {
     window.captionChanged.connect(() => restore(window));
 }
+
+// The window the user gave the focus to. wine activates a window that is
+// clicked, so each click that skips an intro pulls the focus to its game.
+let focused = workspace.activeWindow;
+
+function keepFocus(window) {
+    if (!window || !games.has(window.internalId.toString())) {
+        focused = window;
+        return;
+    }
+    callDBus(service, path, iface, "tookFocusForSkipIntro", window.caption, expected => {
+        if (workspace.activeWindow !== window) {
+            return;
+        }
+        if (expected && focused && !focused.deleted) {
+            workspace.activeWindow = focused;
+        } else {
+            focused = window;
+        }
+    });
+}
+
+workspace.windowActivated.connect(keepFocus);
+workspace.windowRemoved.connect(window => {
+    if (focused === window) {
+        focused = null;
+    }
+});
 
 // Windows that are open already are left where they are.
 workspace.stackingOrder.forEach(window => {
