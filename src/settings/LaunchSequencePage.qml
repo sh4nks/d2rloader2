@@ -129,7 +129,6 @@ FormCard.FormCardPage {
             id: parallelDelegate
             visible: Qt.platform.os === "linux"
             text: KI18n.i18nc("@label", "Launch in Parallel")
-            description: KI18n.i18nc("@info:label", "Starts all accounts of a sequence at once instead of one after another.")
             checked: D2RLoaderConfig.sequenceParallel
             onToggled: {
                 D2RLoaderConfig.sequenceParallel = checked;
@@ -143,8 +142,7 @@ FormCard.FormCardPage {
 
         FormCard.FormSpinBoxDelegate {
             enabled: !D2RLoaderConfig.sequenceParallel
-            label: KI18n.i18nc("@label", "Launch Delay")
-            description: KI18n.i18nc("@info:label", "Seconds to wait after an account has started before starting the next one.")
+            label: KI18n.i18nc("@label", "Launch Delay (seconds)")
             from: 1
             to: 300
             stepSize: 1
@@ -160,7 +158,6 @@ FormCard.FormCardPage {
         FormCard.FormCheckDelegate {
             enabled: !D2RLoaderConfig.sequenceParallel
             text: KI18n.i18nc("@label", "Stop Sequence on Failure")
-            description: KI18n.i18nc("@info:label", "Prevents further accounts from launching if one fails to start.")
             checked: D2RLoaderConfig.sequenceStopOnFailure
             onToggled: {
                 D2RLoaderConfig.sequenceStopOnFailure = checked;
@@ -173,7 +170,7 @@ FormCard.FormCardPage {
         FormCard.FormCheckDelegate {
             enabled: !D2RLoaderConfig.sequenceParallel
             text: KI18n.i18nc("@label", "Randomize Delay")
-            description: KI18n.i18nc("@info:label", "Adds up to half the launch delay at random.")
+            description: KI18n.i18nc("@info:label", "Adds up to half the launch delay.")
             checked: D2RLoaderConfig.sequenceRandomizeDelay
             onToggled: {
                 D2RLoaderConfig.sequenceRandomizeDelay = checked;

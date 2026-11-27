@@ -92,13 +92,6 @@ FormCard.FormCardPage {
                 QQC2.Label {
                     text: KI18n.i18nc("@label", "Game Path")
                 }
-                QQC2.Label {
-                    text: KI18n.i18nc("@info:label", "The directory where Diablo II: Resurrected is installed.")
-                    font: Kirigami.Theme.smallFont
-                    opacity: 0.7
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                }
                 RowLayout {
                     QQC2.TextField {
                         id: gamePathField
@@ -128,13 +121,6 @@ FormCard.FormCardPage {
                 QQC2.Label {
                     text: KI18n.i18nc("@label", "Account Settings File")
                 }
-                QQC2.Label {
-                    text: KI18n.i18nc("@info:label", "The JSON file where all account and profile configurations are stored. The accounts in it are loaded as soon as it changes.")
-                    font: Kirigami.Theme.smallFont
-                    opacity: 0.7
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
-                }
                 RowLayout {
                     QQC2.TextField {
                         id: accountSettingsField
@@ -160,7 +146,7 @@ FormCard.FormCardPage {
 
         FormCard.FormCheckDelegate {
             text: KI18n.i18nc("@label", "Show Menu Bar")
-            description: KI18n.i18nc("@info:label", "Show the Settings and Help menus at the top of the main window. Press Ctrl+M to toggle it.")
+            description: KI18n.i18nc("@info:label", "Ctrl+M toggles it.")
             checked: D2RLoaderConfig.showMenuBar
             onToggled: {
                 D2RLoaderConfig.showMenuBar = checked;
@@ -172,7 +158,6 @@ FormCard.FormCardPage {
 
         FormCard.FormCheckDelegate {
             text: KI18n.i18nc("@label", "Show Info Panel")
-            description: KI18n.i18nc("@info:label", "Show the Terror Zones, Diablo Clone and Application Log tabs beneath the accounts table.")
             checked: D2RLoaderConfig.showInfoPanel
             onToggled: {
                 D2RLoaderConfig.showInfoPanel = checked;
@@ -184,7 +169,6 @@ FormCard.FormCardPage {
 
         FormCard.FormCheckDelegate {
             text: KI18n.i18nc("@label", "Close to System Tray")
-            description: KI18n.i18nc("@info:label", "Hide the main window in the system tray instead of quitting when it is closed. Click the tray icon to bring it back; Exit in the menu quits.")
             checked: D2RLoaderConfig.closeToTray
             onToggled: {
                 D2RLoaderConfig.closeToTray = checked;
@@ -201,7 +185,7 @@ FormCard.FormCardPage {
         FormCard.FormTextFieldDelegate {
             id: windowTitleField
             label: KI18n.i18nc("@label", "Window Title")
-            description: KI18n.i18nc("@info:label", "The title given to every game window when its game starts. {name} is the account name, {region} the region (EU, US, KR) and {server} the server address. An account can have a title of its own.")
+            description: KI18n.i18nc("@info:label", "{name} is the account name, {region} the region (EU, US, KR) and {server} the server address.")
             text: D2RLoaderConfig.windowTitleTemplate
             placeholderText: D2RLoaderConfig.defaultWindowTitleTemplateValue
             onEditingFinished: {
@@ -223,7 +207,7 @@ FormCard.FormCardPage {
             visible: Qt.platform.os === "linux"
             enabled: DesktopSession.isPlasma
             text: KI18n.i18nc("@label", "Skip Intro")
-            description: KI18n.i18nc("@info:label", "Clicks into every game window while its game starts to skip the intro videos. The mouse pointer is left alone. Only on KDE Plasma.")
+            description: KI18n.i18nc("@info:label", "Clicks into the game window while it starts. Only on KDE Plasma.")
             checked: enabled && D2RLoaderConfig.skipIntro
             onToggled: {
                 D2RLoaderConfig.skipIntro = checked;
@@ -242,13 +226,6 @@ FormCard.FormCardPage {
                 spacing: Kirigami.Units.smallSpacing
                 QQC2.Label {
                     text: KI18n.i18nc("@label", "Wineprefix Location")
-                }
-                QQC2.Label {
-                    text: KI18n.i18nc("@info:label", "The directory where the per-account wineprefixes are stored. Defaults to the wineprefixes folder next to the configuration file.")
-                    font: Kirigami.Theme.smallFont
-                    opacity: 0.7
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
                 }
                 RowLayout {
                     QQC2.TextField {
@@ -283,7 +260,7 @@ FormCard.FormCardPage {
                     text: KI18n.i18nc("@label", "Proton Runtime")
                 }
                 QQC2.Label {
-                    text: KI18n.i18nc("@info:label", "The directory containing the Proton/Wine compatibility layer runtime.")
+                    text: KI18n.i18nc("@info:label", "UMU-Latest, UMU-Proton, GE-Latest, GE-Proton or the path to a Proton directory.")
                     font: Kirigami.Theme.smallFont
                     opacity: 0.7
                     wrapMode: Text.WordWrap
@@ -298,7 +275,7 @@ FormCard.FormCardPage {
                             D2RLoaderConfig.protonPath = text;
                             D2RLoaderConfig.save();
                         }
-                        placeholderText: KI18n.i18nc("@info:placeholder", "e.g. GE-Proton or UMU-Latest")
+                        placeholderText: "UMU-Latest"
                     }
                     QQC2.Button {
                         icon.name: "folder-open"
@@ -316,7 +293,6 @@ FormCard.FormCardPage {
 
         FormCard.FormComboBoxDelegate {
             text: KI18n.i18nc("@label", "Log Level")
-            description: KI18n.i18nc("@info:label", "Set the verbosity of the application logs.")
             model: [KI18n.i18nc("@item", "DEBUG"), KI18n.i18nc("@item", "INFO"), KI18n.i18nc("@item", "WARN"), KI18n.i18nc("@item", "ERROR")]
             currentIndex: D2RLoaderConfig.logLevel
             onActivated: {
@@ -329,7 +305,6 @@ FormCard.FormCardPage {
 
         FormCard.FormCheckDelegate {
             text: KI18n.i18nc("@label", "Log to File")
-            description: KI18n.i18nc("@info:label", "Save application logs to a file on disk for troubleshooting.")
             checked: D2RLoaderConfig.logToFile
             onToggled: {
                 D2RLoaderConfig.logToFile = checked;
@@ -346,13 +321,6 @@ FormCard.FormCardPage {
                 spacing: Kirigami.Units.smallSpacing
                 QQC2.Label {
                     text: KI18n.i18nc("@label", "Log Directory")
-                }
-                QQC2.Label {
-                    text: KI18n.i18nc("@info:label", "The directory d2rloader.log is written to.")
-                    font: Kirigami.Theme.smallFont
-                    opacity: 0.7
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
                 }
                 RowLayout {
                     QQC2.TextField {
@@ -385,8 +353,7 @@ FormCard.FormCardPage {
 
         FormCard.FormCheckDelegate {
             visible: !UpdateChecker.managedExternally
-            text: KI18n.i18nc("@label", "Check for Updates")
-            description: KI18n.i18nc("@info:label", "Automatically check for new versions of D2RLoader on startup.")
+            text: KI18n.i18nc("@label", "Check for Updates on Startup")
             checked: D2RLoaderConfig.checkForUpdates
             onToggled: {
                 D2RLoaderConfig.checkForUpdates = checked;
@@ -427,7 +394,6 @@ FormCard.FormCardPage {
         FormCard.FormButtonDelegate {
             visible: UpdateChecker.updateAvailable
             text: KI18n.i18nc("@action:button", "Open Release Page")
-            description: KI18n.i18nc("@info:label", "The release notes and the downloads for the new version.")
             icon.name: "cloud-download"
             onClicked: Qt.openUrlExternally(UpdateChecker.releaseUrl)
         }

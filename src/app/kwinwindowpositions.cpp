@@ -149,6 +149,7 @@ bool KWinWindowPositions::handleMessage(const QDBusMessage &message, const QDBus
         const auto steal = m_expectedFocusSteals.find(title);
         const bool expected = steal != m_expectedFocusSteals.end() && !steal->hasExpired();
         if (expected) {
+            qCDebug(LOG_GAME) << "the window" << title << "took the focus for the click that skips its intro, KWin hands it back";
             *steal = std::min(*steal, QDeadlineTimer(LateFocusGrace));
         }
         connection.send(message.createReply(QVariantList{expected}));

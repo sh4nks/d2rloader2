@@ -18,7 +18,6 @@ FormCard.FormCardPage {
         FormCard.FormComboBoxDelegate {
             id: providerField
             text: KI18n.i18nc("@label", "Data Provider")
-            description: KI18n.i18nc("@info:label", "Where Terror Zone and Diablo Clone data is fetched from.")
             model: [KI18n.i18nc("@item:inlistbox", "D2RLoader Service"), KI18n.i18nc("@item:inlistbox", "d2emu.com directly")]
             currentIndex: D2RLoaderConfig.useD2RInfo ? 0 : 1
             onActivated: {
@@ -31,7 +30,6 @@ FormCard.FormCardPage {
 
         FormCard.FormTextFieldDelegate {
             label: KI18n.i18nc("@label", "Username")
-            description: KI18n.i18nc("@info:label", "Your D2Emu.com account username.")
             placeholderText: KI18n.i18nc("@info:placeholder", "Enter your username...")
             enabled: !D2RLoaderConfig.useD2RInfo
             text: D2RLoaderConfig.d2emuUser
@@ -45,7 +43,6 @@ FormCard.FormCardPage {
 
         FormCard.FormTextFieldDelegate {
             label: KI18n.i18nc("@label", "API Key")
-            description: KI18n.i18nc("@info:label", "Your D2Emu.com API key for Terror Zone and Diablo Clone data.")
             placeholderText: KI18n.i18nc("@info:placeholder", "Enter your API key...")
             echoMode: TextInput.Password
             enabled: !D2RLoaderConfig.useD2RInfo
@@ -61,7 +58,6 @@ FormCard.FormCardPage {
         FormCard.FormCheckDelegate {
             id: autoRefresh
             text: KI18n.i18nc("@label", "Automatic Refresh")
-            description: KI18n.i18nc("@info:label", "Periodically fetch the latest data from D2Emu.com.")
             checked: D2RLoaderConfig.autoRefresh
             onToggled: {
                 D2RLoaderConfig.autoRefresh = checked;
@@ -75,7 +71,6 @@ FormCard.FormCardPage {
 
         FormCard.FormSpinBoxDelegate {
             label: KI18n.i18nc("@label", "Update Interval (minutes)")
-            description: KI18n.i18nc("@info:label", "How often to check for game event updates.")
             visible: autoRefresh.checked
             from: 10
             to: 60
@@ -96,7 +91,6 @@ FormCard.FormCardPage {
         FormCard.FormCheckDelegate {
             id: dcloneNotifications
             text: KI18n.i18nc("@label", "Enable DClone Notifications")
-            description: KI18n.i18nc("@info:label", "Receive desktop notifications when Diablo Clone progress rises on a listed realm.")
             checked: D2RLoaderConfig.dcloneNotifications
             onToggled: {
                 D2RLoaderConfig.dcloneNotifications = checked;
@@ -110,7 +104,7 @@ FormCard.FormCardPage {
 
         FormCard.FormSpinBoxDelegate {
             label: KI18n.i18nc("@label", "Notification Threshold")
-            description: KI18n.i18nc("@info:label", "Only notify once a realm reaches this progress out of 6.")
+            description: KI18n.i18nc("@info:label", "Progress out of 6.")
             visible: dcloneNotifications.checked
             from: 1
             to: 6
@@ -126,7 +120,7 @@ FormCard.FormCardPage {
         FormCard.FormComboBoxDelegate {
             id: modeField
             text: KI18n.i18nc("@label", "Preferred Mode")
-            description: KI18n.i18nc("@info:label", "The mode the Diablo Clone tab lists first.")
+            description: KI18n.i18nc("@info:label", "Listed first in the Diablo Clone tab.")
             model: [KI18n.i18nc("@item", "Softcore"), KI18n.i18nc("@item", "Hardcore"), KI18n.i18nc("@item", "Softcore Ladder"), KI18n.i18nc("@item", "Hardcore Ladder")]
             currentIndex: D2RLoaderConfig.dcloneMode
             onActivated: {
@@ -164,7 +158,6 @@ FormCard.FormCardPage {
     FormCard.FormCard {
         FormCard.FormCheckDelegate {
             text: KI18n.i18nc("@label", "Enable TZ Notifications")
-            description: KI18n.i18nc("@info:label", "Receive desktop notifications when a new Terror Zone starts and when the next one is predicted.")
             checked: D2RLoaderConfig.tzNotifications
             onToggled: {
                 D2RLoaderConfig.tzNotifications = checked;

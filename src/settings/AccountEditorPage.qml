@@ -253,7 +253,6 @@ FormCard.FormCardPage {
         FormCard.FormTextFieldDelegate {
             id: nameField
             label: KI18n.i18nc("@label", "Account Name")
-            description: KI18n.i18nc("@info:label", "A unique identifier for this account.")
             text: root.profile.profileName
             placeholderText: KI18n.i18nc("@info:placeholder", "e.g. MyAccount")
             onEditingFinished: root.profile.profileName = text
@@ -264,7 +263,6 @@ FormCard.FormCardPage {
         FormCard.FormComboBoxDelegate {
             id: authField
             text: KI18n.i18nc("@label", "Authentication Method")
-            description: KI18n.i18nc("@info:label", "The method used to log in to Battle.net.")
             model: Accounts.AuthMethodModel
 
             textRole: "name"
@@ -284,7 +282,6 @@ FormCard.FormCardPage {
         FormCard.FormTextFieldDelegate {
             id: tokenField
             label: KI18n.i18nc("@label", "Authentication Token")
-            description: KI18n.i18nc("@info:label", "The Battle.net login token, or the address of the page the login redirected to.")
             visible: root.profile.authMethod === Accounts.AuthMethodModel.Token
             text: root.profile.token
             placeholderText: KI18n.i18nc("@info:placeholder", "Enter your login token or paste the login URL...")
@@ -299,7 +296,6 @@ FormCard.FormCardPage {
         FormCard.FormTextFieldDelegate {
             id: emailField
             label: KI18n.i18nc("@label", "Battle.net Email Address")
-            description: KI18n.i18nc("@info:label", "Your Battle.net account email.")
             visible: root.profile.authMethod === Accounts.AuthMethodModel.Password
             text: root.profile.email
             placeholderText: KI18n.i18nc("@info:placeholder", "example@email.com")
@@ -323,7 +319,6 @@ FormCard.FormCardPage {
         FormCard.FormComboBoxDelegate {
             id: regionField
             text: KI18n.i18nc("@label", "Region")
-            description: KI18n.i18nc("@info:label", "The game server region for this account.")
             model: Accounts.RegionModel
 
             textRole: "name"
@@ -341,7 +336,6 @@ FormCard.FormCardPage {
         FormCard.FormTextFieldDelegate {
             id: paramsField
             label: KI18n.i18nc("@label", "Launch Parameters")
-            description: KI18n.i18nc("@info:label", "Command line arguments passed to the game executable.")
             text: root.profile.gameParameters
             placeholderText: KI18n.i18nc("@info:placeholder", "-w -txt")
             onEditingFinished: root.profile.gameParameters = text
@@ -363,7 +357,8 @@ FormCard.FormCardPage {
                     text: KI18n.i18nc("@label", "Game Directory")
                 }
                 QQC2.Label {
-                    text: gamePathDelegate.enabled ? KI18n.i18nc("@info:label", "A different Diablo II: Resurrected installation for this account. Leave empty to use the one from the application settings.") : KI18n.i18nc("@info:label", "Steam accounts start the game from Steam's own installation.")
+                    visible: !gamePathDelegate.enabled
+                    text: KI18n.i18nc("@info:label", "Steam accounts start the game from Steam's own installation.")
                     font: Kirigami.Theme.smallFont
                     opacity: 0.7
                     wrapMode: Text.Wrap
@@ -400,10 +395,10 @@ FormCard.FormCardPage {
                     text: KI18n.i18nc("@label", "Proton Runtime")
                 }
                 QQC2.Label {
-                    text: KI18n.i18nc("@info:label", "The directory containing the Proton/Wine compatibility layer for this account.")
+                    text: KI18n.i18nc("@info:label", "UMU-Latest, UMU-Proton, GE-Latest, GE-Proton or the path to a Proton directory.")
                     font: Kirigami.Theme.smallFont
                     opacity: 0.7
-                    wrapMode: Text.Wrap
+                    wrapMode: Text.WordWrap
                     Layout.fillWidth: true
                 }
                 RowLayout {
@@ -411,7 +406,7 @@ FormCard.FormCardPage {
                         id: protonPathField
                         Layout.fillWidth: true
                         text: root.profile.protonPath
-                        placeholderText: KI18n.i18nc("@info:placeholder", "e.g. GE-Proton or UMU-Latest")
+                        placeholderText: D2RLoaderConfig.protonPath || "UMU-Latest"
                         onEditingFinished: root.profile.protonPath = text
                     }
                     QQC2.Button {
@@ -433,7 +428,6 @@ FormCard.FormCardPage {
         FormCard.FormComboBoxDelegate {
             id: gameSettingsField
             text: KI18n.i18nc("@label", "Settings Profile")
-            description: KI18n.i18nc("@info:label", "Select which game settings (Settings.json) to use for this account.")
             model: [
                 {
                     name: KI18n.i18nc("@item game settings", "Default"),
@@ -526,7 +520,7 @@ FormCard.FormCardPage {
 
         FormCard.FormButtonDelegate {
             text: KI18n.i18nc("@action:button", "Copy Current Settings")
-            description: KI18n.i18nc("@info:label", "Copy the Settings.json the game currently uses for this account to its account specific settings.")
+            description: KI18n.i18nc("@info:label", "Stores the game's current Settings.json as this account's own copy.")
             icon.name: "edit-copy"
             enabled: nameField.text.length > 0
             onClicked: {
@@ -570,7 +564,7 @@ FormCard.FormCardPage {
             // Steam's game window keeps the game's own title.
             enabled: root.profile.authMethod !== Accounts.AuthMethodModel.Steam
             label: KI18n.i18nc("@label", "Window Title")
-            description: enabled ? KI18n.i18nc("@info:label %1 is a window title", "This account's game window is titled \"%1\". Leave empty to use the title from the application settings. {name} is the account name, {region} the region (EU, US, KR) and {server} the server address.", windowTitleField.title) : KI18n.i18nc("@info:label", "Steam accounts keep the game's own window title.")
+            description: enabled ? KI18n.i18nc("@info:label %1 is a window title", "This account's game window is titled \"%1\". {name}, {region} and {server} are replaced.", windowTitleField.title) : KI18n.i18nc("@info:label", "Steam accounts keep the game's own window title.")
             text: root.profile.windowTitleTemplate
             placeholderText: D2RLoaderConfig.windowTitleTemplate
             onEditingFinished: root.profile.windowTitleTemplate = text
@@ -584,7 +578,7 @@ FormCard.FormCardPage {
             // Steam's game window keeps the game's own title, so it cannot be told apart.
             enabled: root.profile.authMethod !== Accounts.AuthMethodModel.Steam
             text: KI18n.i18nc("@option:check", "Remember Window Position")
-            description: enabled ? KI18n.i18nc("@info:label", "Move the game window back to where it was when this account's game last closed. Only in windowed mode.") : KI18n.i18nc("@info:label", "Steam accounts keep the game's own window title, so their window cannot be told apart.")
+            description: enabled ? KI18n.i18nc("@info:label", "Only in windowed mode.") : KI18n.i18nc("@info:label", "Steam accounts keep the game's own window title, so their window cannot be told apart.")
             checked: root.profile.rememberWindowPosition
             onToggled: root.profile.rememberWindowPosition = checked
         }
@@ -598,7 +592,7 @@ FormCard.FormCardPage {
         FormCard.FormComboBoxDelegate {
             id: lootFilterField
             text: KI18n.i18nc("@label", "Loot Filter")
-            description: KI18n.i18nc("@info:label", "Given to every character of this account before each launch. Changes made to it in game are replaced on the next launch unless imported.")
+            description: KI18n.i18nc("@info:label", "Changes made to it in game are replaced on the next launch unless imported.")
             model: root.lootFilterOptions(root.profile.lootFilter)
             textRole: "name"
             valueRole: "value"
@@ -614,7 +608,6 @@ FormCard.FormCardPage {
 
         FormCard.FormButtonDelegate {
             text: KI18n.i18nc("@action:button", "Import From Game...")
-            description: KI18n.i18nc("@info:label", "Add a loot filter made in game for this account to the library.")
             icon.name: "document-import"
             enabled: nameField.text.length > 0
             onClicked: {
@@ -644,7 +637,6 @@ FormCard.FormCardPage {
 
         FormCard.FormButtonDelegate {
             text: KI18n.i18nc("@action:button", "Advanced")
-            description: KI18n.i18nc("@info:label", "Extra environment variables for the game.")
             icon.name: "configure"
             trailingLogo.direction: root.showAdvanced ? Qt.UpArrow : Qt.DownArrow
             onClicked: root.showAdvanced = !root.showAdvanced
@@ -664,10 +656,7 @@ FormCard.FormCardPage {
                 if (!enabled) {
                     return KI18n.i18nc("@info:label", "Steam accounts take their environment from the launch options in Steam.");
                 }
-                if (root.isWindows) {
-                    return KI18n.i18nc("@info:label", "One NAME=value per line, set for this account's game on top of the application's own environment.");
-                }
-                return KI18n.i18nc("@info:label", "One NAME=value per line, set for this account's game on top of the defaults. DRI_PRIME=1 runs it on the other GPU.");
+                return KI18n.i18nc("@info:label", "One NAME=value per line.");
             }
             placeholderText: root.isWindows ? "NAME=value" : "DRI_PRIME=1\nDXVK_HUD=fps"
             text: root.profile.environmentVariables

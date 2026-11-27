@@ -29,7 +29,6 @@ FormCard.FormCardPage {
         FormCard.FormTextFieldDelegate {
             id: nameField
             label: KI18n.i18nc("@label", "Sequence Name")
-            description: KI18n.i18nc("@info:label", "A descriptive name for this launch sequence.")
             text: root.sequenceName
             placeholderText: KI18n.i18nc("@info:placeholder", "e.g. Morning Farming")
         }

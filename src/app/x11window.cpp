@@ -65,7 +65,7 @@ X11Window::Click X11Window::click(const QString &title, QPoint position)
     const std::unique_ptr<xcb_connection_t, Disconnect> connection(xcb_connect(nullptr, nullptr));
     xcb_connection_t *x = connection.get();
     if (xcb_connection_has_error(x)) {
-        qCDebug(LOG_GAME) << "cannot click into the window" << title << "- there is no X11 display to connect to";
+        qCDebug(LOG_GAME) << "no native click into the window" << title << "- there is no X11 display to connect to";
         return Click::NotSent;
     }
     const xcb_window_t root = xcb_setup_roots_iterator(xcb_get_setup(x)).data->root;
@@ -77,7 +77,7 @@ X11Window::Click X11Window::click(const QString &title, QPoint position)
         return property(x, client, nameAtom) == name;
     });
     if (match == clients.end()) {
-        qCDebug(LOG_GAME) << "cannot click into the window" << title << "- it is not an X11 window";
+        qCDebug(LOG_GAME) << "no native click into the window" << title << "- it is not an X11 window";
         return Click::NotSent;
     }
     const xcb_window_t window = *match;
@@ -111,6 +111,5 @@ X11Window::Click X11Window::click(const QString &title, QPoint position)
     // The server answers once it has handled the events before it.
     const Reply<xcb_get_input_focus_reply_t> handled(xcb_get_input_focus_reply(x, xcb_get_input_focus(x), nullptr));
 
-    qCDebug(LOG_GAME) << "clicked into the" << (active ? "active" : "inactive") << "window" << title;
     return active ? Click::SentToActiveWindow : Click::SentToInactiveWindow;
 }

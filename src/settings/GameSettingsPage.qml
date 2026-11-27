@@ -348,7 +348,7 @@ FormCard.FormCardPage {
     FormCard.FormCard {
         FormCard.FormButtonDelegate {
             text: KI18n.i18nc("@action:button", "Copy Current Settings to All Accounts")
-            description: KI18n.i18nc("@info:label", "Copy the Settings.json the game currently uses for each account to its account specific settings.")
+            description: KI18n.i18nc("@info:label", "Stores the game's current Settings.json as each account's own copy.")
             icon.name: "edit-copy"
             onClicked: {
                 const rows = [];
@@ -365,7 +365,6 @@ FormCard.FormCardPage {
 
         FormCard.FormButtonDelegate {
             text: KI18n.i18nc("@action:button", "Open Settings Folder")
-            description: KI18n.i18nc("@info:label", "Settings put there by hand show up the next time this page is opened.")
             icon.name: "folder-open"
             onClicked: Qt.openUrlExternally(Accounts.GameSettings.profileSettingsFolder())
         }

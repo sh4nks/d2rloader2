@@ -355,7 +355,6 @@ FormCard.FormCardPage {
     FormCard.FormCard {
         FormCard.FormButtonDelegate {
             text: KI18n.i18nc("@action:button", "Import Loot Filter File...")
-            description: KI18n.i18nc("@info:label", "Add a .fltr file, for example one shared by another player, to the library.")
             icon.name: "document-import"
             onClicked: fileDialog.open()
         }
@@ -364,7 +363,6 @@ FormCard.FormCardPage {
 
         FormCard.FormButtonDelegate {
             text: KI18n.i18nc("@action:button", "Open Library Folder")
-            description: KI18n.i18nc("@info:label", "Loot filters put there by hand show up the next time this page is opened.")
             icon.name: "folder-open"
             onClicked: Qt.openUrlExternally(Accounts.LootFilters.libraryFolder())
         }

@@ -847,19 +847,23 @@ void LinuxGameLauncher::renameWindow(Profile *profile, qint64 pid, int attemptsL
 
 void LinuxGameLauncher::skipIntro(Profile *profile, QDeadlineTimer deadline)
 {
+    const QString title = profile->windowTitle();
     if (deadline.hasExpired()) {
+        qCDebug(LOG_GAME) << "stopped skipping the intro of" << title;
         return;
     }
 
-    const QString title = profile->windowTitle();
     switch (X11Window::click(title, SkipIntroPosition)) {
     case X11Window::Click::SentToInactiveWindow:
+        qCDebug(LOG_GAME) << "skipping the intro of" << title << "with a native click, which takes the focus until KWin hands it back";
         m_kwinWindowPositions->expectFocusSteal(title, QDeadlineTimer(SkipIntroInterval));
         break;
     case X11Window::Click::SentToActiveWindow:
+        qCDebug(LOG_GAME) << "skipping the intro of" << title << "with a native click, its window has the focus";
         break;
     case X11Window::Click::NotSent:
         // A game on the Wayland driver of wine has no X11 window.
+        qCDebug(LOG_GAME) << "skipping the intro of" << title << "with d2rreg inside wine instead of a native click";
         clickInsideWine(profile, SkipIntroPosition);
         break;
     }
@@ -876,11 +880,11 @@ void LinuxGameLauncher::clickInsideWine(Profile *profile, QPoint position)
     // Without the wineserver, wine would set up a prefix of its own.
     const qint64 wineserver = wineserverProcess(profile->normalizedName());
     if (wineEnvironment(wineserver).value(QStringLiteral("WINEPREFIX")).isEmpty()) {
+        qCDebug(LOG_GAME) << "not clicking into the window of" << profile->profileName() << "- its wineserver is gone";
         return;
     }
 
-    const QString title = profile->windowTitle();
-    const QStringList arguments{QStringLiteral("--click-window"), title, QString::number(position.x()), QString::number(position.y())};
+    const QStringList arguments{QStringLiteral("--click-window"), profile->windowTitle(), QString::number(position.x()), QString::number(position.y())};
     QProcess *process = tokenToolProcess(wineserver, arguments, this);
 
     connect(process, &QProcess::errorOccurred, this, [process](QProcess::ProcessError error) {
@@ -891,7 +895,6 @@ void LinuxGameLauncher::clickInsideWine(Profile *profile, QPoint position)
     });
     connect(process, &QProcess::finished, process, &QProcess::deleteLater);
 
-    qCDebug(LOG_GAME) << "clicking into the window" << title << "with d2rreg";
     process->start();
 }
 
