@@ -1,7 +1,9 @@
 # Changelog
 
 
-## Unreleased
+## 0.7.0
+
+Released on Nov 27th, 2026
 
 ### Added
 
@@ -10,7 +12,17 @@
   and `--minimized` starts D2RLoader hidden in the system tray or minimized. A D2RLoader that is
   running already takes over the launch.
 - Launch sequences can start all their accounts at once with the new _Launch in Parallel_ setting (Linux only)
-- Skip intro and login screen (KDE Plasma only)
+- Skip intro and login screen (Linux, KDE Plasma only)
+- The title of the game windows can be changed with the new _Window Title_ setting. `{name}`, `{region}`
+  and `{server}` are replaced by the account's name, region and server, and an account can have a title
+  of its own.
+- The Diablo Clone tab can show more than one game mode
+
+### Changed
+
+- The Flatpak can use X11 on Wayland sessions too, so its games run through Xwayland there, which
+  _Skip Intro_ needs
+- libxcb is a new dependency on Linux
 
 
 ## 0.6.0
