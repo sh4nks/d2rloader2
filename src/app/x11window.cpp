@@ -35,6 +35,11 @@ using Reply = std::unique_ptr<T, Free>;
  */
 const uint32_t PropertyLength = 4096;
 
+/**
+ * wine names the class of an X11 window after its program.
+ */
+const QByteArray GameProgram = "d2r.exe";
+
 xcb_atom_t atom(xcb_connection_t *connection, const char *name)
 {
     const Reply<xcb_intern_atom_reply_t> reply(
@@ -52,10 +57,13 @@ QByteArray property(xcb_connection_t *connection, xcb_window_t window, xcb_atom_
     return QByteArray(static_cast<const char *>(xcb_get_property_value(reply.get())), xcb_get_property_value_length(reply.get()));
 }
 
-QList<xcb_window_t> windows(const QByteArray &property)
+/**
+ * The windows or atoms a property lists.
+ */
+QList<uint32_t> ids(const QByteArray &property)
 {
-    QList<xcb_window_t> list(property.size() / qsizetype(sizeof(xcb_window_t)));
-    std::copy_n(property.constData(), list.size() * qsizetype(sizeof(xcb_window_t)), reinterpret_cast<char *>(list.data()));
+    QList<uint32_t> list(property.size() / qsizetype(sizeof(uint32_t)));
+    std::copy_n(property.constData(), list.size() * qsizetype(sizeof(uint32_t)), reinterpret_cast<char *>(list.data()));
     return list;
 }
 }
@@ -72,15 +80,21 @@ X11Window::Click X11Window::click(const QString &title, QPoint position)
 
     const QByteArray name = title.toUtf8();
     const xcb_atom_t nameAtom = atom(x, "_NET_WM_NAME");
-    const QList<xcb_window_t> clients = windows(property(x, root, atom(x, "_NET_CLIENT_LIST")));
+    const QList<xcb_window_t> clients = ids(property(x, root, atom(x, "_NET_CLIENT_LIST")));
     const auto match = std::ranges::find_if(clients, [x, nameAtom, &name](xcb_window_t client) {
-        return property(x, client, nameAtom) == name;
+        return property(x, client, nameAtom) == name && property(x, client, XCB_ATOM_WM_CLASS).toLower().split('\0').contains(GameProgram);
     });
     if (match == clients.end()) {
-        qCDebug(LOG_GAME) << "no native click into the window" << title << "- it is not an X11 window";
+        qCDebug(LOG_GAME) << "no native click into the window" << title << "- no X11 window of the game carries that title";
         return Click::NotSent;
     }
     const xcb_window_t window = *match;
+
+    // wine looks for the clicked window where it is on the screen, and a minimized one is not there.
+    if (ids(property(x, window, atom(x, "_NET_WM_STATE"))).contains(atom(x, "_NET_WM_STATE_HIDDEN"))) {
+        qCDebug(LOG_GAME) << "no native click into the window" << title << "- it is minimized";
+        return Click::NotSent;
+    }
 
     // wine works out which of its windows is clicked from the position on the root window.
     const Reply<xcb_translate_coordinates_reply_t> onRoot(
@@ -88,9 +102,10 @@ X11Window::Click X11Window::click(const QString &title, QPoint position)
                                         xcb_translate_coordinates(x, window, root, static_cast<int16_t>(position.x()), static_cast<int16_t>(position.y())),
                                         nullptr));
     if (!onRoot) {
+        qCDebug(LOG_GAME) << "no native click into the window" << title << "- it is gone";
         return Click::NotSent;
     }
-    const bool active = windows(property(x, root, atom(x, "_NET_ACTIVE_WINDOW"))).value(0) == window;
+    const bool active = ids(property(x, root, atom(x, "_NET_ACTIVE_WINDOW"))).value(0) == window;
 
     xcb_button_press_event_t event{};
     event.response_type = XCB_BUTTON_PRESS;

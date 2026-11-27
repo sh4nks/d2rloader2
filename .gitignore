@@ -94,7 +94,9 @@ packaging/arch/*/src/
 packaging/arch/*/pkg/
 packaging/arch/*/d2rloader*/
 packaging/arch/*/*.pkg.tar.*
+packaging/arch/*/*.pkg.tar
 packaging/arch/*/*.tar.gz
+lsan.supp
 repo/
 *.flatpak
 TODO.md

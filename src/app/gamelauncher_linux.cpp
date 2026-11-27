@@ -190,6 +190,12 @@ const std::chrono::seconds SkipIntroInterval{2};
 const QPoint SkipIntroPosition{8, 8};
 
 /**
+ * wine asks for the focus within milliseconds of a click. A window that is
+ * activated later than this was activated by the user.
+ */
+const std::chrono::milliseconds FocusStealWait{500};
+
+/**
  * How often the log of a starting umu-run is read for progress.
  */
 const std::chrono::milliseconds SetupPollInterval{500};
@@ -830,7 +836,7 @@ void LinuxGameLauncher::renameWindow(Profile *profile, qint64 pid, int attemptsL
             qCInfo(LOG_GAME) << "renamed the window of pid" << pid << "to" << title;
             // Only on Plasma, where KWin gives the focus back that a click takes.
             if (profile && m_kwinWindowPositions && D2RLoaderConfig::self()->skipIntro()) {
-                skipIntro(profile, QDeadlineTimer(SkipIntroDuration));
+                skipIntro(profile, pid, title, QDeadlineTimer(SkipIntroDuration));
             }
             // On Plasma the KWin script takes over once the window carries its title.
             if (profile && !m_kwinWindowPositions && profile->rememberWindowPosition()) {
@@ -845,37 +851,40 @@ void LinuxGameLauncher::renameWindow(Profile *profile, qint64 pid, int attemptsL
     process->start();
 }
 
-void LinuxGameLauncher::skipIntro(Profile *profile, QDeadlineTimer deadline)
+void LinuxGameLauncher::skipIntro(Profile *profile, qint64 pid, const QString &title, QDeadlineTimer deadline)
 {
-    const QString title = profile->windowTitle();
-    if (deadline.hasExpired()) {
+    // Stop once the game is gone.
+    if (deadline.hasExpired() || ::kill(static_cast<pid_t>(pid), 0) != 0) {
         qCDebug(LOG_GAME) << "stopped skipping the intro of" << title;
         return;
     }
 
-    switch (X11Window::click(title, SkipIntroPosition)) {
+    const auto next = [this, profile = QPointer(profile), pid, title, deadline] {
+        QTimer::singleShot(SkipIntroInterval, this, [this, profile, pid, title, deadline] {
+            if (profile) {
+                skipIntro(profile, pid, title, deadline);
+            }
+        });
+    };
+
+    // Without the KWin script nothing gives the focus back that a native click takes.
+    switch (m_kwinWindowPositions->isScriptLoaded() ? X11Window::click(title, SkipIntroPosition) : X11Window::Click::NotSent) {
     case X11Window::Click::SentToInactiveWindow:
-        qCDebug(LOG_GAME) << "skipping the intro of" << title << "with a native click, which takes the focus until KWin hands it back";
-        m_kwinWindowPositions->expectFocusSteal(title, QDeadlineTimer(SkipIntroInterval));
+        qCDebug(LOG_GAME) << "skipping the intro of" << title << "with a native click, expecting its window to take the focus";
+        m_kwinWindowPositions->expectFocusSteal(title, QDeadlineTimer(FocusStealWait));
         break;
     case X11Window::Click::SentToActiveWindow:
         qCDebug(LOG_GAME) << "skipping the intro of" << title << "with a native click, its window has the focus";
         break;
     case X11Window::Click::NotSent:
         // A game on the Wayland driver of wine has no X11 window.
-        qCDebug(LOG_GAME) << "skipping the intro of" << title << "with d2rreg inside wine instead of a native click";
-        clickInsideWine(profile, SkipIntroPosition);
-        break;
+        clickInsideWine(profile, title, SkipIntroPosition, next);
+        return;
     }
-
-    QTimer::singleShot(SkipIntroInterval, this, [this, profile = QPointer(profile), deadline] {
-        if (profile) {
-            skipIntro(profile, deadline);
-        }
-    });
+    next();
 }
 
-void LinuxGameLauncher::clickInsideWine(Profile *profile, QPoint position)
+void LinuxGameLauncher::clickInsideWine(Profile *profile, const QString &title, QPoint position, const std::function<void()> &next)
 {
     // Without the wineserver, wine would set up a prefix of its own.
     const qint64 wineserver = wineserverProcess(profile->normalizedName());
@@ -884,7 +893,7 @@ void LinuxGameLauncher::clickInsideWine(Profile *profile, QPoint position)
         return;
     }
 
-    const QStringList arguments{QStringLiteral("--click-window"), profile->windowTitle(), QString::number(position.x()), QString::number(position.y())};
+    const QStringList arguments{QStringLiteral("--click-window"), title, QString::number(position.x()), QString::number(position.y())};
     QProcess *process = tokenToolProcess(wineserver, arguments, this);
 
     connect(process, &QProcess::errorOccurred, this, [process](QProcess::ProcessError error) {
@@ -893,8 +902,15 @@ void LinuxGameLauncher::clickInsideWine(Profile *profile, QPoint position)
             process->deleteLater();
         }
     });
-    connect(process, &QProcess::finished, process, &QProcess::deleteLater);
+    connect(process, &QProcess::finished, this, [process, next](int exitCode, QProcess::ExitStatus status) {
+        process->deleteLater();
+        // d2rreg exits with 1 once the window is gone.
+        if (status == QProcess::NormalExit && exitCode == 0) {
+            next();
+        }
+    });
 
+    qCDebug(LOG_GAME) << "skipping the intro of" << title << "with d2rreg inside wine instead of a native click";
     process->start();
 }
 

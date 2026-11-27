@@ -64,20 +64,21 @@ private:
     void renameWindow(Profile *profile, qint64 pid, int attemptsLeft);
 
     /**
-     * Clicks into the game window of \a profile every few seconds until
-     * \a deadline, which skips the intro videos and the title screen. The
-     * click is sent to the X11 window of the game from outside its
-     * wineprefix, and KWin gives the focus back that the window takes for it.
-     * A game without an X11 window is clicked from inside its wineprefix.
+     * Clicks into the window titled \a title of the game started as \a pid
+     * every few seconds, until \a deadline or until the game is gone, which
+     * skips the intro videos and the title screen. The click is sent to the
+     * X11 window of the game from outside its wineprefix, and KWin gives the
+     * focus back that the window takes for it. A game without an X11 window
+     * is clicked from inside its wineprefix.
      */
-    void skipIntro(Profile *profile, QDeadlineTimer deadline);
+    void skipIntro(Profile *profile, qint64 pid, const QString &title, QDeadlineTimer deadline);
 
     /**
-     * Clicks at \a position inside the game window of \a profile with
+     * Clicks at \a position inside the window titled \a title with
      * d2rreg.exe, which posts the click to the window without giving it the
-     * focus.
+     * focus, then calls \a next unless the window is gone.
      */
-    void clickInsideWine(Profile *profile, QPoint position);
+    void clickInsideWine(Profile *profile, const QString &title, QPoint position, const std::function<void()> &next);
 
     /**
      * Moves the game window of \a profile to its saved position with

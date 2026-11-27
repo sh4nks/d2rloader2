@@ -28,6 +28,11 @@ public:
     ~KWinWindowPositions() override;
 
     /**
+     * Whether the script runs in KWin and asks this loader about its windows.
+     */
+    bool isScriptLoaded() const;
+
+    /**
      * The window titled \a title was clicked to skip its intro and takes the
      * focus for it. When it does so before \a deadline, the script hands the
      * focus back to the window that had it.

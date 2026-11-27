@@ -73,9 +73,15 @@ KWinWindowPositions::~KWinWindowPositions()
     }
 }
 
+bool KWinWindowPositions::isScriptLoaded() const
+{
+    return m_scriptLoaded;
+}
+
 void KWinWindowPositions::expectFocusSteal(const QString &title, QDeadlineTimer deadline)
 {
-    m_expectedFocusSteals.insert(title, deadline);
+    // The script asks with the caption KWin makes of the title.
+    m_expectedFocusSteals.insert(title.simplified(), deadline);
 }
 
 void KWinWindowPositions::loadScript()
@@ -149,7 +155,7 @@ bool KWinWindowPositions::handleMessage(const QDBusMessage &message, const QDBus
         const auto steal = m_expectedFocusSteals.find(title);
         const bool expected = steal != m_expectedFocusSteals.end() && !steal->hasExpired();
         if (expected) {
-            qCDebug(LOG_GAME) << "the window" << title << "took the focus for the click that skips its intro, KWin hands it back";
+            qCDebug(LOG_GAME) << "told KWin that the window" << title << "took the focus for the click that skips its intro";
             *steal = std::min(*steal, QDeadlineTimer(LateFocusGrace));
         }
         connection.send(message.createReply(QVariantList{expected}));

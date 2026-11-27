@@ -78,7 +78,8 @@ function keepFocus(window) {
         focused = window;
         return;
     }
-    callDBus(service, path, iface, "tookFocusForSkipIntro", window.caption, expected => {
+    // Without what KWin appends to the title, like " (Not Responding)".
+    callDBus(service, path, iface, "tookFocusForSkipIntro", window.captionNormal, expected => {
         if (workspace.activeWindow !== window) {
             return;
         }
